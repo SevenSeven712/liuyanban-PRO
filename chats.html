@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <link rel="manifest" href="./manifest.json" />
 <meta name="theme-color" content="#2e7d32" />
+<link rel="stylesheet" href="bubbles.css" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Seven戚 · 聊天群</title>
 <script src="./vendor/supabase.js"></script>
@@ -33,7 +34,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .app-content{flex:1;min-height:0;display:flex;flex-direction:column}
 .chat-messages{flex:1;overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch}
 
-/* 聊天气泡 */
 .row{display:flex;align-items:flex-start;gap:8px;max-width:85%;}
 .row.other{align-self:flex-start;}
 .row.self{align-self:flex-end;flex-direction:row-reverse;}
@@ -45,7 +45,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .row .uname{font-size:.68em;color:var(--text-muted);margin-bottom:3px;display:flex;align-items:center;gap:6px;}
 .row.self .uname{flex-direction:row-reverse;text-align:right;}
 
-/* 红包卡片 */
 .rp-card{display:block;max-width:230px;background:linear-gradient(135deg,#ff7043,#e64a19);border-radius:14px;padding:12px 16px;color:#fff;cursor:pointer;box-shadow:0 6px 18px rgba(230,74,25,.3);transition:transform .15s;}
 .rp-card:active{transform:scale(.97)}
 .rp-card.grabbed{background:linear-gradient(135deg,#9e9e9e,#757575);box-shadow:none;cursor:default;}
@@ -62,7 +61,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .fixed-input-area button{padding:8px 18px;border-radius:99px;border:none;background:var(--primary);color:#fff;font-weight:700;font-size:.85em;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;font-family:inherit}
 .fixed-input-area .red-packet-btn{background:linear-gradient(135deg,#ff7043,#e64a19);}
 
-/* 发红包抽屉 */
 .rp-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:998;opacity:0;pointer-events:none;transition:opacity .3s;}
 .rp-backdrop.open{opacity:1;pointer-events:auto;}
 .rp-sheet{position:fixed;left:0;right:0;bottom:0;background:var(--bg-card);border-radius:20px 20px 0 0;z-index:999;padding:8px 20px calc(20px + var(--safe-b));transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:82vh;overflow-y:auto;}
@@ -122,7 +120,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   <div id="footer-container"></div>
 </div>
 
-<!-- 发红包面板 -->
 <div class="rp-backdrop" id="rpBackdrop"></div>
 <div class="rp-sheet" id="rpSheet">
   <div class="rp-handle"></div>
@@ -149,7 +146,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   <button class="rp-send" id="crpSendBtn">塞钱进红包</button>
 </div>
 
-<!-- 红包详情面板 -->
 <div class="rp-backdrop" id="rpDetailBackdrop"></div>
 <div class="rp-sheet" id="rpDetailSheet">
   <div class="rp-handle"></div>
@@ -159,7 +155,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   <div id="rpDetailBody" style="padding:0 4px 20px;"></div>
 </div>
 
-<!-- 在线用户 -->
 <div class="online-overlay" id="onlineOverlay">
   <div class="online-header">
     <button class="back" id="onlineBackBtn"><svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
@@ -175,7 +170,6 @@ var currentUser = getSessionUser();
 if(!currentUser || !currentUser.id) window.location.href='./index.html';
 
 function showToast(m){var t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(function(){t.classList.remove('show')},2600)}
-function escapeHtml(s){if(!s)return '';return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function safeUrl(u){if(!u)return '';var s=String(u).trim();if(!/^https?:\/\//.test(s))return '';return escapeHtml(s);}
 
 function renderHeaderUI(){
@@ -200,7 +194,6 @@ function renderHeaderUI(){
 renderHeaderUI();
 renderFooter('chats');
 
-// 在线状态
 var onlineUsers={}, onlineChannel=null;
 function renderOnlineUsers(){
   var c=document.getElementById('onlineUserList'); if(!c)return;
@@ -233,10 +226,15 @@ function initPresence(){
 }
 document.getElementById('onlineBackBtn').onclick=function(){document.getElementById('onlineOverlay').classList.remove('open');};
 
-// ==========================================
-// 核心业务：聊天与红包
-// ==========================================
-var chats=[], rpList=[], myGrabs={}, usersCache={};
+var chats=[], rpList=[], myGrabs={}, usersCache={}, currentBubbleSkin=0;
+
+async function loadBubbleSkin(){
+  try {
+    var u = await window.sb.rpc('get_my_profile');
+    var d = (u && u.data) ? (Array.isArray(u.data) ? u.data[0] : u.data) : null;
+    if (d && typeof d.bubble_skin === 'number') currentBubbleSkin = d.bubble_skin;
+  } catch(e) {}
+}
 
 async function fetchChats(){
   var res=await window.sb.from('chats').select('*').order('created_at',{ascending:true});
@@ -248,7 +246,6 @@ async function fetchChats(){
   }catch(e){}
   return data;
 }
-
 async function loadChatRedPackets(){
   try{
     var res = await window.sb.from('red_packets').select('*').eq('scope', 'chat').order('created_at', { ascending: false }).limit(20);
@@ -257,7 +254,6 @@ async function loadChatRedPackets(){
     await loadChatMyGrabs();
   }catch(e){ rpList = []; }
 }
-
 async function loadChatMyGrabs(){
   myGrabs = {};
   if(!rpList.length) return;
@@ -267,86 +263,65 @@ async function loadChatMyGrabs(){
     (res.data || []).forEach(function(g){ myGrabs[g.packet_id] = g.amount; });
   }catch(e){}
 }
-
 function renderChat(){
   var container=document.getElementById('chatMessages');
-  if(!chats.length && !rpList.length){container.innerHTML='<div class="empty-state">还没有聊天消息</div>';return}
-  
-  // 合并聊天消息和红包并按时间排序
+  if(!chats.length && !rpList.length){container.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-muted);">还没有聊天消息</div>';return}
   var merged = [];
   chats.forEach(function(c){ merged.push({ kind:'chat', t:new Date(c.created_at).getTime(), data:c }); });
   rpList.forEach(function(p){ merged.push({ kind:'rp', t:new Date(p.created_at).getTime(), data:p }); });
   merged.sort(function(a,b){ return a.t - b.t; });
-
+  var skinCls = 'b' + currentBubbleSkin;
   var html='';
   merged.forEach(function(item){
     var isSelf, name, avatarUrl;
-    
     if(item.kind === 'chat') {
       var c = item.data;
       isSelf = currentUser && c.user_id === currentUser.id;
       var ui = usersCache[c.user_id] || null;
       name = ui ? ui.nickname : c.author;
       avatarUrl = ui ? ui.avatar_url : null;
-      
       var av = (avatarUrl && String(avatarUrl).indexOf('http')===0) ? '<div class="avatar" style="background-image:url(\''+safeUrl(avatarUrl)+'\');background-size:cover;background-position:center;"></div>' : '<div class="avatar">'+escapeHtml(String(name).charAt(0).toUpperCase())+'</div>';
-      html+='<div class="row '+(isSelf?'self':'other')+'">'+av+'<div class="bubble-wrap"><div class="uname">'+escapeHtml(name)+'</div><div class="bubble">'+escapeHtml(c.content)+'</div></div></div>';
+      var rowCls = 'row ' + (isSelf ? 'self' : 'other') + (isSelf ? ' ' + skinCls : '');
+      html+='<div class="'+rowCls+'">'+av+'<div class="bubble-wrap"><div class="uname">'+escapeHtml(name)+'</div><div class="bubble">'+escapeHtml(c.content)+'</div></div></div>';
     } else {
-      // 渲染红包
       var p = item.data;
       isSelf = currentUser && p.sender_id === currentUser.id;
       var rpUi = usersCache[p.sender_id] || null;
       name = rpUi ? rpUi.nickname : p.sender_name;
       avatarUrl = rpUi ? rpUi.avatar_url : null;
-      
       var mine = myGrabs[p.id];
       var finished = p.remaining_count <= 0;
       var isEx = !!p.target_user_id;
-      
-      // 红包卡片样式类
       var rpCls = (isEx?'exclusive ':'') + (mine!==undefined?'grabbed':(finished?'done':''));
       var sub = '';
       if(mine !== undefined) sub = isEx ? '专属红包 · 你已领取' : '你已领取 · 看看手气';
       else if(finished) sub = '手慢了，红包已领完';
       else if(isEx) sub = (p.target_user_id === currentUser.id) ? '专属红包 · 点击领取' : '专属红包（非指定人无法领取）';
       else sub = '剩余 ' + p.remaining_count + '/' + p.count + ' 份';
-
       var av = (avatarUrl && String(avatarUrl).indexOf('http')===0) ? '<div class="avatar" style="background-image:url(\''+safeUrl(avatarUrl)+'\');background-size:cover;background-position:center;"></div>' : '<div class="avatar">'+escapeHtml(String(name).charAt(0).toUpperCase())+'</div>';
-      
-      html += '<div class="row '+(isSelf?'self':'other')+'">'+av;
-      html += '<div class="bubble-wrap"><div class="uname">'+escapeHtml(name)+'</div>';
-      html += '<div class="rp-card '+rpCls+'" data-rp="'+p.id+'" onclick="openChatRedPacket(\''+p.id+'\')">';
-      html += '<div class="rp-top"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:#fff;"><rect x="3" y="2" width="18" height="20" rx="2"/><path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2c-2.5 1.5-5.5 2.5-9 2.5S5.5 8.5 3 7V5Z" style="fill:#ffe082"/><circle cx="12" cy="15" r="2.5" style="fill:#e53935"/><rect x="11.2" y="14.2" width="1.6" height="1.6" style="fill:#fff"/></svg>';
-      html += (isEx?'专属红包':'拼手气红包') + '</div>';
-      if(mine !== undefined) html += '<div class="rp-amt">'+mine+' 币</div>';
-      html += '<div class="rp-sub">'+sub+'</div></div></div></div>';
+      html += '<div class="row '+(isSelf?'self':'other')+'">'+av+'<div class="bubble-wrap"><div class="uname">'+escapeHtml(name)+'</div><div class="rp-card '+rpCls+'" data-rp="'+p.id+'" onclick="openChatRedPacket(\''+p.id+'\')"><div class="rp-top"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:#fff;"><rect x="3" y="2" width="18" height="20" rx="2"/><path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2c-2.5 1.5-5.5 2.5-9 2.5S5.5 8.5 3 7V5Z" style="fill:#ffe082"/><circle cx="12" cy="15" r="2.5" style="fill:#e53935"/><rect x="11.2" y="14.2" width="1.6" height="1.6" style="fill:#fff"/></svg>'+(isEx?'专属红包':'拼手气红包') + '</div>'+(mine !== undefined ? '<div class="rp-amt">'+mine+' 币</div>' : '')+'<div class="rp-sub">'+sub+'</div></div></div></div>';
     }
   });
-  
   container.innerHTML=html;
   container.scrollTop=container.scrollHeight;
 }
-
 async function loadAllChats(){
-  try{ 
-    chats = await fetchChats(); 
+  try{
+    chats = await fetchChats();
     await loadChatRedPackets();
   }catch(e){ showToast('数据加载失败') }
   renderChat();
 }
-
 async function sendChat(){
   var input=document.getElementById('chatInput'),content=input.value.trim();
   if(!content){showToast('请输入内容');return}
-  var btn=document.getElementById('sendChatBtn');
-  btn.disabled=true;
+  var btn=document.getElementById('sendChatBtn'); btn.disabled=true;
   try {
     await window.sb.from('chats').insert([{user_id:currentUser.id,author:currentUser.nickname,content:content}]);
     input.value=''; loadAllChats();
   } catch(e) { showToast('发送失败：'+e.message); } finally { btn.disabled=false; }
 }
 
-// ---- 红包业务逻辑 ----
 var crpType = 'group';
 document.getElementById('chatRedPacketBtn').onclick = function(){
   document.getElementById('crpTotal').value = '';
@@ -357,7 +332,6 @@ document.getElementById('chatRedPacketBtn').onclick = function(){
   document.getElementById('rpSheet').classList.add('open');
 };
 document.getElementById('rpBackdrop').onclick = function(){ this.classList.remove('open'); document.getElementById('rpSheet').classList.remove('open'); };
-
 function syncCrpTypeUI(){
   document.querySelectorAll('.rp-type').forEach(function(b){ b.classList.toggle('active', b.dataset.t === crpType); });
   document.getElementById('crpCountField').style.display = crpType === 'group' ? 'block' : 'none';
@@ -366,7 +340,6 @@ function syncCrpTypeUI(){
 document.querySelectorAll('.rp-type').forEach(function(b){
   b.onclick = function(){ crpType = this.dataset.t; syncCrpTypeUI(); };
 });
-
 function buildCrpTargetOptions(){
   var sel = document.getElementById('crpTarget');
   var opts = ['<option value="">请选择在线用户</option>'];
@@ -377,7 +350,6 @@ function buildCrpTargetOptions(){
   });
   sel.innerHTML = opts.join('');
 }
-
 document.getElementById('crpSendBtn').onclick = async function(){
   var total = parseInt(document.getElementById('crpTotal').value, 10);
   if(!total || total < 1){ showToast('请输入红包总积分'); return; }
@@ -393,14 +365,10 @@ document.getElementById('crpSendBtn').onclick = async function(){
   }
   this.disabled = true;
   try{
-    // 调用后端 RPC 发红包
-    var res = await window.sb.rpc('send_red_packet', {
-      p_room_id: null, p_total: total, p_count: count, p_scope: 'chat', p_target_user_id: target
-    });
+    var res = await window.sb.rpc('send_red_packet', { p_room_id: null, p_total: total, p_count: count, p_scope: 'chat', p_target_user_id: target });
     if(res.error) throw res.error;
     var d = res.data;
     if(!d || !d.ok){ showToast((d && d.message) || '发送失败'); return; }
-    
     showToast('红包已发出');
     document.getElementById('rpBackdrop').classList.remove('open');
     document.getElementById('rpSheet').classList.remove('open');
@@ -412,16 +380,9 @@ async function openChatRedPacket(packetId){
   var p = rpList.find(function(x){ return String(x.id) === String(packetId); });
   if(!p) return;
   var mine = myGrabs[p.id];
-  
-  // 如果没抢过，且还有剩余，且不是自己发的，且不是专属别人的
   if(mine === undefined && p.remaining_count > 0 && p.sender_id !== currentUser.id) {
-    if(p.target_user_id && p.target_user_id !== currentUser.id) {
-      showToast('这是专属红包，你无法领取');
-      return;
-    }
-    
+    if(p.target_user_id && p.target_user_id !== currentUser.id) { showToast('这是专属红包，你无法领取'); return; }
     try{
-      // 调用后端 RPC 抢红包
       var res = await window.sb.rpc('grab_red_packet', { p_packet_id: p.id });
       if(res.error) throw res.error;
       var d = res.data;
@@ -437,8 +398,6 @@ async function openChatRedPacket(packetId){
       }
     }catch(e){ showToast('领取失败：' + e.message); return; }
   }
-  
-  // 弹出详情面板
   showChatRedPacketDetail(p, mine);
 }
 
@@ -447,7 +406,6 @@ async function showChatRedPacketDetail(p, myAmount){
   body.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:.85em;padding:20px;">加载中…</div>';
   document.getElementById('rpDetailBackdrop').classList.add('open');
   document.getElementById('rpDetailSheet').classList.add('open');
-  
   try{
     var res = await window.sb.from('red_packet_grabs').select('*').eq('packet_id', p.id).order('amount', { ascending: false });
     var rows = res.data || [];
@@ -457,7 +415,6 @@ async function showChatRedPacketDetail(p, myAmount){
       '<div style="font-size:.75em;color:var(--text-light);margin-top:4px;">共 ' + p.count + ' 份 · 已领 ' + rows.length + ' 份</div>';
     if(myAmount !== undefined) html += '<div style="margin-top:10px;font-size:.85em;font-weight:700;color:var(--primary);">你领到 ' + myAmount + ' 币</div>';
     html += '</div>';
-    
     if(rows.length){
       html += '<div style="font-size:.72em;font-weight:700;color:var(--text-muted);margin-bottom:8px;">领取排行榜</div>';
       html += rows.map(function(g, i){
@@ -482,11 +439,10 @@ document.getElementById('rpDetailBackdrop').onclick = function() {
   document.getElementById('rpDetailSheet').classList.remove('open');
 };
 
-// 事件绑定与初始化
 document.getElementById('sendChatBtn').onclick = sendChat;
 document.getElementById('chatInput').onkeydown = function(e){ if(e.key==='Enter') sendChat(); };
 
-loadAllChats();
+loadBubbleSkin().then(function(){ loadAllChats(); });
 initPresence();
 </script>
 </body>
