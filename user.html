@@ -21,22 +21,21 @@
 }
 html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);overflow:hidden}
 #mainApp{display:flex;flex-direction:column;height:100vh;height:100dvh}
-.app-header{flex-shrink:0;padding:12px 20px 8px;background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;z-index:50;min-height:56px}
-.brand{font-weight:800;font-size:1.15em;color:var(--text);cursor:pointer}
+
+/* ====== 顶部 Header ====== */
+.app-header{flex-shrink:0;padding:12px 20px;background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;z-index:50;min-height:56px}
+.brand{font-weight:800;font-size:1.15em;color:var(--text);display:flex;align-items:center;gap:.2em}
 .brand span{color:var(--primary)}
-.header-actions{display:flex;align-items:center;gap:8px}
-.icon-btn{background:none;border:none;cursor:pointer;padding:6px;color:var(--text);display:flex;border-radius:8px}
-.icon-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.icon-btn:hover{background:var(--primary-bg)}
-.user-area{display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 8px;border-radius:99px}
-.user-area:hover{background:var(--primary-bg)}
+.header-right{display:flex;align-items:center;gap:8px}
+.user-area{display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:99px;cursor:pointer;}
 .user-area .avatar{width:30px;height:30px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;background-size:cover;background-position:center;flex-shrink:0}
 .user-area .user-name{font-size:.85em;font-weight:600}
 .user-area .chevron{font-size:.7em;color:var(--text-light)}
-.page-content{flex:1;overflow-y:auto;padding:16px 16px 80px}
-.footer-container{flex-shrink:0}
 
-/* 资料卡 */
+/* ====== 页面内容 ====== */
+.page-content{flex:1;overflow-y:auto;padding:16px 16px 80px; -webkit-overflow-scrolling: touch;}
+
+/* ====== 资料卡 ====== */
 .profile-hero{background:linear-gradient(135deg,#2e7d32,#4caf50);border-radius:var(--radius);padding:24px 20px 20px;color:#fff;position:relative;overflow:hidden}
 .profile-hero::after{content:'';position:absolute;right:-30px;top:-30px;width:120px;height:120px;background:rgba(255,255,255,.1);border-radius:50%}
 .hero-main{display:flex;align-items:center;gap:16px;position:relative;z-index:1}
@@ -49,26 +48,23 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .hero-stat .lbl{font-size:.72em;opacity:.85}
 .hero-line2{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:.72em;opacity:.85}
 .hero-no{opacity:.9}
-.hero-gender{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:.92em}
-.hero-gender.male{background:rgba(64,150,255,.9);color:#fff}
-.hero-gender.female{background:rgba(255,105,160,.9);color:#fff}
-.hero-gender svg{display:block}
 .hero-bio{font-size:.84em;opacity:.92;margin-top:14px;line-height:1.6;position:relative;z-index:1;word-break:break-word;padding-top:12px;border-top:1px solid rgba(255,255,255,.2)}
 .hero-actions{display:flex;gap:10px;margin-top:16px;position:relative;z-index:1}
 .btn-follow{flex:1;padding:11px;border:2px solid #fff;border-radius:10px;font-weight:800;font-family:inherit;font-size:.9em;cursor:pointer;background:#fff;color:var(--primary)}
 .btn-follow.following{background:transparent;color:#fff}
 .btn-edit-profile{flex:1;padding:11px;border:2px solid #fff;border-radius:10px;font-weight:800;font-family:inherit;font-size:.9em;cursor:pointer;background:#fff;color:var(--primary)}
 
-/* 宫格导航 */
+/* ====== 宫格导航 ====== */
 .nav-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 8px;margin:18px 0 4px}
 .nav-cell{background:none;border:none;padding:4px 2px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:transform .18s;text-align:center}
 .nav-cell:active{transform:scale(.92)}
 .nav-cell .ic{width:52px;height:52px;border-radius:50%;background:var(--primary-bg);display:grid;place-items:center;color:var(--primary);transition:all .18s;box-shadow:0 2px 8px rgba(46,125,50,.10)}
 .nav-cell:hover .ic{background:var(--primary);color:#fff;box-shadow:0 6px 16px rgba(46,125,50,.28);transform:translateY(-2px)}
-.nav-cell .ic svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* 严格限制图标宽高，防止撑爆 */
+.nav-cell .ic svg{width:24px !important;height:24px !important;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .nav-cell .tx{font-size:.72em;font-weight:600;color:var(--text-muted)}
 
-/* Tab & 帖子卡 */
+/* ====== 帖子列表 ====== */
 .tabs{display:flex;gap:8px;margin:16px 0 12px;border-bottom:1px solid var(--border)}
 .tab{padding:10px 4px;border:none;background:none;font-family:inherit;font-size:.88em;font-weight:700;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;margin-right:8px}
 .tab.active{color:var(--primary);border-bottom-color:var(--primary)}
@@ -81,7 +77,15 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* 编辑弹窗 */
+/* ====== 底部导航 (直接硬编码) ====== */
+.app-tabs{flex-shrink:0;display:flex;background:rgba(255,255,255,.96);border-top:1px solid var(--border);padding:6px 0 calc(6px + env(safe-area-inset-bottom,0px));z-index:50}
+.tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;font-family:var(--font);font-size:.6em;font-weight:600;color:var(--text-muted);padding:4px 0;cursor:pointer;text-decoration:none;position:relative}
+.tab-btn .tab-icon{font-size:1.6em;line-height:1.2;display:flex;align-items:center;justify-content:center;width:1.7em;height:1.7em}
+.tab-btn .tab-icon svg{width:100% !important;height:100% !important;display:block;stroke:currentColor;fill:none}
+.tab-btn.active{color:var(--primary)}
+.tab-btn.active::after{content:'';position:absolute;top:-1px;left:30%;right:30%;height:3px;background:var(--primary);border-radius:0 0 4px 4px}
+
+/* ====== 弹窗 & Toast ====== */
 .edit-modal{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px}
 .edit-modal.active{display:flex}
 .edit-box{background:#fff;border-radius:var(--radius);padding:22px 20px;max-width:400px;width:100%;max-height:86vh;overflow-y:auto}
@@ -99,8 +103,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .avatar-edit{display:flex;align-items:center;gap:14px;margin-bottom:14px}
 .avatar-edit .av{width:64px;height:64px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-size:24px;font-weight:800;background-size:cover;background-position:center;flex-shrink:0}
 .avatar-edit label{font-size:.8em;color:var(--primary);font-weight:700;cursor:pointer;text-decoration:underline}
-
-/* 确认弹窗 */
 .custom-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:2000;padding:20px}
 .custom-modal.active{display:flex}
 .modal-box{background:var(--bg-card);padding:24px;border-radius:var(--radius);max-width:400px;width:100%;box-shadow:var(--shadow)}
@@ -117,10 +119,32 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 <body>
 <div id="mainApp">
   <div id="header-container"></div>
+  
   <div class="page-content" id="pageContent">
     <div class="loading-state"><div class="spinner"></div>加载中...</div>
   </div>
-  <div class="footer-container" id="footer-container"></div>
+
+  <!-- 底部导航直接写死 -->
+  <div id="footer-container">
+    <div class="app-tabs">
+      <a href="./posts.html" class="tab-btn" id="tab-posts">
+        <span class="tab-icon"><svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18V42H39V18L24 6L9 18Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 29V42H29V29H19Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M9 42H39" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></span>
+        帖子
+      </a>
+      <a href="./messages.html" class="tab-btn" id="tab-messages">
+        <span class="tab-icon"><svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M40 33V42C40 43.1046 39.1046 44 38 44H31.5" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M40 16V6C40 4.89543 39.1046 4 38 4H10C8.89543 4 8 4.89543 8 6V42C8 43.1046 8.89543 44 10 44H16" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 16H30" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M23 44L40 23" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M16 24H24" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></span>
+        留言板
+      </a>
+      <a href="./chats.html" class="tab-btn" id="tab-chats">
+        <span class="tab-icon"><svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6H44V36H29L24 41L19 36H4V6Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M23 21H25.0025" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M33.001 21H34.9999" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M13.001 21H14.9999" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></span>
+        消息
+      </a>
+      <a href="./user.html" class="tab-btn active" id="tab-profile">
+        <span class="tab-icon"><svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M42 44C42 34.0589 33.9411 26 24 26C14.0589 26 6 34.0589 6 44" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        个人
+      </a>
+    </div>
+  </div>
 </div>
 
 <!-- 编辑资料弹窗 -->
@@ -157,12 +181,13 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   </div>
 </div>
 <div id="toast"></div>
+
 <script src="./common.js"></script>
 <script>
 var currentUser = getSessionUser();
 if (!currentUser || !currentUser.id) window.location.href = './index.html';
 
-var viewingUser = null;   // 被查看的用户
+var viewingUser = null;
 var isSelf = false;
 var iFollowed = false;
 var myPosts = [];
@@ -171,7 +196,6 @@ function $(id){ return document.getElementById(id); }
 function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function showToast(msg){ var t=$('toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); clearTimeout(window.__tt); window.__tt=setTimeout(function(){t.classList.remove('show');},2200); }
 
-// 从 URL 取目标用户（?id=uuid）
 function getTargetParam(){
   var p = new URLSearchParams(location.search);
   return { id: p.get('id') };
@@ -193,15 +217,6 @@ async function loadUser(){
   viewingUser = row;
   isSelf = (viewingUser.id === currentUser.id);
   return true;
-}
-
-function calcAge(birthday){
-  if(!birthday) return null;
-  var b = new Date(birthday); var now = new Date();
-  var age = now.getFullYear() - b.getFullYear();
-  var m = now.getMonth() - b.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--;
-  return (age >= 0 && age < 150) ? age : null;
 }
 
 function avatarOf(u){
@@ -260,7 +275,6 @@ async function render(){
   }
   hero += '</div></div>';
 
-  // 宫格导航（仅看自己时）
   var navHtml = '';
   if (isSelf) {
     var isAdmin = (currentUser && currentUser.is_admin === true);
@@ -279,7 +293,6 @@ async function render(){
       '</div>';
   }
 
-  // 帖子列表
   var postsHtml = '<div class="tabs"><button class="tab active">' + (isSelf ? '我的帖子' : '他的帖子') + ' (' + myPosts.length + ')</button></div>';
   if (myPosts.length) {
     postsHtml += myPosts.map(function(p){
@@ -313,7 +326,6 @@ async function toggleFollow(){
   }catch(e){ showToast('操作失败：' + e.message); }
 }
 
-// ====== 编辑资料 ======
 function openEdit(){
   var u = viewingUser;
   $('editNickname').value = u.nickname || '';
@@ -341,7 +353,6 @@ async function saveProfile(){
   if (!patch.nickname) return showToast('昵称不能为空');
   try{
     await window.sb.from('users').update(patch).eq('id', currentUser.id);
-    // 更新本地 session
     var u = getSessionUser() || {};
     u.nickname = patch.nickname; u.bio = patch.bio; u.gender = patch.gender; u.birthday = patch.birthday;
     setSessionUser(u);
@@ -380,14 +391,12 @@ async function doLogout(){
 }
 window.doLogout = doLogout;
 
-// 头像上传
 document.getElementById('editAvatarInput').onchange = async function(e){
   var file = e.target.files[0]; if (!file) return;
   if (file.size > 5*1024*1024) { showToast('图片不能超过 5MB'); this.value=''; return; }
   try{
     showToast('上传中...');
     var ext = (file.name.split('.').pop() || 'png').toLowerCase();
-    // ★ 关键：路径必须是 [用户ID]/文件名
     var path = currentUser.id + '/profile_' + Date.now() + '.' + ext;
     var up = await window.sb.storage.from('avatars').upload(path, file, { contentType: file.type, upsert: false });
     if (up.error) throw up.error;
@@ -397,36 +406,36 @@ document.getElementById('editAvatarInput').onchange = async function(e){
     viewingUser.avatar_url = url;
     var av = $('editAvatar'); av.style.backgroundImage = 'url(' + url + ')'; av.textContent = '';
     showToast('头像已更新');
-    await render(); // 刷新页面显示
+    await render();
   }catch(err){ showToast('上传失败：' + err.message); }
 };
 
-// ====== 初始化 ======
 (async function init(){
-  if (typeof renderHeader === "function") renderHeader("用户主页", "profile");
-  if (typeof renderFooter === "function") renderFooter("profile");
+  // 顶部头部
+  var hc = document.getElementById("header-container");
+  hc.innerHTML = '<div class="app-header">' +
+    '<div class="brand" onclick="location.href=\'./posts.html\'">Seven<span>戚</span><small> · 用户主页</small></div>' +
+    '<div class="header-right">' +
+      '<div class="user-area" onclick="location.href=\'./user.html\'">' +
+        '<div class="avatar" id="headerAvatar" style="' + (currentUser.avatar_url && currentUser.avatar_url.indexOf('http')===0 ? 'background-image:url('+currentUser.avatar_url+')' : '') + '">' + (currentUser.avatar_url ? '' : (currentUser.nickname||'U').charAt(0).toUpperCase()) + '</div>' +
+        '<span class="user-name">' + (currentUser.nickname || '用户') + '</span>' +
+        '<span class="chevron">▾</span>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+
   await render();
-  if (isSelf) {
-    if (typeof renderFooter === "function") renderFooter("profile");
-    if (typeof renderHeader === "function") renderHeader("用户主页", "profile");
-  } else {
-    // 看别人：隐藏底部导航，顶部改为"返回按钮"
-    var fc = document.getElementById("footer-container");
-    if (fc) fc.style.display = "none";
-    var hc = document.getElementById("header-container");
-    if (hc) {
-      hc.innerHTML = '<div class="app-header" style="justify-content:flex-start;">' +
-        '<button class="back-btn" onclick="goBackFromUser()" title="返回" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text);display:flex;border-radius:8px;">' +
-        '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>' +
-        '</button></div>';
-    }
+  
+  // 如果是看别人的主页，就把底部导航隐藏掉
+  if (!isSelf) {
+    document.getElementById("footer-container").style.display = "none";
+    // 顶部替换成返回按钮
+    hc.innerHTML = '<div class="app-header" style="justify-content:flex-start;">' +
+      '<button onclick="history.back()" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text);display:flex;border-radius:8px;">' +
+      '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>' +
+      '</button></div>';
   }
 })();
-function goBackFromUser(){
-  if (window.history.length > 1) window.history.back();
-  else location.href = './posts.html';
-}
-window.goBackFromUser = goBackFromUser;
 </script>
 </body>
 </html>
