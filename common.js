@@ -74,16 +74,25 @@ if (!window.sb) {
 // 页面加载转圈（所有页面通用）
 // ============================================================
 (function pageLoading() {
-    // 注入样式
+    // 注入样式（咖啡杯 loader）
     if (!document.getElementById('page-loading-styles')) {
         var st = document.createElement('style');
         st.id = 'page-loading-styles';
         st.textContent =
             '.page-loading-mask{position:fixed;inset:0;z-index:999999;background:var(--bg,#f5faf5);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;transition:opacity .35s ease;}' +
             '.page-loading-mask.fade-out{opacity:0;pointer-events:none;}' +
-            '.page-loading-spinner{width:40px;height:40px;border:3px solid var(--border,#c8e0c8);border-top-color:var(--primary,#2e7d32);border-radius:50%;animation:pageLoadSpin .8s linear infinite;}' +
-            '@keyframes pageLoadSpin{to{transform:rotate(360deg);}}' +
-            '.page-loading-text{font-size:.8em;color:var(--text-muted,#5a7a6a);font-family:var(--font,system-ui,sans-serif);}';
+            '.page-loading-cup{position:relative;width:100px;height:80px;display:flex;align-items:center;justify-content:center;}' +
+            '.page-loading-cup .cup{position:absolute;width:25px;height:18px;background-color:#fff;border:1px solid #2e2e2e;z-index:1;border-radius:2px 2px 10px 10px;animation:sqCupExpansion 6s infinite ease-in-out;transform-origin:center;}' +
+            '.page-loading-cup .cup::after{content:"";position:absolute;top:-2px;width:calc(100% - 2px);height:2px;background:#fed59fca;border:1px solid #2e2e2ebe;border-radius:50%;}' +
+            '.page-loading-cup .cup::before{content:"";position:absolute;top:15px;width:calc(100% - 2px);height:4px;background:#ffffff00;border:1px solid #2e2e2e;border-top:none;border-radius:50%;z-index:-1;}' +
+            '.page-loading-cup .cup .cup-handle{position:absolute;width:5px;height:10px;background-color:#fff;border:1px solid #2e2e2e;right:-5px;top:2px;border-radius:2px 10px 20px 2px;}' +
+            '.page-loading-cup .cup .smoke{position:absolute;bottom:100%;left:50%;width:15px;height:25px;background:rgba(107,102,102,0.433);border-radius:50%;transform:translateX(-50%);animation:sqCupRise 6s infinite ease-in-out;filter:blur(8px);}' +
+            '.page-loading-cup .cup .smoke.one{animation-delay:0s;}' +
+            '.page-loading-cup .cup .smoke.two{animation-delay:1s;}' +
+            '.page-loading-cup .cup .smoke.three{animation-delay:2s;}' +
+            '.page-loading-cup .load{position:absolute;font-size:10px;opacity:.7;top:45%;left:50%;transform:translateX(-50%);z-index:-1;letter-spacing:-1px;color:var(--text-muted,#5a7a6a);}' +
+            '@keyframes sqCupExpansion{0%{width:25px;transform:translateX(0);}40%{width:100%;transform:translateX(0);}80%{width:25px;transform:translateX(64px);}90%{width:100%;transform:translateX(0);}100%{width:25px;transform:translateX(0);}}' +
+            '@keyframes sqCupRise{0%{transform:translate(-50%,0) scale(.4);opacity:0;}30%{opacity:.7;}60%{opacity:.4;}100%{transform:translate(-50%,-120px) scale(1);opacity:0;}}';
         document.head.appendChild(st);
     }
 
@@ -92,7 +101,16 @@ if (!window.sb) {
         var mask = document.createElement('div');
         mask.className = 'page-loading-mask';
         mask.id = 'pageLoadingMask';
-        mask.innerHTML = '<div class="page-loading-spinner"></div><div class="page-loading-text">加载中…</div>';
+        mask.innerHTML =
+            '<div class="page-loading-cup">' +
+              '<div class="cup">' +
+                '<div class="cup-handle"></div>' +
+                '<div class="smoke one"></div>' +
+                '<div class="smoke two"></div>' +
+                '<div class="smoke three"></div>' +
+              '</div>' +
+              '<div class="load">..........................</div>' +
+            '</div>';
         document.body.appendChild(mask);
     }
 
