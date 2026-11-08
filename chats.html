@@ -32,7 +32,57 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .tab-btn.active{color:var(--primary)}
 .tab-btn.active::after{content:'';position:absolute;top:-1px;left:30%;right:30%;height:3px;background:var(--primary);border-radius:0 0 4px 4px}
 .app-content{flex:1;min-height:0;display:flex;flex-direction:column}
-.chat-messages{flex:1;overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch}
+.chat-messages{flex:1;overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch;position:relative}
+
+/* 咖啡杯 loader */
+.loader-wrap{display:flex;align-items:center;justify-content:center;flex:1;min-height:220px;width:100%}
+.loader {
+  width: 100px;height: 80px;position: relative;
+  display: flex;align-items: center;justify-content: center;
+}
+.loader .cup {
+  position: absolute;width: 25px;height: 18px;background-color: #fff;
+  border: 1px solid #2e2e2e;z-index: 1;
+  border-radius: 2px 2px 10px 10px;
+  animation: expansion 6s infinite ease-in-out;transform-origin: center;
+}
+.cup::after {
+  content: "";position: absolute;top: -2px;width: calc(100% - 2px);height: 2px;
+  background: #fed59fca;border: 1px solid #2e2e2ebe;border-radius: 50%;
+}
+.cup::before {
+  content: "";position: absolute;top: 15px;width: calc(100% - 2px);height: 4px;
+  background: #ffffff00;border: 1px solid #2e2e2e;border-top: none;border-radius: 50%;z-index: -1;
+}
+.loader .cup .cup-handle {
+  position: absolute;width: 5px;height: 10px;background-color: #fff;
+  border: 1px solid #2e2e2e;right: -5px;top: 2px;border-radius: 2px 10px 20px 2px;
+}
+.loader .cup .smoke {
+  position: absolute;bottom: 100%;left: 50%;width: 15px;height: 25px;
+  background: rgba(107, 102, 102, 0.433);border-radius: 50%;
+  transform: translateX(-50%);animation: rise 6s infinite ease-in-out;filter: blur(8px);
+}
+.loader .cup .smoke.one{animation-delay: 0s;}
+.loader .cup .smoke.two{animation-delay: 1s;}
+.loader .cup .smoke.three{animation-delay: 2s;}
+.loader .load {
+  position: absolute;font-size: 10px;opacity: 0.7;top: 45%;left: 50%;
+  transform: translateX(-50%);z-index: -1;letter-spacing:-1px;
+}
+@keyframes expansion {
+  0% {width: 25px;transform: translateX(0);}
+  40% {width: 100%;transform: translateX(0);}
+  80% {width: 25px;transform: translateX(64px);}
+  90% {width: 100%;transform: translateX(0);}
+  100% {width: 25px;transform: translateX(0);}
+}
+@keyframes rise {
+  0% {transform: translate(-50%, 0) scale(0.4);opacity: 0;}
+  30% {opacity: 0.7;}
+  60% {opacity: 0.4;}
+  100% {transform: translate(-50%, -120px) scale(1);opacity: 0;}
+}
 
 .row{display:flex;align-items:flex-start;gap:8px;max-width:85%;}
 .row.other{align-self:flex-start;}
@@ -52,6 +102,8 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .rp-card .rp-top{display:flex;align-items:center;gap:8px;font-weight:800;font-size:.88em;}
 .rp-card .rp-amt{font-size:1.4em;font-weight:900;margin-top:4px;}
 .rp-card .rp-sub{font-size:.7em;opacity:.9;margin-top:4px;}
+
+.empty-tip{text-align:center;padding:20px;color:var(--text-muted);font-size:.9em;margin:auto}
 
 .pill-bar{flex-shrink:0;display:flex;gap:8px;align-items:center;padding:8px 16px 0;overflow-x:auto;background:var(--bg)}
 .pill-btn{position:relative;display:inline-flex;align-items:center;gap:6px;padding:8px 22px;border-radius:999px;border:2px solid var(--border);background:var(--bg-card);color:var(--text);font-family:inherit;font-weight:700;font-size:.8em;cursor:pointer;white-space:nowrap;transition:.2s}
@@ -99,7 +151,19 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 <div id="mainApp">
   <div id="header-container"></div>
   <div class="app-content">
-    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="loader-wrap" id="chatLoader">
+        <div class="loader">
+          <div class="cup">
+            <div class="cup-handle"></div>
+            <div class="smoke one"></div>
+            <div class="smoke two"></div>
+            <div class="smoke three"></div>
+          </div>
+          <div class="load">..........................</div>
+        </div>
+      </div>
+    </div>
     <div class="pill-bar">
       <button class="pill-btn" onclick="location.href='./room.html'">房间</button>
     </div>
@@ -194,6 +258,7 @@ function renderHeaderUI(){
 renderHeaderUI();
 renderFooter('chats');
 
+/* ============== 在线状态 ============== */
 var onlineUsers={}, onlineChannel=null;
 function renderOnlineUsers(){
   var c=document.getElementById('onlineUserList'); if(!c)return;
@@ -226,7 +291,10 @@ function initPresence(){
 }
 document.getElementById('onlineBackBtn').onclick=function(){document.getElementById('onlineOverlay').classList.remove('open');};
 
+/* ============== 数据 & 增量渲染 ============== */
 var chats=[], rpList=[], myGrabs={}, usersCache={}, currentBubbleSkin=0;
+var renderedSet = {};       // 'c_<id>' / 'r_<id>'
+var realtimeChannel = null;
 
 async function loadBubbleSkin(){
   try {
@@ -237,20 +305,20 @@ async function loadBubbleSkin(){
 }
 
 async function fetchChats(){
-  var res=await window.sb.from('chats').select('*').order('created_at',{ascending:true});
-  if(res.error)throw res.error;
-  var data=res.data||[];
-  try{
-    var pr=await window.sb.from('public_profiles').select('id, nickname, avatar_url');
+  var res = await window.sb.from('chats').select('*').order('created_at',{ascending:true});
+  if(res.error) throw res.error;
+  var data = res.data || [];
+  try {
+    var pr = await window.sb.from('public_profiles').select('id, nickname, avatar_url');
     if(!pr.error){ (pr.data||[]).forEach(function(u){ usersCache[u.id]=u; }); }
-  }catch(e){}
+  } catch(e){}
   return data;
 }
 async function loadChatRedPackets(){
   try{
-    var res = await window.sb.from('red_packets').select('*').eq('scope', 'chat').order('created_at', { ascending: false }).limit(20);
+    var res = await window.sb.from('red_packets').select('*').eq('scope','chat').order('created_at',{ascending:false}).limit(20);
     if(res.error) throw res.error;
-    rpList = res.data || [];
+    rpList = (res.data || []).slice().reverse();
     await loadChatMyGrabs();
   }catch(e){ rpList = []; }
 }
@@ -263,65 +331,210 @@ async function loadChatMyGrabs(){
     (res.data || []).forEach(function(g){ myGrabs[g.packet_id] = g.amount; });
   }catch(e){}
 }
-function renderChat(){
-  var container=document.getElementById('chatMessages');
-  if(!chats.length && !rpList.length){container.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-muted);">还没有聊天消息</div>';return}
+
+function buildChatItemHtml(c){
+  var isSelf = currentUser && c.user_id === currentUser.id;
+  var ui = usersCache[c.user_id] || null;
+  var name = ui ? ui.nickname : (c.author || '匿名');
+  var avatarUrl = ui ? ui.avatar_url : null;
+  var av = (avatarUrl && String(avatarUrl).indexOf('http')===0)
+    ? '<div class="avatar" style="background-image:url(\''+safeUrl(avatarUrl)+'\');background-size:cover;background-position:center;"></div>'
+    : '<div class="avatar">'+escapeHtml(String(name).charAt(0).toUpperCase())+'</div>';
+  var skinCls = 'b' + currentBubbleSkin;
+  var rowCls = 'row ' + (isSelf ? 'self' : 'other') + (isSelf ? ' ' + skinCls : '');
+  return '<div class="'+rowCls+'" data-cid="'+escapeHtml(String(c.id||''))+'">'+av+
+    '<div class="bubble-wrap"><div class="uname">'+escapeHtml(name)+'</div>'+
+    '<div class="bubble">'+escapeHtml(c.content)+'</div></div></div>';
+}
+
+function buildRedPacketHtml(p){
+  var isSelf = currentUser && p.sender_id === currentUser.id;
+  var rpUi = usersCache[p.sender_id] || null;
+  var name = rpUi ? rpUi.nickname : (p.sender_name || '匿名');
+  var avatarUrl = rpUi ? rpUi.avatar_url : null;
+  var mine = myGrabs[p.id];
+  var finished = p.remaining_count <= 0;
+  var isEx = !!p.target_user_id;
+  var rpCls = (isEx?'exclusive ':'') + (mine!==undefined?'grabbed':(finished?'done':''));
+  var sub = '';
+  if (mine !== undefined) sub = isEx ? '专属红包 · 你已领取' : '你已领取 · 看看手气';
+  else if (finished) sub = '手慢了，红包已领完';
+  else if (isEx) sub = (p.target_user_id === currentUser.id) ? '专属红包 · 点击领取' : '专属红包（非指定人无法领取）';
+  else sub = '剩余 ' + p.remaining_count + '/' + p.count + ' 份';
+  var av = (avatarUrl && String(avatarUrl).indexOf('http')===0)
+    ? '<div class="avatar" style="background-image:url(\''+safeUrl(avatarUrl)+'\');background-size:cover;background-position:center;"></div>'
+    : '<div class="avatar">'+escapeHtml(String(name).charAt(0).toUpperCase())+'</div>';
+  return '<div class="row '+(isSelf?'self':'other')+'" data-rid="'+escapeHtml(String(p.id))+'">'+av+
+    '<div class="bubble-wrap"><div class="uname">'+escapeHtml(name)+'</div>'+
+    '<div class="rp-card '+rpCls+'" data-rp="'+p.id+'" onclick="openChatRedPacket(\''+p.id+'\')">'+
+    '<div class="rp-top"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:#fff;"><rect x="3" y="2" width="18" height="20" rx="2"/><path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2c-2.5 1.5-5.5 2.5-9 2.5S5.5 8.5 3 7V5Z" style="fill:#ffe082"/><circle cx="12" cy="15" r="2.5" style="fill:#e53935"/><rect x="11.2" y="14.2" width="1.6" height="1.6" style="fill:#fff"/></svg>'+
+    (isEx?'专属红包':'拼手气红包') + '</div>'+
+    (mine !== undefined ? '<div class="rp-amt">'+mine+' 币</div>' : '')+
+    '<div class="rp-sub">'+sub+'</div></div></div></div>';
+}
+
+function renderAll(){
+  var container = document.getElementById('chatMessages');
   var merged = [];
   chats.forEach(function(c){ merged.push({ kind:'chat', t:new Date(c.created_at).getTime(), data:c }); });
   rpList.forEach(function(p){ merged.push({ kind:'rp', t:new Date(p.created_at).getTime(), data:p }); });
   merged.sort(function(a,b){ return a.t - b.t; });
-  var skinCls = 'b' + currentBubbleSkin;
-  var html='';
-  merged.forEach(function(item){
-    var isSelf, name, avatarUrl;
-    if(item.kind === 'chat') {
-      var c = item.data;
-      isSelf = currentUser && c.user_id === currentUser.id;
-      var ui = usersCache[c.user_id] || null;
-      name = ui ? ui.nickname : c.author;
-      avatarUrl = ui ? ui.avatar_url : null;
-      var av = (avatarUrl && String(avatarUrl).indexOf('http')===0) ? '<div class="avatar" style="background-image:url(\''+safeUrl(avatarUrl)+'\');background-size:cover;background-position:center;"></div>' : '<div class="avatar">'+escapeHtml(String(name).charAt(0).toUpperCase())+'</div>';
-      var rowCls = 'row ' + (isSelf ? 'self' : 'other') + (isSelf ? ' ' + skinCls : '');
-      html+='<div class="'+rowCls+'">'+av+'<div class="bubble-wrap"><div class="uname">'+escapeHtml(name)+'</div><div class="bubble">'+escapeHtml(c.content)+'</div></div></div>';
-    } else {
-      var p = item.data;
-      isSelf = currentUser && p.sender_id === currentUser.id;
-      var rpUi = usersCache[p.sender_id] || null;
-      name = rpUi ? rpUi.nickname : p.sender_name;
-      avatarUrl = rpUi ? rpUi.avatar_url : null;
-      var mine = myGrabs[p.id];
-      var finished = p.remaining_count <= 0;
-      var isEx = !!p.target_user_id;
-      var rpCls = (isEx?'exclusive ':'') + (mine!==undefined?'grabbed':(finished?'done':''));
-      var sub = '';
-      if(mine !== undefined) sub = isEx ? '专属红包 · 你已领取' : '你已领取 · 看看手气';
-      else if(finished) sub = '手慢了，红包已领完';
-      else if(isEx) sub = (p.target_user_id === currentUser.id) ? '专属红包 · 点击领取' : '专属红包（非指定人无法领取）';
-      else sub = '剩余 ' + p.remaining_count + '/' + p.count + ' 份';
-      var av = (avatarUrl && String(avatarUrl).indexOf('http')===0) ? '<div class="avatar" style="background-image:url(\''+safeUrl(avatarUrl)+'\');background-size:cover;background-position:center;"></div>' : '<div class="avatar">'+escapeHtml(String(name).charAt(0).toUpperCase())+'</div>';
-      html += '<div class="row '+(isSelf?'self':'other')+'">'+av+'<div class="bubble-wrap"><div class="uname">'+escapeHtml(name)+'</div><div class="rp-card '+rpCls+'" data-rp="'+p.id+'" onclick="openChatRedPacket(\''+p.id+'\')"><div class="rp-top"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:#fff;"><rect x="3" y="2" width="18" height="20" rx="2"/><path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2c-2.5 1.5-5.5 2.5-9 2.5S5.5 8.5 3 7V5Z" style="fill:#ffe082"/><circle cx="12" cy="15" r="2.5" style="fill:#e53935"/><rect x="11.2" y="14.2" width="1.6" height="1.6" style="fill:#fff"/></svg>'+(isEx?'专属红包':'拼手气红包') + '</div>'+(mine !== undefined ? '<div class="rp-amt">'+mine+' 币</div>' : '')+'<div class="rp-sub">'+sub+'</div></div></div></div>';
-    }
-  });
-  container.innerHTML=html;
-  container.scrollTop=container.scrollHeight;
-}
-async function loadAllChats(){
-  try{
-    chats = await fetchChats();
-    await loadChatRedPackets();
-  }catch(e){ showToast('数据加载失败') }
-  renderChat();
-}
-async function sendChat(){
-  var input=document.getElementById('chatInput'),content=input.value.trim();
-  if(!content){showToast('请输入内容');return}
-  var btn=document.getElementById('sendChatBtn'); btn.disabled=true;
-  try {
-    await window.sb.from('chats').insert([{user_id:currentUser.id,author:currentUser.nickname,content:content}]);
-    input.value=''; loadAllChats();
-  } catch(e) { showToast('发送失败：'+e.message); } finally { btn.disabled=false; }
+  renderedSet = {};
+  if (!merged.length) {
+    container.innerHTML = '<div class="empty-tip">还没有聊天消息，说点什么吧～</div>';
+    return;
+  }
+  var html = merged.map(function(it){
+    renderedSet[(it.kind==='chat'?'c_':'r_') + it.data.id] = true;
+    return it.kind==='chat' ? buildChatItemHtml(it.data) : buildRedPacketHtml(it.data);
+  }).join('');
+  container.innerHTML = html;
+  container.scrollTop = container.scrollHeight;
 }
 
+function appendChat(c){
+  if (!c || !c.id) return;
+  if (renderedSet['c_' + c.id]) return;
+  renderedSet['c_' + c.id] = true;
+  var container = document.getElementById('chatMessages');
+  var tip = container.querySelector('.empty-tip');
+  if (tip) tip.remove();
+  var tmp = document.createElement('div');
+  tmp.innerHTML = buildChatItemHtml(c);
+  var node = tmp.firstElementChild;
+  if (!node) return;
+  container.appendChild(node);
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendRedPacket(p){
+  if (!p || !p.id) return;
+  if (renderedSet['r_' + p.id]) return;
+  renderedSet['r_' + p.id] = true;
+  var container = document.getElementById('chatMessages');
+  var tip = container.querySelector('.empty-tip');
+  if (tip) tip.remove();
+  var tmp = document.createElement('div');
+  tmp.innerHTML = buildRedPacketHtml(p);
+  var node = tmp.firstElementChild;
+  if (!node) return;
+  container.appendChild(node);
+  container.scrollTop = container.scrollHeight;
+}
+
+function refreshRedPacket(p){
+  if (!p || !p.id) return;
+  var row = document.querySelector('.row[data-rid="' + p.id + '"]');
+  if (!row) return;
+  var tmp = document.createElement('div');
+  tmp.innerHTML = buildRedPacketHtml(p);
+  var newNode = tmp.firstElementChild;
+  if (!newNode) return;
+  row.parentNode.replaceChild(newNode, row);
+}
+
+function ensureUserCached(uid, cb){
+  if (!uid) return cb();
+  if (usersCache[uid]) return cb();
+  window.sb.from('public_profiles').select('id, nickname, avatar_url').eq('id', uid).maybeSingle().then(function(r){
+    if (r.data) usersCache[uid] = r.data;
+    cb();
+  }).catch(function(){ cb(); });
+}
+
+/* ============== Realtime 增量订阅 ============== */
+function initRealtime(){
+  try {
+    if (realtimeChannel) { try { window.sb.removeChannel(realtimeChannel); } catch(e){} realtimeChannel = null; }
+    realtimeChannel = window.sb.channel('chats-page-live-' + currentUser.id);
+
+    realtimeChannel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats' }, function(payload){
+      var c = payload.new;
+      if (!c || !c.id) return;
+      if (renderedSet['c_' + c.id]) return;         // 自己发的已经乐观渲染过
+      if (!chats.find(function(x){ return x.id === c.id; })) chats.push(c);
+      ensureUserCached(c.user_id, function(){
+        // 用真实 id 但内容可能缺 author，构建时兜底
+        appendChat(c);
+      });
+    });
+
+    realtimeChannel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'red_packets' }, function(payload){
+      var p = payload.new;
+      if (!p || p.scope !== 'chat') return;
+      if (renderedSet['r_' + p.id]) return;
+      if (!rpList.find(function(x){ return x.id === p.id; })) rpList.push(p);
+      ensureUserCached(p.sender_id, function(){ appendRedPacket(p); });
+    });
+
+    realtimeChannel.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'red_packets' }, function(payload){
+      var p = payload.new;
+      if (!p || !p.id) return;
+      var i = rpList.findIndex(function(x){ return x.id === p.id; });
+      if (i >= 0) rpList[i] = p; else return;
+      refreshRedPacket(p);
+    });
+
+    realtimeChannel.subscribe();
+    window.__chatsPageChannel = realtimeChannel;
+  } catch(e) { /* 忽略 */ }
+}
+
+/* ============== 发送消息：乐观追加 ============== */
+var sendLock = false;
+async function sendChat(){
+  if (sendLock) return;
+  var input = document.getElementById('chatInput');
+  var content = input.value.trim();
+  if (!content) { showToast('请输入内容'); return; }
+
+  var tempId = 'temp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  var tempC = {
+    id: tempId,
+    user_id: currentUser.id,
+    author: currentUser.nickname,
+    content: content,
+    created_at: new Date().toISOString()
+  };
+
+  input.value = '';
+  chats.push(tempC);
+  appendChat(tempC);
+
+  sendLock = true;
+  var btn = document.getElementById('sendChatBtn'); btn.disabled = true;
+  try {
+    var r = await window.sb.from('chats')
+      .insert([{ user_id: currentUser.id, author: currentUser.nickname, content: content }])
+      .select();
+    if (r.error) throw r.error;
+
+    // 用真实 id 把乐观条目接管过来
+    if (r.data && r.data[0] && r.data[0].id) {
+      var real = r.data[0];
+      var idx = chats.findIndex(function(x){ return x.id === tempId; });
+      if (idx >= 0) chats[idx] = real; else chats.push(real);
+      var node = document.querySelector('.row[data-cid="' + tempId + '"]');
+      if (node) node.dataset.cid = real.id;
+      delete renderedSet['c_' + tempId];
+      renderedSet['c_' + real.id] = true;
+    }
+  } catch(e) {
+    // 发送失败，移除乐观条目
+    var badNode = document.querySelector('.row[data-cid="' + tempId + '"]');
+    if (badNode) badNode.remove();
+    var j = chats.findIndex(function(x){ return x.id === tempId; });
+    if (j >= 0) chats.splice(j, 1);
+    delete renderedSet['c_' + tempId];
+    showToast('发送失败：' + (e.message || '网络错误'));
+    input.value = content; // 归还内容，方便重发
+  } finally {
+    btn.disabled = false;
+    sendLock = false;
+  }
+}
+
+/* ============== 发红包 ============== */
 var crpType = 'group';
 document.getElementById('chatRedPacketBtn').onclick = function(){
   document.getElementById('crpTotal').value = '';
@@ -372,10 +585,27 @@ document.getElementById('crpSendBtn').onclick = async function(){
     showToast('红包已发出');
     document.getElementById('rpBackdrop').classList.remove('open');
     document.getElementById('rpSheet').classList.remove('open');
-    await loadAllChats();
+
+    // 主动获取刚发的红包并本地追加（不依赖 realtime 是否开启）
+    try {
+      var sentAt = new Date(Date.now() - 5000).toISOString();
+      var q = await window.sb.from('red_packets')
+        .select('*')
+        .eq('scope','chat')
+        .eq('sender_id', currentUser.id)
+        .gt('created_at', sentAt)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      if (q.data && q.data[0]) {
+        var np = q.data[0];
+        if (!rpList.find(function(x){ return x.id === np.id; })) rpList.push(np);
+        ensureUserCached(np.sender_id, function(){ appendRedPacket(np); });
+      }
+    } catch(_ignored) {}
   }catch(e){ showToast('发送失败：' + e.message); } finally { this.disabled = false; }
 };
 
+/* ============== 抢红包：仅更新对应卡片 ============== */
 async function openChatRedPacket(packetId){
   var p = rpList.find(function(x){ return String(x.id) === String(packetId); });
   if(!p) return;
@@ -388,17 +618,29 @@ async function openChatRedPacket(packetId){
       var d = res.data;
       if(d && d.ok){
         showToast('手气不错，抢到 ' + d.amount + ' 币！');
+        myGrabs[p.id] = d.amount;
+        // 拉一次该红包最新状态（remaining_count 会变）
+        try {
+          var q = await window.sb.from('red_packets').select('*').eq('id', p.id).maybeSingle();
+          if (q.data) {
+            p = q.data;
+            var i = rpList.findIndex(function(x){ return x.id === p.id; });
+            if (i >= 0) rpList[i] = p;
+          }
+        } catch(_ignored) {}
+        refreshRedPacket(p);
         try{ var u = await window.sb.rpc('get_my_profile'); if(u.data){ currentUser.coins = u.data.coins; setSessionUser(currentUser); } }catch(e){}
-        await loadAllChats();
-        p = rpList.find(function(x){ return String(x.id) === String(packetId); }) || p;
-        mine = myGrabs[p.id];
       } else {
         showToast((d && d.message) || '领取失败');
-        await loadAllChats(); return;
+        try {
+          var q2 = await window.sb.from('red_packets').select('*').eq('id', p.id).maybeSingle();
+          if (q2.data) { p = q2.data; var j = rpList.findIndex(function(x){ return x.id === p.id; }); if (j>=0) rpList[j]=p; refreshRedPacket(p); }
+        } catch(_ignored) {}
+        return;
       }
     }catch(e){ showToast('领取失败：' + e.message); return; }
   }
-  showChatRedPacketDetail(p, mine);
+  showChatRedPacketDetail(p, myGrabs[p.id]);
 }
 
 async function showChatRedPacketDetail(p, myAmount){
@@ -442,8 +684,34 @@ document.getElementById('rpDetailBackdrop').onclick = function() {
 document.getElementById('sendChatBtn').onclick = sendChat;
 document.getElementById('chatInput').onkeydown = function(e){ if(e.key==='Enter') sendChat(); };
 
-loadBubbleSkin().then(function(){ loadAllChats(); });
-initPresence();
+/* ============== 启动流程 ============== */
+(async function initChatPage(){
+  await loadBubbleSkin();
+
+  try {
+    chats = await fetchChats();
+  } catch(e) {
+    chats = [];
+  }
+
+  try {
+    await loadChatRedPackets();
+  } catch(e) {
+    rpList = [];
+  }
+
+  // 渲染（renderAll 会覆盖掉 loader，加载完后消息正常显示）
+  renderAll();
+
+  // 增量订阅
+  initRealtime();
+
+  // 在线状态
+  initPresence();
+
+  // 隐藏 common.js 的整页 loading 遮罩
+  if (window.hidePageLoading) window.hidePageLoading();
+})();
 </script>
 </body>
 </html>
