@@ -2,9 +2,293 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>跳转中...</title>
-<script>window.location.replace('./user.html');</script>
+<link rel="manifest" href="./manifest.json" />
+<meta name="theme-color" content="#2e7d32" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Seven戚 · 中心</title>
+<script src="./vendor/supabase.js"></script>
+<script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/script>');</script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:#f5faf5; --bg-card:#fff; --bg-input:#eaf3ea; --border:#c8e0c8;
+  --text:#1e3a2e; --text-muted:#5a7a6a; --text-light:#8aaa9a;
+  --primary:#2e7d32; --primary-light:#4caf50; --primary-bg:#e8f5e9;
+  --shadow:0 8px 32px rgba(46,125,50,.12); --radius:16px; --radius-sm:10px;
+  --font:"Space Grotesk","PingFang SC","Segoe UI",system-ui,sans-serif;
+  --danger:#e57373; --danger-bg:#ffebee;
+}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);overflow:hidden}
+#mainApp{display:flex;flex-direction:column;height:100vh;height:100dvh}
+
+.app-header{flex-shrink:0;padding:12px 16px;background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;z-index:50;min-height:56px}
+.app-header .back-btn{background:none;border:none;cursor:pointer;padding:6px;color:var(--text);display:flex;border-radius:8px;}
+.app-header .back-btn svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.app-header .title{font-weight:700;font-size:1.05em;flex:1;}
+
+.page-content{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch;}
+.view{display:none;width:100%;max-width:600px;margin:0 auto;}
+.view.active{display:block;animation:fadeIn .3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* 总面板的宫格 */
+.home-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 12px;margin-top:20px;}
+.home-cell{background:var(--bg-card);border-radius:var(--radius-sm);padding:16px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;box-shadow:0 2px 8px rgba(46,125,50,.05);border:1px solid var(--border);transition:transform .2s;}
+.home-cell:active{transform:scale(.95);}
+.home-cell .ic{width:44px;height:44px;border-radius:50%;background:var(--primary-bg);display:grid;place-items:center;color:var(--primary);}
+.home-cell .ic svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.home-cell .tx{font-size:.85em;font-weight:600;}
+
+/* 设置列表 */
+.settings-card{background:var(--bg-card);border-radius:var(--radius);padding:1.5em;width:100%;box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:16px;}
+.settings-title{font-size:.75em;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+.settings-item{display:flex;align-items:center;justify-content:space-between;padding:12px 10px;border-bottom:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:4px;}
+.settings-item:last-child{border-bottom:none;margin-bottom:0}
+.settings-item .item-left{display:flex;align-items:center;gap:12px}
+.settings-item .item-icon{width:38px;height:38px;border-radius:50%;background:var(--primary-bg);display:grid;place-items:center;flex-shrink:0;color:var(--primary)}
+.settings-item .item-icon svg{width:20px;height:20px}
+.settings-item .item-label{font-size:.95em;font-weight:600;color:var(--text)}
+
+/* 消息 */
+.ntf-card{display:flex;align-items:flex-start;gap:12px;padding:14px 12px;border-radius:12px;margin-bottom:8px;background:var(--bg-card);border:1px solid var(--border);cursor:pointer}
+.ntf-card.unread{background:linear-gradient(135deg,#f0faf0 0%,#ffffff 100%);border-color:var(--primary)}
+.ntf-type-icon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;background:var(--primary-bg);color:var(--primary)}
+.ntf-type-icon svg{width:20px;height:20px}
+.ntf-body{flex:1;min-width:0}
+.ntf-title{font-size:.9em;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:2px}
+.ntf-snippet{font-size:.8em;color:var(--text-muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:4px}
+.ntf-meta{font-size:.7em;color:var(--text-light);display:flex;align-items:center;gap:8px}
+.ntf-empty{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:.9em}
+
+/* 加载中 */
+.loading-wrap{text-align:center;padding:50px 20px;display:flex;flex-direction:column;align-items:center;}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:.85em;color:var(--text-muted);}
+
+.field-group{margin-bottom:16px}
+.field-group label{display:block;font-size:.78em;font-weight:700;color:var(--text-muted);margin-bottom:6px}
+.field-group textarea,.field-group input{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:10px;font-family:inherit;font-size:.9em;outline:none;background:var(--bg-input);color:var(--text);box-sizing:border-box}
+.field-group textarea{min-height:80px;resize:vertical}
+.btn-primary{width:100%;padding:12px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-weight:700;font-size:.95em;cursor:pointer;}
+.btn-danger{width:100%;padding:12px;border-radius:10px;border:none;background:var(--danger-bg);color:var(--danger);font-weight:700;font-size:.95em;cursor:pointer;}
+.toggle-switch { display: inline-block; position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+.toggle-input { display: none; }
+.toggle-label { position: absolute; top: 0; left: 0; width: 46px; height: 26px; background-color: #ccc; border-radius: 26px; cursor: pointer; transition: background-color 0.3s ease; }
+.toggle-label::before { content: ""; position: absolute; top: 2px; left: 2px; width: 22px; height: 22px; background-color: #fff; border-radius: 50%; transition: transform 0.3s ease; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+.toggle-input:checked + .toggle-label { background-color: var(--primary); }
+.toggle-input:checked + .toggle-label::before { transform: translateX(20px); }
+</style>
 </head>
-<body style="background:#f5faf5;"></body>
+<body>
+<div id="mainApp">
+  <div class="app-header">
+    <button class="back-btn" onclick="goBack()">
+      <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <span class="title" id="pageTitle">功能中心</span>
+  </div>
+
+  <div class="page-content">
+    <!-- 总览：所有宫格功能 -->
+    <div class="view" id="homeView">
+      <div class="home-grid">
+        <div class="home-cell" onclick="switchView('messages')">
+          <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 4h16v12H5.17L4 17.17V4z"/></svg></div>
+          <div class="tx">消息中心</div>
+        </div>
+        <div class="home-cell" onclick="switchView('settings')">
+          <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+          <div class="tx">设置中心</div>
+        </div>
+        <div class="home-cell" onclick="location.href='./shop.html'">
+          <div class="ic"><svg viewBox="0 0 24 24"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M3 9h18"/><path d="M9 13a3 3 0 0 0 6 0"/></svg></div>
+          <div class="tx">皮肤商店</div>
+        </div>
+        <div class="home-cell" onclick="location.href='./assets.html'">
+          <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h5M9.5 14.5h5"/></svg></div>
+          <div class="tx">我的资产</div>
+        </div>
+        <div class="home-cell" onclick="location.href='./activity.html'">
+          <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 5.9 6.4.5-4.9 4.2 1.5 6.3L12 15.8 6.6 18.9l1.5-6.3L3.2 8.4l6.4-.5z"/></svg></div>
+          <div class="tx">活动</div>
+        </div>
+        <div class="home-cell" onclick="switchView('about')">
+          <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+          <div class="tx">关于我们</div>
+        </div>
+        <div class="home-cell" onclick="switchView('feedback')">
+          <div class="ic"><svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div class="tx">反馈 Bug</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 消息中心 -->
+    <div class="view" id="messagesView">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span style="font-weight:700;font-size:1.1em;">消息中心</span>
+        <button onclick="markAllRead()" style="background:none;border:none;color:var(--primary);font-size:.75em;font-weight:600;cursor:pointer;">全部已读</button>
+      </div>
+      <div id="notificationList">
+        <div class="loading-wrap">
+          <div class="spinner"></div>
+          <div class="loading-text">正在加载消息...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 设置中心 -->
+    <div class="view" id="settingsView">
+      <div class="settings-card">
+        <div class="settings-title">设置中心</div>
+        <div class="settings-item">
+          <div class="item-left">
+            <div class="item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></div>
+            <div class="item-label">提醒音效</div>
+          </div>
+          <label class="toggle-switch">
+            <input class="toggle-input" type="checkbox" id="soundToggle" />
+            <label class="toggle-label" for="soundToggle"></label>
+          </label>
+        </div>
+      </div>
+      <button class="btn-danger" onclick="doLogout()">退出登录</button>
+    </div>
+
+    <!-- 反馈 Bug -->
+    <div class="view" id="feedbackView">
+      <div class="settings-card">
+        <div class="settings-title">反馈 Bug</div>
+        <div class="field-group">
+          <label>问题描述</label>
+          <textarea id="fbContent" placeholder="请详细描述你遇到的问题..."></textarea>
+        </div>
+        <div class="field-group">
+          <label>联系方式（选填）</label>
+          <input type="text" id="fbContact" placeholder="QQ / 微信" />
+        </div>
+        <button class="btn-primary" onclick="submitFeedback()">提交反馈</button>
+      </div>
+    </div>
+
+    <!-- 关于我们 -->
+    <div class="view" id="aboutView">
+      <div class="settings-card" style="text-align:center;padding:30px 20px;">
+        <img src="https://i.ibb.co/Y4rD6F2Y/b-8ee0f1b16f3c823eeff690735ca17e1f.jpg" style="width:100px;height:100px;border-radius:50%;margin-bottom:16px;">
+        <h2 style="margin-bottom:8px;">Seven戚</h2>
+        <div style="font-size:.8em;color:var(--text-muted);margin-bottom:20px;">全栈开发者 · 社区创始人</div>
+        <div style="font-size:.9em;line-height:1.6;color:var(--text);">多多推广本网站，谢谢你们 Thanks♪(･ω･)ﾉ</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="./common.js"></script>
+<script>
+var currentUser = getSessionUser();
+if (!currentUser || !currentUser.id) window.location.href = './index.html';
+
+function $(id){ return document.getElementById(id); }
+function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+
+// 切换视图及标题
+function switchView(viewName) {
+  ['homeView', 'messagesView', 'settingsView', 'feedbackView', 'aboutView'].forEach(function(id) {
+    $(id).classList.toggle('active', id === viewName + 'View');
+  });
+  var title = '功能中心';
+  if (viewName === 'messages') { title = '消息中心'; loadNotifications(); }
+  else if (viewName === 'settings') { title = '设置中心'; initSoundToggle(); }
+  else if (viewName === 'feedback') { title = '反馈 Bug'; }
+  else if (viewName === 'about') { title = '关于我们'; }
+  $('pageTitle').textContent = title;
+}
+
+// 返回逻辑：如果不是首页，就退回首页；如果是首页，就退回个人主页 user.html
+function goBack() {
+  var activeView = document.querySelector('.view.active');
+  if (activeView && activeView.id !== 'homeView') {
+    switchView('home');
+  } else {
+    window.location.href = './user.html';
+  }
+}
+window.goBack = goBack;
+
+// ---------- 业务逻辑 ----------
+async function loadNotifications() {
+  var listEl = $('notificationList');
+  try {
+    var r = await window.sb.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(50);
+    var list = r.data || [];
+    if (!list.length) {
+      listEl.innerHTML = '<div class="ntf-empty">暂无消息</div>';
+      return;
+    }
+    var h = '';
+    list.forEach(function(n) {
+      h += '<div class="ntf-card ' + (!n.is_read ? 'unread' : '') + '">';
+      h += '<div class="ntf-type-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>';
+      h += '<div class="ntf-body"><div class="ntf-title">' + escapeHtml(n.title || n.extra_text || '新消息') + '</div>';
+      h += '<div class="ntf-snippet">' + escapeHtml(n.body || n.extra_text || '') + '</div>';
+      h += '<div class="ntf-meta">' + (n.created_at ? new Date(n.created_at).toLocaleString('zh-CN') : '') + '</div></div></div>';
+    });
+    listEl.innerHTML = h;
+  } catch(e) {
+    listEl.innerHTML = '<div class="ntf-empty">加载失败</div>';
+  }
+}
+
+async function markAllRead() {
+  try {
+    await window.sb.from('notifications').update({ is_read: true }).eq('user_id', currentUser.id).eq('is_read', false);
+    loadNotifications();
+  } catch(e) {}
+}
+
+function initSoundToggle() {
+  var soundEnabled = localStorage.getItem('sq_sound_enabled') !== 'false';
+  var t = $('soundToggle');
+  if (t) {
+    t.checked = soundEnabled;
+    t.onchange = function() { localStorage.setItem('sq_sound_enabled', this.checked ? 'true' : 'false'); };
+  }
+}
+
+async function submitFeedback() {
+  var content = $('fbContent').value.trim();
+  var contact = $('fbContact').value.trim();
+  if (!content) return alert('请填写问题描述');
+  try {
+    await window.sb.from('feedback').insert([{ user_id: currentUser.id, content: content, contact: contact, status: 'pending' }]);
+    alert('反馈已提交，感谢您！');
+    goBack(); // 提交成功自动回首页
+  } catch (e) { alert('提交失败：' + e.message); }
+}
+window.submitFeedback = submitFeedback;
+
+async function doLogout() {
+  if (confirm('确定要退出登录吗？')) {
+    await clearSession();
+    location.href = './index.html';
+  }
+}
+window.doLogout = doLogout;
+
+// 初始化路由
+(function init() {
+  var params = new URLSearchParams(location.search);
+  var view = params.get('view') || 'home';
+  
+  if (view === 'messages') switchView('messages');
+  else if (view === 'settings') switchView('settings');
+  else if (view === 'feedback') switchView('feedback');
+  else if (view === 'about') switchView('about');
+  else switchView('home'); // 默认显示所有功能面板
+  
+  if (window.hidePageLoading) window.hidePageLoading();
+})();
+</script>
+</body>
 </html>
