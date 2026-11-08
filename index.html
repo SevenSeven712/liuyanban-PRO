@@ -195,10 +195,7 @@ var DOMESTIC_EMAIL_REGEX = /^[a-zA-Z0-9_.-]+@(qq|vip\.qq|foxmail|163|126|yeah|si
 
 async function fetchMyProfileServer() {
     if (!window.sb) return null;
-    try {
-        var r = await window.sb.rpc('get_my_profile');
-        if (!r.error && r.data) return Array.isArray(r.data) ? r.data[0] : r.data;
-    } catch (e) {}
+    try { var r = await window.sb.rpc('get_my_profile'); if (!r.error && r.data) return Array.isArray(r.data) ? r.data[0] : r.data; } catch (e) {}
     return null;
 }
 
@@ -211,10 +208,8 @@ async function ensureProfileFromAuth(nickname) {
         var nick = nickname || (me.user_metadata && me.user_metadata.nickname) || (me.email || '').split('@')[0];
         var ip = '0.0.0.0';
         try { var res = await fetch('https://api.ipify.org?format=json'); ip = (await res.json()).ip; } catch(e) {}
-        
         var r = await window.sb.rpc('register_profile', { p_nickname: nick, p_ip: ip, p_uid: null });
         if (!r.error) return await fetchMyProfileServer();
-        
         var ins = await window.sb.from('users').insert([{ id: me.id, nickname: nick, ip_address: ip }]).select();
         if (!ins.error && ins.data[0]) return ins.data[0];
         return await fetchMyProfileServer();
@@ -228,19 +223,17 @@ function saveLocalSession(profile) {
 }
 
 async function doLogin() {
-    if (!window.sb) return alert('网络组件未加载完毕，请稍后重试');
+    if (!window.sb) return alert('网络组件未加载完毕');
     var email = document.getElementById('loginEmail').value.trim();
     var password = document.getElementById('loginPassword').value;
     var errEl = document.getElementById('loginError');
     if (!email || !password) return errEl.textContent = '请填写邮箱和密码';
-    
     errEl.textContent = '登录中...';
     try {
         var res = await window.sb.auth.signInWithPassword({ email, password });
         if (res.error) throw new Error('账号或密码错误');
         var profile = await fetchMyProfileServer() || await ensureProfileFromAuth();
         if (!profile) throw new Error('档案补建失败');
-        
         if (profile.is_admin === true) {
             var code = prompt('【管理员验证】请输入 6 位验证码：');
             if(!code) throw new Error('必须输入验证码');
@@ -254,35 +247,25 @@ async function doLogin() {
 }
 
 async function doRegister() {
-    if (!window.sb) return alert('网络组件未加载完毕，请稍后重试');
+    if (!window.sb) return alert('网络组件未加载完毕');
     var nickname = document.getElementById('regNick').value.trim();
     var email = document.getElementById('regEmail').value.trim();
     var pwd = document.getElementById('regPassword').value;
     var pwd2 = document.getElementById('regPassword2').value;
     var errEl = document.getElementById('registerError');
-    
     if (!nickname || !email || !pwd) return errEl.textContent = '请填写完整信息';
     if (!DOMESTIC_EMAIL_REGEX.test(email)) return errEl.textContent = '仅支持 QQ、163、126 等国内常用邮箱';
     if (pwd !== pwd2) return errEl.textContent = '两次密码不一致';
-    
     errEl.textContent = '注册中...';
     try {
         var res = await window.sb.auth.signUp({ email, password: pwd, options: { data: { nickname: nickname } } });
         if (res.error) {
             var msg = res.error.message;
-            if (msg.includes('rate limit') || msg.includes('Email rate limit exceeded')) {
-                errEl.innerHTML = '⚠️ <b>今日邮箱发送数量已达上限</b><br>请直接添加 <b>站主QQ：2103686588</b> 为您补号。';
-                return;
-            }
+            if (msg.includes('rate limit') || msg.includes('Email rate limit exceeded')) { errEl.innerHTML = '⚠️ <b>今日邮箱发送数量已达上限</b><br>请直接添加 <b>站主QQ：2103686588</b> 为您补号。'; return; }
             if (msg.includes('already registered')) throw new Error('该邮箱已注册');
             throw new Error(msg);
         }
-        if (!res.data.session) {
-            alert('注册成功，请去邮箱查收验证邮件后再登录。\n(注：如未收到邮件，请检查垃圾箱或联系站主QQ 2103686588)');
-            switchCard('login');
-            document.getElementById('loginEmail').value = email;
-            return;
-        }
+        if (!res.data.session) { alert('注册成功，请去邮箱查收验证邮件后再登录。\n(注：如未收到邮件，请检查垃圾箱或联系站主QQ 2103686588)'); switchCard('login'); document.getElementById('loginEmail').value = email; return; }
         await ensureProfileFromAuth(nickname);
         document.getElementById('authScreen').classList.add('hide');
         setTimeout(() => window.location.href = './posts.html', 400);
@@ -290,12 +273,8 @@ async function doRegister() {
 }
 
 function switchCard(which) {
-    ['loginCard', 'registerCard'].forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) el.classList.toggle('active', id === which + 'Card');
-    });
-    document.getElementById('loginError').textContent = '';
-    document.getElementById('registerError').textContent = '';
+    ['loginCard', 'registerCard'].forEach(function (id) { var el = document.getElementById(id); if (el) el.classList.toggle('active', id === which + 'Card'); });
+    document.getElementById('loginError').textContent = ''; document.getElementById('registerError').textContent = '';
     if (which === 'login') document.getElementById('regEmailHint').textContent = '';
 }
 
@@ -311,17 +290,9 @@ function switchCard(which) {
             bootText.appendChild(span);
         });
     }
-
     var isBootShown = sessionStorage.getItem('index_boot_shown');
-    if (isBootShown) {
-        document.getElementById('bootScreen').style.display = 'none';
-    } else {
-        sessionStorage.setItem('index_boot_shown', '1');
-        setTimeout(function() {
-            document.getElementById('bootScreen').classList.add('hide');
-            setTimeout(function() { document.getElementById('bootScreen').style.display = 'none'; }, 800);
-        }, 1500); 
-    }
+    if (isBootShown) { document.getElementById('bootScreen').style.display = 'none'; }
+    else { sessionStorage.setItem('index_boot_shown', '1'); setTimeout(function() { document.getElementById('bootScreen').classList.add('hide'); setTimeout(function() { document.getElementById('bootScreen').style.display = 'none'; }, 800); }, 1500); }
 
     document.getElementById('toRegisterBtn').onclick = function() { switchCard('register'); };
     document.getElementById('toLoginBtn').onclick = function() { switchCard('login'); };
@@ -343,10 +314,7 @@ function switchCard(which) {
         document.querySelectorAll('.intro-dots .dot').forEach(function(el, i) { el.classList.toggle('active', i === idx); });
         document.getElementById('introNextBtn').textContent = idx === totalSlides - 1 ? '开启体验' : '下一步';
     }
-    document.getElementById('introNextBtn').onclick = function() {
-        if (currentSlide < totalSlides - 1) updateSlide(currentSlide + 1);
-        else finishIntro();
-    };
+    document.getElementById('introNextBtn').onclick = function() { if (currentSlide < totalSlides - 1) updateSlide(currentSlide + 1); else finishIntro(); };
     document.getElementById('introSkipBtn').onclick = finishIntro;
     function finishIntro() {
         localStorage.setItem('seven_intro_shown_v6', '1');
@@ -359,16 +327,11 @@ function switchCard(which) {
             if (s.data && s.data.session) return fetchMyProfileServer().then(function(p) { return p || ensureProfileFromAuth(); });
             return null;
         }).then(function(profile) {
-            if (profile) {
-                saveLocalSession(profile);
-                window.location.replace('./posts.html');
-                return;
-            }
+            if (profile) { saveLocalSession(profile); window.location.replace('./posts.html'); return; }
             var urlParams = new URLSearchParams(location.search);
             var isLoginIntent = urlParams.get('login') === '1';
             var hasSeenIntro = localStorage.getItem('seven_intro_shown_v6');
             var isReferrerInternal = document.referrer && document.referrer.includes(window.location.host);
-
             if (isLoginIntent || isReferrerInternal) document.getElementById('authScreen').style.display = 'flex';
             else if (!hasSeenIntro) document.getElementById('introScreen').style.display = 'flex';
             else window.location.replace('./messages.html');
@@ -376,9 +339,7 @@ function switchCard(which) {
             if (document.getElementById('introScreen').style.display !== 'flex' && document.getElementById('authScreen').style.display !== 'flex') document.getElementById('introScreen').style.display = 'flex';
         });
     } else {
-        setTimeout(function(){
-            if (document.getElementById('introScreen').style.display !== 'flex' && document.getElementById('authScreen').style.display !== 'flex') document.getElementById('introScreen').style.display = 'flex';
-        }, 1500);
+        setTimeout(function(){ if (document.getElementById('introScreen').style.display !== 'flex' && document.getElementById('authScreen').style.display !== 'flex') document.getElementById('introScreen').style.display = 'flex'; }, 1500);
     }
 })();
 </script>
