@@ -4,8 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>设置专属UID</title>
-    <script src="./vendor/supabase.js"></script>
-<script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/script>');</script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -65,11 +64,11 @@
         <div class="error" id="errMsg"></div>
     </div>
 
-    <script src="./common.js"></script>
+    <script src="/liuyanban/common.js"></script>
     <script>
         var user = getSessionUser();
-        if (!user || !user.id) window.location.href = './index.html';
-        if (user.custom_uid) window.location.href = './user.html';
+        if (!user || !user.id) window.location.href = '/liuyanban/index.html';
+        if (user.custom_uid) window.location.href = '/liuyanban/user.html';
 
         async function handleSubmit() {
             var uid = document.getElementById('uidInput').value.trim();
@@ -97,7 +96,7 @@
                 setSessionUser(user);
                 
                 showToast('设置成功！即将返回个人中心');
-                setTimeout(function() { window.location.href = './user.html'; }, 1500);
+                setTimeout(function() { window.location.href = '/liuyanban/user.html'; }, 1500);
 
             } catch (e) {
                 errEl.textContent = e.message || '网络异常，请重试';

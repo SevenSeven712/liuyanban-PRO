@@ -2,492 +2,1473 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8" />
-<link rel="manifest" href="./manifest.json" />
+<link rel="manifest" href="/liuyanban/manifest.json" />
 <meta name="theme-color" content="#2e7d32" />
-<link rel="apple-touch-icon" href="./icon.svg" />
+<link rel="apple-touch-icon" href="/liuyanban/icon.svg" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>通行证 · Seven戚社区</title>
-<script src="./vendor/supabase.js"></script>
-<script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/script>');</script>
-<script>
-  sessionStorage.setItem('sq_boot_shown', '1');
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
 :root {
---bg: #f5faf5; --bg-card: #ffffff; --bg-input: #eaf3ea; --border: #c8e0c8;
---text: #1e3a2e; --text-muted: #5a7a6a; --primary: #2e7d32; --primary-light: #4caf50;
---primary-glow: rgba(46, 125, 50, 0.25); --primary-bg: #e8f5e9;
---shadow: 0 8px 32px rgba(46, 125, 50, 0.12); --radius: 16px; --radius-sm: 10px;
+--bg: #f5faf5;
+--bg-card: #ffffff;
+--bg-input: #eaf3ea;
+--border: #c8e0c8;
+--text: #1e3a2e;
+--text-muted: #5a7a6a;
+--text-light: #8aaa9a;
+--primary: #2e7d32;
+--primary-light: #4caf50;
+--primary-glow: rgba(46, 125, 50, 0.25);
+--primary-bg: #e8f5e9;
+--shadow: 0 8px 32px rgba(46, 125, 50, 0.12);
+--danger: #e57373;
+--danger-bg: #ffebee;
+--radius: 16px;
+--radius-sm: 10px;
 --font: "Space Grotesk", "PingFang SC", "Segoe UI", system-ui, sans-serif;
 }
-html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); overflow: hidden; }
-
-/* ===== 1. 高精度开屏动画 ===== */
-#bootScreen {
-    position: fixed; inset: 0; z-index: 99999; background: #000;
-    display: flex; align-items: center; justify-content: center;
-    font-family: "Poppins", "Space Grotesk", "PingFang SC", sans-serif;
-    font-size: 1.6em; font-weight: 600; color: #fff;
-    transition: opacity 0.8s ease; opacity: 1; overflow: hidden;
+html, body {
+height: 100%;
+font-family: var(--font);
+background: var(--bg);
+background-image:
+radial-gradient(circle at 20% 10%, rgba(46, 125, 50, 0.06) 0%, transparent 45%),
+radial-gradient(circle at 80% 90%, rgba(76, 175, 80, 0.06) 0%, transparent 45%);
+color: var(--text);
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 20px;
+overflow: hidden;
 }
-#bootScreen.hide { opacity: 0; pointer-events: none; }
-.boot-loader-inner { position: relative; display: flex; align-items: center; justify-content: center; height: 120px; width: auto; margin: 2rem; transform: scale(1.55); }
-.boot-loader { position: absolute; top: 0; left: 0; height: 100%; width: 100%; z-index: 1; background-color: transparent; -webkit-mask: repeating-linear-gradient(90deg, transparent 0, transparent 6px, black 7px, black 8px); mask: repeating-linear-gradient(90deg, transparent 0, transparent 6px, black 7px, black 8px); }
-.boot-loader::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: radial-gradient(circle at 50% 50%, #ff0 0%, transparent 50%), radial-gradient(circle at 45% 45%, #f00 0%, transparent 45%), radial-gradient(circle at 55% 55%, #0ff 0%, transparent 45%), radial-gradient(circle at 45% 55%, #0f0 0%, transparent 45%), radial-gradient(circle at 55% 45%, #00f 0%, transparent 45%); -webkit-mask: radial-gradient(circle at 50% 50%, transparent 0%, transparent 10%, black 25%); mask: radial-gradient(circle at 50% 50%, transparent 0%, transparent 10%, black 25%); animation: boot-transform 2s infinite alternate, boot-opacity 4s infinite; animation-timing-function: cubic-bezier(0.6, 0.8, 0.5, 1); }
-@keyframes boot-transform { 0% { transform: translate(-55%); } 100% { transform: translate(55%); } }
-@keyframes boot-opacity { 0%, 100% { opacity: 0; } 15% { opacity: 1; } 65% { opacity: 0; } }
-.boot-letter { display: inline-block; opacity: 0; animation: boot-letter-anim 4s infinite linear; z-index: 2; white-space: pre; }
-@keyframes boot-letter-anim { 0% { opacity: 0; } 5% { opacity: 1; text-shadow: 0 0 4px #fff; transform: scale(1.1) translateY(-2px); } 20% { opacity: 0.2; } 100% { opacity: 0; } }
-
-/* ===== 2. 炸裂引导页 ===== */
-#introScreen { position: fixed; inset: 0; z-index: 9000; background: #fff; display: none; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; opacity: 1; overflow: hidden; }
-#introScreen.hide { opacity: 0; pointer-events: none; }
-
-/* 背景游动光斑 */
-.intro-orb { position: absolute; border-radius: 50%; filter: blur(80px); z-index: 1; opacity: 0.6; animation: floatOrb 8s ease-in-out infinite alternate; }
-.orb1 { width: 350px; height: 350px; background: rgba(76,175,80,0.25); top: -100px; left: -100px; }
-.orb2 { width: 450px; height: 450px; background: rgba(46,125,50,0.15); bottom: -150px; right: -100px; animation-delay: -4s; }
-@keyframes floatOrb { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 30px) scale(1.1); } }
-
-.slides-wrap { position: relative; z-index: 2; width: 100%; max-width: 400px; height: 420px; display: flex; align-items: center; justify-content: center; }
-
-.intro-slide { display: none; text-align: center; padding: 20px; width: 100%; }
-.intro-slide.active { display: block; }
-/* 核心：炸裂弹簧出场效果 */
-.intro-slide.active .anim-item { animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-.intro-slide.active .delay-1 { animation-delay: 0.1s; }
-.intro-slide.active .delay-2 { animation-delay: 0.25s; }
-.intro-slide.active .delay-3 { animation-delay: 0.4s; }
-
-@keyframes popIn { 
-    0% { opacity: 0; transform: translateY(-30px) scale(0.5) rotate(-5deg); filter: blur(10px); }
-    100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); filter: blur(0); }
+.login-card {
+width: 23em;
+max-width: 92vw;
+max-height: 92vh;
+overflow-y: auto;
+background: var(--bg-card);
+border-radius: var(--radius);
+padding: 2.2em 2em;
+position: relative;
+border: 1px solid var(--border);
+box-shadow: var(--shadow);
+-webkit-overflow-scrolling: touch;
 }
-
-/* 精致图标容器 */
-.intro-icon { 
-    width: 100px; height: 100px; border-radius: 30px; margin: 0 auto 28px; 
-    display: flex; align-items: center; justify-content: center; 
-    background: linear-gradient(135deg, #4caf50, #2e7d32); 
-    box-shadow: 0 16px 32px rgba(46,125,50,0.25), inset 0 2px 4px rgba(255,255,255,0.4);
-    position: relative;
+.login-card::-webkit-scrollbar { width: 4px; }
+.login-card::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+.login-card::after {
+content: "";
+position: absolute;
+inset: 0;
+border-radius: var(--radius);
+background-image:
+linear-gradient(rgba(46, 125, 50, 0.04) 1px, transparent 1px),
+linear-gradient(90deg, rgba(46, 125, 50, 0.04) 1px, transparent 1px);
+background-size: 2em 2em;
+opacity: 0.6;
+pointer-events: none;
+z-index: 0;
 }
-/* 图标背后的光晕 */
-.intro-icon::after {
-    content: ''; position: absolute; inset: -10px; border-radius: 36px;
-    background: inherit; filter: blur(20px); opacity: 0.5; z-index: -1;
+.login-card::before {
+content: "";
+position: absolute;
+inset: 0;
+border-radius: var(--radius);
+background: linear-gradient(115deg,
+transparent 0%, transparent 40%,
+rgba(46, 125, 50, 0.03) 45%,
+rgba(46, 125, 50, 0.10) 50%,
+rgba(46, 125, 50, 0.03) 55%,
+transparent 60%, transparent 100%);
+pointer-events: none;
+z-index: 1;
+animation: sweep 6s ease-in-out infinite;
 }
-.intro-icon svg { width: 52px; height: 52px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2)); }
-.intro-title { font-size: 1.8em; font-weight: 900; margin-bottom: 12px; color: #1e3a2e; letter-spacing: 1px; }
-.intro-desc { font-size: 0.95em; color: #5a7a6a; line-height: 1.8; }
-
-.intro-footer { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
-.intro-dots { display: flex; gap: 8px; margin-bottom: 24px; }
-.intro-dots .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(46,125,50,0.2); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-.intro-dots .dot.active { width: 28px; border-radius: 4px; background: #2e7d32; }
-
-/* 带光泽的按钮 */
-.intro-btn { 
-    background: linear-gradient(135deg, #4caf50, #2e7d32); color: #fff; border: none; 
-    padding: 16px 48px; font-size: 1.05em; font-weight: 700; border-radius: 99px; 
-    cursor: pointer; min-width: 220px; box-shadow: 0 10px 25px rgba(46,125,50,0.3);
-    transition: all 0.3s; position: relative; overflow: hidden;
+@keyframes sweep {
+0%, 100% { background-position: 100% 100%; }
+50% { background-position: 0% 0%; }
 }
-.intro-btn:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(46,125,50,0.4); }
-.intro-btn:active { transform: scale(0.96); }
-/* 按钮扫光 */
-.intro-btn::before {
-    content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-    transform: skewX(-20deg); transition: 0.5s;
-}
-.intro-btn:hover::before { left: 150%; }
-.skip-btn { background: none; border: none; color: #8aaa9a; font-size: 0.85em; margin-top: 16px; cursor: pointer; transition: color 0.2s; }
-.skip-btn:hover { color: #2e7d32; }
+.login-card > * { position: relative; z-index: 2; }
 
-/* ===== 3. 登录注册层 ===== */
-#authScreen { position: fixed; inset: 0; z-index: 8000; background: var(--bg); display: none; align-items: center; justify-content: center; padding: 20px; background-image: radial-gradient(circle at 20% 10%, rgba(46, 125, 50, 0.06) 0%, transparent 45%), radial-gradient(circle at 80% 90%, rgba(76, 175, 80, 0.06) 0%, transparent 45%); transition: opacity 0.4s ease; opacity: 1; overflow-y: auto; }
-#authScreen.hide { opacity: 0; pointer-events: none; }
-.login-card { width: 23em; max-width: 92vw; background: #fff; border-radius: 16px; padding: 2.2em 2em; border: 1px solid #c8e0c8; box-shadow: 0 8px 32px rgba(46,125,50,0.12); }
-.login-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5em; }
-.login-logo { font-weight: 900; font-size: 1.35em; color: #1e3a2e; display: flex; align-items: center; gap: 0.35em; }
-.login-logo span { color: #2e7d32; }
-.login-title { font-size: 1.4em; font-weight: 700; text-align: center; margin-bottom: 1em; }
-.login-title span { display: block; font-weight: 400; color: #5a7a6a; font-size: 0.55em; margin-top: 0.2em; }
-.login-form { display: flex; flex-direction: column; gap: 0.9em; }
-.field-group { display: flex; flex-direction: column; gap: 0.35em; }
-.field-group label { font-size: 0.7em; font-weight: 600; color: #5a7a6a; }
-.field-group input { width: 100%; padding: 0.8em 1em; border-radius: 10px; border: 2px solid #c8e0c8; background: #eaf3ea; font-size: 0.95em; outline: none; transition: all 0.2s; }
-.field-group input:focus { border-color: #2e7d32; box-shadow: 0 0 0 4px rgba(46,125,50,0.1); }
-.login-continue { width: 100%; padding: 0.85em; border-radius: 10px; border: none; background: #2e7d32; color: #fff; font-weight: 700; font-size: 0.95em; cursor: pointer; margin-top: 0.3em; transition: all 0.2s; }
-.login-continue:hover { background: #4caf50; transform: translateY(-1px); }
-.login-footer { text-align: center; margin-top: 1.1em; font-size: 0.82em; color: #5a7a6a; }
-.login-footer .switch-link { color: #2e7d32; font-weight: 700; cursor: pointer; border: none; background: none; padding: 0 4px; text-decoration: underline; }
-.login-error { color: #c62828; font-size: 0.78em; text-align: center; min-height: 1.5em; margin-top: 0.2em; line-height: 1.4; }
-.auth-card { display: none; }
-.auth-card.active { display: block; animation: slideUp 0.3s ease; }
-@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-.field-hint { font-size: 0.72em; margin-top: 4px; min-height: 1.2em; transition: color 0.2s; }
-.field-hint.error { color: #c62828; }
+.login-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 1.5em;
+}
+.login-logo {
+font-weight: 900;
+font-size: 1.35em;
+color: var(--text);
+letter-spacing: -0.02em;
+display: flex;
+align-items: center;
+gap: 0.35em;
+}
+.login-logo span { color: var(--primary); }
+.login-logo svg {
+width: 1.3em;
+height: 1.3em;
+stroke: var(--primary);
+fill: none;
+stroke-width: 2;
+stroke-linecap: round;
+stroke-linejoin: round;
+filter: drop-shadow(0 0 4px var(--primary-glow));
+}
+.lang-switch { display: flex; gap: 0.3em; }
+.lang-btn {
+background: transparent;
+border: 1.5px solid var(--border);
+color: var(--text-muted);
+padding: 0.2em 0.7em;
+border-radius: 99px;
+font-size: 0.65em;
+font-weight: 700;
+cursor: pointer;
+transition: all 0.2s;
+font-family: inherit;
+}
+.lang-btn.active {
+background: var(--primary);
+border-color: var(--primary);
+color: #fff;
+box-shadow: 0 0 20px var(--primary-glow);
+}
+.lang-btn:hover { filter: brightness(1.05); }
+
+.login-title {
+font-size: 1.4em;
+font-weight: 700;
+color: var(--text);
+text-align: center;
+margin-bottom: 1em;
+}
+.login-title span {
+display: block;
+font-weight: 400;
+color: var(--text-muted);
+font-size: 0.55em;
+margin-top: 0.2em;
+}
+.login-form {
+display: flex;
+flex-direction: column;
+gap: 0.9em;
+}
+.field-hint { font-size: 0.75em; margin-top: 4px; height: 1em; transition: color 0.2s; }
+.field-hint.error { color: #e57373; }
 .field-hint.success { color: #2e7d32; }
-.oauth-row { display: flex; gap: 10px; margin-bottom: 12px; }
-.oauth-btn { flex: 1; padding: 10px; border: 1.5px solid #c8e0c8; border-radius: 10px; background: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85em; font-weight: 700; color: #1e3a2e; cursor: pointer; font-family: inherit; }
-.oauth-btn:hover { background: #f5faf5; }
-.oauth-divider { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; font-size: 0.75em; color: #8aaa9a; }
-.oauth-divider div { flex: 1; height: 1px; background: #c8e0c8; }
+.field-group {
+display: flex;
+flex-direction: column;
+gap: 0.35em;
+}
+.field-group label {
+font-size: 0.7em;
+font-weight: 600;
+color: var(--text-muted);
+text-transform: uppercase;
+letter-spacing: 0.06em;
+}
+.field-group input {
+width: 100%;
+padding: 0.8em 1em;
+border-radius: var(--radius-sm);
+border: 2px solid var(--border);
+background: var(--bg-input);
+color: var(--text);
+font-size: 0.95em;
+font-weight: 600;
+outline: none;
+transition: border-color 0.3s, box-shadow 0.3s;
+font-family: inherit;
+}
+.field-group input:focus {
+border-color: var(--primary);
+box-shadow: 0 0 0 4px var(--primary-glow);
+}
+.field-group input::placeholder { color: var(--text-light); }
+
+.oauth-row { display: flex; gap: 0.6em; }
+.oauth-btn {
+flex: 1;
+display: flex;
+justify-content: center;
+align-items: center;
+gap: 0.5em;
+padding: 0.7em;
+border-radius: var(--radius-sm);
+border: 2px solid var(--border);
+background: var(--bg-input);
+color: var(--text);
+font-size: 0.85em;
+font-weight: 600;
+cursor: pointer;
+position: relative;
+overflow: hidden;
+transition: all 250ms;
+font-family: inherit;
+}
+.oauth-btn::before {
+content: "";
+position: absolute;
+top: 0; left: 0;
+height: 100%; width: 0;
+background: var(--primary);
+z-index: 0;
+transition: width 250ms;
+}
+.oauth-btn:hover { color: #fff; border-color: var(--primary); }
+.oauth-btn:hover::before { width: 100%; }
+.oauth-btn > * { position: relative; z-index: 1; }
+.oauth-btn .icon { width: 1.2em; height: 1.2em; flex-shrink: 0; }
+
+.separator {
+display: flex;
+align-items: center;
+gap: 0.6em;
+color: var(--text-muted);
+font-size: 0.75em;
+margin: 0.2em 0;
+}
+.separator div {
+flex: 1;
+height: 1px;
+background: var(--border);
+}
+.login-continue {
+width: 100%;
+padding: 0.85em;
+border-radius: var(--radius-sm);
+border: 2px solid var(--primary);
+background: var(--primary);
+color: #fff;
+font-weight: 700;
+font-size: 0.95em;
+cursor: pointer;
+transition: all 0.3s;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 0.5em;
+font-family: inherit;
+margin-top: 0.3em;
+}
+.login-continue:hover {
+background: var(--primary-light);
+border-color: var(--primary-light);
+box-shadow: 0 0 30px var(--primary-glow);
+transform: translateY(-1px);
+}
+.login-continue:disabled {
+opacity: 0.5;
+pointer-events: none;
+}
+.login-continue .icon {
+width: 1.2em;
+height: 1.2em;
+stroke: currentColor;
+stroke-width: 2.5;
+fill: none;
+}
+.login-footer {
+text-align: center;
+margin-top: 1.1em;
+font-size: 0.82em;
+color: var(--text-muted);
+}
+.login-footer .switch-link {
+color: var(--primary);
+font-weight: 700;
+cursor: pointer;
+border: none;
+background: none;
+font-family: inherit;
+font-size: inherit;
+padding: 0 4px;
+text-decoration: underline;
+text-underline-offset: 3px;
+}
+.login-footer .switch-link:hover { color: var(--primary-light); }
+
+.login-error {
+color: #c62828;
+font-size: 0.78em;
+text-align: center;
+min-height: 1.5em;
+margin-top: 0.2em;
+}
+
+/* 设备检测提示条 */
+.device-hint {
+display: flex;
+align-items: flex-start;
+gap: 8px;
+padding: 10px 12px;
+border-radius: var(--radius-sm);
+background: var(--primary-bg);
+border: 1px solid var(--border);
+font-size: 0.75em;
+color: var(--text-muted);
+line-height: 1.5;
+}
+.device-hint svg {
+width: 16px;
+height: 16px;
+flex-shrink: 0;
+stroke: var(--primary);
+fill: none;
+stroke-width: 2;
+stroke-linecap: round;
+stroke-linejoin: round;
+margin-top: 2px;
+}
+.device-hint.warn {
+background: var(--danger-bg);
+border-color: #ffcdd2;
+color: #c62828;
+}
+.device-hint.warn svg { stroke: #c62828; }
+
+.auth-card { display: none; }
+.auth-card.active { display: block; animation: fadeIn 0.35s ease; }
+@keyframes fadeIn {
+from { opacity: 0; transform: translateY(8px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+#toast {
+position: fixed;
+bottom: 40px;
+left: 50%;
+transform: translateX(-50%) translateY(80px);
+background: var(--text);
+color: #fff;
+padding: 0.7em 1.6em;
+border-radius: 2em;
+font-weight: 600;
+font-size: 0.85em;
+opacity: 0;
+transition: all 0.4s ease;
+z-index: 300;
+pointer-events: none;
+white-space: nowrap;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+display: flex;
+align-items: center;
+gap: 6px;
+}
+#toast svg { width: 16px; height: 16px; flex-shrink: 0; }
+#toast.show {
+opacity: 1;
+transform: translateX(-50%) translateY(0);
+}
+
+.modal-overlay {
+position: fixed;
+inset: 0;
+z-index: 1000;
+background: rgba(30, 58, 46, 0.35);
+backdrop-filter: blur(6px);
+-webkit-backdrop-filter: blur(6px);
+display: none;
+align-items: center;
+justify-content: center;
+padding: 20px;
+opacity: 0;
+transition: opacity 0.3s ease;
+}
+.modal-overlay.active { display: flex; opacity: 1; }
+.modal-box {
+background: var(--bg-card);
+border-radius: var(--radius);
+max-width: 400px;
+width: 100%;
+padding: 2em;
+box-shadow: var(--shadow);
+border: 1px solid var(--border);
+text-align: center;
+transform: scale(0.9);
+transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.modal-overlay.active .modal-box { transform: scale(1); }
+.modal-box .modal-icon {
+width: 64px;
+height: 64px;
+margin: 0 auto 0.4em;
+border-radius: 50%;
+background: var(--primary-bg);
+display: grid;
+place-items: center;
+color: var(--primary);
+}
+.modal-box .modal-icon.warn { background: var(--danger-bg); color: #c62828; }
+.modal-box .modal-icon svg {
+width: 32px;
+height: 32px;
+stroke: currentColor;
+fill: none;
+stroke-width: 2;
+stroke-linecap: round;
+stroke-linejoin: round;
+}
+.modal-box .modal-title {
+font-size: 1.25em;
+font-weight: 900;
+color: var(--text);
+margin-bottom: 0.4em;
+}
+.modal-box .modal-body {
+font-size: 0.95em;
+color: var(--text-muted);
+line-height: 1.6;
+margin-bottom: 1.4em;
+white-space: pre-line;
+}
+.modal-box .modal-actions {
+display: flex;
+justify-content: center;
+gap: 10px;
+flex-wrap: wrap;
+}
+.modal-box .modal-actions .btn-secondary {
+padding: 0.6em 1.4em;
+border-radius: var(--radius-sm);
+border: 2px solid var(--border);
+background: transparent;
+color: var(--text-muted);
+font-weight: 700;
+font-size: 0.95em;
+cursor: pointer;
+font-family: inherit;
+transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.modal-box .modal-actions .btn-secondary:hover {
+border-color: var(--primary);
+color: var(--primary);
+background: var(--primary-bg);
+}
+.modal-box .modal-actions .btn-primary {
+padding: 0.6em 2em;
+border-radius: var(--radius-sm);
+border: none;
+background: var(--primary);
+color: #fff;
+font-weight: 700;
+font-size: 0.95em;
+cursor: pointer;
+font-family: inherit;
+transition: background 0.2s, box-shadow 0.2s;
+}
+.modal-box .modal-actions .btn-primary:hover {
+background: var(--primary-light);
+box-shadow: 0 0 25px var(--primary-glow);
+}
+
+@media (max-width: 480px) {
+.login-card { padding: 1.6em 1.4em; }
+.oauth-row { flex-direction: column; }
+}
 </style>
 </head>
 <body>
 
-<div id="bootScreen">
-    <div class="boot-loader-inner">
-        <div class="boot-loader"></div>
+<!-- 首次访问专属引导页 -->
+<div id="introOverlay" style="display:none; position:fixed; inset:0; z-index:999999; background:linear-gradient(135deg, #ffffff 0%, #e8f5e9 100%); flex-direction:column; align-items:center; justify-content:center; color:#1e3a2e; transition:opacity 0.8s ease; overflow:hidden;">
+    <div class="bg-orb bg-orb-1" style="position:absolute; border-radius:50%; filter:blur(80px); z-index:1; opacity:0.6; animation:floatOrb 8s ease-in-out infinite alternate; width:350px; height:350px; background:rgba(76,175,80,0.25); top:-100px; left:-100px;"></div>
+    <div class="bg-orb bg-orb-2" style="position:absolute; border-radius:50%; filter:blur(80px); z-index:1; opacity:0.6; animation:floatOrb 8s ease-in-out infinite alternate; width:450px; height:450px; background:rgba(46,125,50,0.15); bottom:-150px; right:-100px; animation-delay:-4s;"></div>
+
+    <div class="slides-wrap" style="position:relative; z-index:2; width:100%; max-width:420px; height:480px;">
+        <!-- 第 1 步：社区广场 -->
+        <div class="slide" data-idx="0" style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 20px; text-align:center; opacity:0; pointer-events:none; transition:opacity 0.5s ease;">
+            <div class="slide-icon anim-item delay-1" style="width:96px; height:96px; border-radius:28px; display:flex; align-items:center; justify-content:center; margin-bottom:28px; box-shadow:0 12px 32px rgba(46,125,50,0.2); background:linear-gradient(135deg, #4caf50, #2e7d32);">
+                <svg viewBox="0 0 64 64" style="width:48px; height:48px;" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="commGrad" x1="10" y1="10" x2="54" y2="54" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#ffffff" stop-opacity="0.9"/>
+                      <stop offset="1" stop-color="#ffffff" stop-opacity="0.5"/>
+                    </linearGradient>
+                    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+                      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#2e7d32" flood-opacity="0.3"/>
+                    </filter>
+                  </defs>
+                  <path d="M16 24C16 18.4772 20.4772 14 26 14H38C43.5228 14 48 18.4772 48 24V32C48 37.5228 43.5228 42 38 42H30L20 50V42C17.7909 42 16 40.2091 16 38V24Z" fill="url(#commGrad)" filter="url(#shadow)"/>
+                  <path d="M26 26H38M26 32H34" stroke="#2e7d32" stroke-width="3" stroke-linecap="round"/>
+                  <circle cx="46" cy="18" r="6" fill="#ff6b6b" stroke="#fff" stroke-width="2"/>
+                </svg>
+            </div>
+            <div class="slide-title anim-item delay-2" style="font-size:1.8em; font-weight:900; color:#1e3a2e; margin-bottom:14px; letter-spacing:0.5px; text-shadow:0 4px 12px rgba(46,125,50,0.1);">社区广场</div>
+            <div class="slide-desc anim-item delay-3" style="font-size:0.95em; color:#5a7a6a; line-height:1.7; margin-bottom:20px;">帖子广场、实时聊天群、匿名留言板<br>发布动态，随便聊聊，找到同好</div>
+            <div class="slide-features anim-item delay-4" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">
+                <span class="feature-pill" style="background:rgba(46,125,50,0.08); border:1px solid rgba(46,125,50,0.15); color:#2e7d32; padding:6px 14px; border-radius:99px; font-size:0.8em; font-weight:700;"><svg viewBox="0 0 48 48" width="14" height="14" fill="currentColor" style="vertical-align:-2px;margin-right:4px;"><path d="M10 4h28v40H10z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M18 14h12m-12 8h12m-12 8h8" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg> 帖子广场</span>
+                <span class="feature-pill" style="background:rgba(46,125,50,0.08); border:1px solid rgba(46,125,50,0.15); color:#2e7d32; padding:6px 14px; border-radius:99px; font-size:0.8em; font-weight:700;"><svg viewBox="0 0 48 48" width="14" height="14" fill="currentColor" style="vertical-align:-2px;margin-right:4px;"><path d="M4 6h40v28H24l-8 8V34H4z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M16 18h16m-16 6h10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg> 实时聊天</span>
+                <span class="feature-pill" style="background:rgba(46,125,50,0.08); border:1px solid rgba(46,125,50,0.15); color:#2e7d32; padding:6px 14px; border-radius:99px; font-size:0.8em; font-weight:700;"><svg viewBox="0 0 48 48" width="14" height="14" fill="currentColor" style="vertical-align:-2px;margin-right:4px;"><rect x="4" y="10" width="40" height="28" rx="2" fill="none" stroke="currentColor" stroke-width="4"/><path d="M4 12l20 14 20-14" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/></svg> 匿名留言</span>
+            </div>
+        </div>
+
+        <!-- 第 2 步：互动游戏 -->
+        <div class="slide" data-idx="1" style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 20px; text-align:center; opacity:0; pointer-events:none; transition:opacity 0.5s ease;">
+            <div class="slide-icon anim-item delay-1" style="width:96px; height:96px; border-radius:28px; display:flex; align-items:center; justify-content:center; margin-bottom:28px; box-shadow:0 12px 32px rgba(46,125,50,0.2); background:linear-gradient(135deg, #7c3aed, #db2777);">
+                <svg viewBox="0 0 64 64" style="width:48px; height:48px;" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="gameGrad" x1="12" y1="20" x2="52" y2="44" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#ffffff" stop-opacity="0.95"/>
+                      <stop offset="1" stop-color="#ffffff" stop-opacity="0.6"/>
+                    </linearGradient>
+                    <filter id="shadow2" x="-10%" y="-10%" width="120%" height="120%">
+                      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#7c3aed" flood-opacity="0.4"/>
+                    </filter>
+                  </defs>
+                  <path d="M22 24C16 24 12 30 12 38C12 44 16 48 20 48C24 48 26 46 28 42H36C38 46 40 48 44 48C48 48 52 44 52 38C52 30 48 24 42 24H22Z" fill="url(#gameGrad)" filter="url(#shadow2)"/>
+                  <circle cx="24" cy="36" r="4" fill="#7c3aed"/>
+                  <path d="M38 32V40M34 36H42" stroke="#db2777" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M28 18L32 22L36 18" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="slide-title anim-item delay-2" style="font-size:1.8em; font-weight:900; color:#1e3a2e; margin-bottom:14px; letter-spacing:0.5px; text-shadow:0 4px 12px rgba(46,125,50,0.1);">互动游戏</div>
+            <div class="slide-desc anim-item delay-3" style="font-size:0.95em; color:#5a7a6a; line-height:1.7; margin-bottom:20px;">开个房间，和朋友一起玩<br>斗地主、五子棋、你画我猜、连麦聊天</div>
+            <div class="slide-features anim-item delay-4" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">
+                <span class="feature-pill" style="background:rgba(46,125,50,0.08); border:1px solid rgba(46,125,50,0.15); color:#2e7d32; padding:6px 14px; border-radius:99px; font-size:0.8em; font-weight:700;"><svg viewBox="0 0 48 48" width="14" height="14" fill="currentColor" style="vertical-align:-2px;margin-right:4px;"><path d="M6 12h36v24H6z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M12 18h8m-8 6h8m-8 6h8m8-12h8m-8 6h8m-8 6h8" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg> 斗地主</span>
+                <span class="feature-pill" style="background:rgba(46,125,50,0.08); border:1px solid rgba(46,125,50,0.15); color:#2e7d32; padding:6px 14px; border-radius:99px; font-size:0.8em; font-weight:700;"><svg viewBox="0 0 48 48" width="14" height="14" fill="currentColor" style="vertical-align:-2px;margin-right:4px;"><rect x="6" y="6" width="36" height="36" fill="none" stroke="currentColor" stroke-width="4"/><path d="M18 6v36M30 6v36M6 18h36M6 30h36" stroke="currentColor" stroke-width="4"/></svg> 五子棋</span>
+                <span class="feature-pill" style="background:rgba(46,125,50,0.08); border:1px solid rgba(46,125,50,0.15); color:#2e7d32; padding:6px 14px; border-radius:99px; font-size:0.8em; font-weight:700;"><svg viewBox="0 0 48 48" width="14" height="14" fill="currentColor" style="vertical-align:-2px;margin-right:4px;"><path d="M24 4C12.954 4 4 12.954 4 24s8.954 20 20 20c2.21 0 4-1.79 4-4 0-1.38-.71-2.58-1.78-3.31-.64-.44-1.22-1.12-1.22-1.91 0-1.53 1.24-2.78 2.78-2.78h3.44C37.5 32 44 25.5 44 17.5S35.5 4 24 4z" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="14" cy="18" r="2" fill="currentColor"/><circle cx="20" cy="12" r="2" fill="currentColor"/><circle cx="28" cy="12" r="2" fill="currentColor"/><circle cx="34" cy="18" r="2" fill="currentColor"/></svg> 你画我猜</span>
+                <span class="feature-pill" style="background:rgba(46,125,50,0.08); border:1px solid rgba(46,125,50,0.15); color:#2e7d32; padding:6px 14px; border-radius:99px; font-size:0.8em; font-weight:700;"><svg viewBox="0 0 48 48" width="14" height="14" fill="currentColor" style="vertical-align:-2px;margin-right:4px;"><rect x="18" y="4" width="12" height="24" rx="6" fill="none" stroke="currentColor" stroke-width="4"/><path d="M10 22c0 8 6 14 14 14s14-6 14-14M24 36v8" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg> 连麦</span>
+            </div>
+        </div>
+
+        <!-- 第 3 步：皮肤商城 -->
+        <div class="slide" data-idx="2" style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 20px; text-align:center; opacity:0; pointer-events:none; transition:opacity 0.5s ease;">
+            <div class="slide-icon anim-item delay-1" style="width:96px; height:96px; border-radius:28px; display:flex; align-items:center; justify-content:center; margin-bottom:28px; box-shadow:0 12px 32px rgba(46,125,50,0.2); background:linear-gradient(135deg, #d4af37, #b8941f);">
+                <svg viewBox="0 0 64 64" style="width:48px; height:48px;" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="shopGrad" x1="18" y1="20" x2="46" y2="50" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#ffffff" stop-opacity="0.95"/>
+                      <stop offset="1" stop-color="#ffffff" stop-opacity="0.5"/>
+                    </linearGradient>
+                    <filter id="shadow3" x="-10%" y="-10%" width="120%" height="120%">
+                      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#d4af37" flood-opacity="0.5"/>
+                    </filter>
+                  </defs>
+                  <path d="M20 24H44L46 48C46.2 50.2 44.5 52 42.3 52H21.7C19.5 52 17.8 50.2 18 48L20 24Z" fill="url(#shopGrad)" filter="url(#shadow3)"/>
+                  <path d="M24 24V18C24 13.5817 27.5817 10 32 10C36.4183 10 40 13.5817 40 18V24" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+                  <circle cx="32" cy="36" r="4" fill="#d4af37"/>
+                  <path d="M50 16L52 20M14 16L12 20" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div class="slide-title anim-item delay-2" style="font-size:1.8em; font-weight:900; color:#1e3a2e; margin-bottom:14px; letter-spacing:0.5px; text-shadow:0 4px 12px rgba(46,125,50,0.1);">皮肤商城</div>
+            <div class="slide-desc anim-item delay-3" style="font-size:0.95em; color:#5a7a6a; line-height:1.7; margin-bottom:20px;">45 款精美气泡皮肤任你挑<br>每日签到、抢红包、晒社区赚小七币</div>
+            <div class="slide-features anim-item delay-4" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">
+                <span class="feature-pill" style="background:rgba(46,125,50,0.08); border:1px solid rgba(46,125,50,0.15); color:#2e7d32; padding:6px 14px; border-radius:99px; font-size:0.8em; font-weight:700;"><svg viewBox="0 0 48 48" width="14" height="14" fill="currentColor" style="vertical-align:-2px;margin-right:4px;"><path d="M14 8l-8 8 4 6 4-4v22h20V18l4 4 4-6-8-8h-6a4 4 0 01-8 0h-6z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/></svg> 45 款皮肤</span>
+                <span class="feature-pill" style="background:rgba(46,125,50,0.08); border:1px solid rgba(46,125,50,0.15); color:#2e7d32; padding:6px 14px; border-radius:99px; font-size:0.8em; font-weight:700;"><svg viewBox="0 0 48 48" width="14" height="14" fill="currentColor" style="vertical-align:-2px;margin-right:4px;"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="4"/><path d="M24 12v24M18 18h12M18 30h12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg> 小七币</span>
+                <span class="feature-pill" style="background:rgba(46,125,50,0.08); border:1px solid rgba(46,125,50,0.15); color:#2e7d32; padding:6px 14px; border-radius:99px; font-size:0.8em; font-weight:700;"><svg viewBox="0 0 48 48" width="14" height="14" fill="currentColor" style="vertical-align:-2px;margin-right:4px;"><rect x="6" y="16" width="36" height="26" rx="2" fill="none" stroke="currentColor" stroke-width="4"/><path d="M24 16v26M6 24h36M14 16a6 6 0 006-6c0-2-1-4-4-4-3 0-4 3-2 6zm20 0a6 6 0 01-6-6c0-2 1-4 4-4 3 0 4 3 2 6z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/></svg> 每日签到</span>
+                <span class="feature-pill" style="background:rgba(46,125,50,0.08); border:1px solid rgba(46,125,50,0.15); color:#2e7d32; padding:6px 14px; border-radius:99px; font-size:0.8em; font-weight:700;"><svg viewBox="0 0 48 48" width="14" height="14" fill="currentColor" style="vertical-align:-2px;margin-right:4px;"><rect x="6" y="12" width="36" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="24" cy="24" r="4" fill="currentColor"/></svg> 抢红包</span>
+            </div>
+        </div>
+
+        <!-- 第 4 步：匿名留言板 -->
+        <div class="slide" data-idx="3" style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 20px; text-align:center; opacity:0; pointer-events:none; transition:opacity 0.5s ease;">
+            <div class="slide-icon anim-item delay-1" style="width:96px; height:96px; border-radius:28px; display:flex; align-items:center; justify-content:center; margin-bottom:28px; box-shadow:0 12px 32px rgba(46,125,50,0.2); background:linear-gradient(135deg, #0ea5e9, #0284c7);">
+                <svg viewBox="0 0 64 64" style="width:48px; height:48px;" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="msgGrad" x1="12" y1="16" x2="52" y2="48" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#ffffff" stop-opacity="0.95"/>
+                      <stop offset="1" stop-color="#ffffff" stop-opacity="0.5"/>
+                    </linearGradient>
+                    <filter id="shadow4" x="-10%" y="-10%" width="120%" height="120%">
+                      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#0284c7" flood-opacity="0.4"/>
+                    </filter>
+                  </defs>
+                  <rect x="14" y="20" width="36" height="26" rx="4" fill="url(#msgGrad)" filter="url(#shadow4)"/>
+                  <path d="M14 24L32 36L50 24" stroke="#0284c7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                  <rect x="34" y="36" width="14" height="12" rx="2" fill="#0284c7" stroke="#fff" stroke-width="2"/>
+                  <path d="M38 36V32C38 29.7909 39.7909 28 42 28C44.2091 28 46 29.7909 46 32V36" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div class="slide-title anim-item delay-2" style="font-size:1.8em; font-weight:900; color:#1e3a2e; margin-bottom:14px; letter-spacing:0.5px; text-shadow:0 4px 12px rgba(46,125,50,0.1);">匿名留言板</div>
+            <div class="slide-desc anim-item delay-3" style="font-size:0.95em; color:#5a7a6a; line-height:1.7; margin-bottom:20px;">无需登录，随写随发<br>每天 3 条额度，管理员审核后公开</div>
+            <div class="slide-features anim-item delay-4" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">
+                <span class="feature-pill" style="background:rgba(46,125,50,0.08); border:1px solid rgba(46,125,50,0.15); color:#2e7d32; padding:6px 14px; border-radius:99px; font-size:0.8em; font-weight:700;"><svg viewBox="0 0 48 48" width="14" height="14" fill="currentColor" style="vertical-align:-2px;margin-right:4px;"><rect x="6" y="22" width="36" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="4"/><path d="M14 22V14a10 10 0 0 1 20 0v8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg> 全匿名</span>
+                <span class="feature-pill" style="background:rgba(46,125,50,0.08); border:1px solid rgba(46,125,50,0.15); color:#2e7d32; padding:6px 14px; border-radius:99px; font-size:0.8em; font-weight:700;"><svg viewBox="0 0 48 48" width="14" height="14" fill="currentColor" style="vertical-align:-2px;margin-right:4px;"><path d="M25.5 37H21l-10 5v-5H4V7h40v11" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M29 25.2c0-1.067 7-3.2 7-3.2s7 2.133 7 3.2c0 8.533-7 12.8-7 12.8s-7-4.267-7-12.8Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/></svg> 安全审核</span>
+                <span class="feature-pill" style="background:rgba(46,125,50,0.08); border:1px solid rgba(46,125,50,0.15); color:#2e7d32; padding:6px 14px; border-radius:99px; font-size:0.8em; font-weight:700;"><svg viewBox="0 0 48 48" width="14" height="14" fill="currentColor" style="vertical-align:-2px;margin-right:4px;"><path d="M6 8.256L24.009 3L42 8.256v10.778A26.32 26.32 0 0 1 24.003 44A26.32 26.32 0 0 1 6 19.029z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/></svg> XSS 防护</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="intro-footer" style="position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; padding:0 20px; margin-top:10px;">
+        <div class="dots" id="dots" style="display:flex; gap:8px; margin-bottom:24px;">
+            <div class="dot" style="width:8px; height:8px; border-radius:50%; background:rgba(46,125,50,0.2); transition:all 0.4s;"></div>
+            <div class="dot" style="width:8px; height:8px; border-radius:50%; background:rgba(46,125,50,0.2); transition:all 0.4s;"></div>
+            <div class="dot" style="width:8px; height:8px; border-radius:50%; background:rgba(46,125,50,0.2); transition:all 0.4s;"></div>
+            <div class="dot" style="width:8px; height:8px; border-radius:50%; background:rgba(46,125,50,0.2); transition:all 0.4s;"></div>
+        </div>
+        <button id="introBtn" class="intro-btn" style="background:linear-gradient(135deg, #4caf50, #2e7d32); color:#fff; border:none; padding:16px 48px; font-size:1.05em; font-weight:700; border-radius:99px; cursor:pointer; box-shadow:0 10px 25px rgba(46,125,50,0.3); transition:all 0.3s; display:flex; align-items:center; gap:8px; min-width:220px; justify-content:center; position:relative; overflow:hidden;">
+            <span id="introBtnText">下一步</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+        <button id="skipBtn" class="skip-btn" style="background:none; border:none; color:#8aaa9a; font-size:0.85em; cursor:pointer; margin-top:16px; padding:6px 12px; transition:color 0.2s;">跳过，直接进入 →</button>
+    </div>
+</div>
+
+<!-- 启动页 (复刻 common.js) -->
+<div id="bootOverlay" class="boot-loader-wrapper" style="display:none; position:fixed; inset:0; z-index:999998; background:#000; align-items:center; justify-content:center; font-family:'Poppins','Space Grotesk','PingFang SC',sans-serif; font-size:1.6em; font-weight:600; user-select:none; color:#fff; transition:opacity 1s ease; overflow:hidden;">
+    <div class="boot-loader-inner" style="position:relative; display:flex; align-items:center; justify-content:center; height:120px; width:auto; margin:2rem; transform:scale(1.55);">
+        <div class="boot-loader" style="position:absolute; top:0; left:0; height:100%; width:100%; z-index:1; background-color:transparent; -webkit-mask:repeating-linear-gradient(90deg,transparent 0,transparent 6px,black 7px,black 8px); mask:repeating-linear-gradient(90deg,transparent 0,transparent 6px,black 7px,black 8px);">
+            <div style="position:absolute;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(circle at 50% 50%, #ff0 0%, transparent 50%),radial-gradient(circle at 45% 45%, #f00 0%, transparent 45%),radial-gradient(circle at 55% 55%, #0ff 0%, transparent 45%),radial-gradient(circle at 45% 55%, #0f0 0%, transparent 45%),radial-gradient(circle at 55% 45%, #00f 0%, transparent 45%);-webkit-mask:radial-gradient(circle at 50% 50%,transparent 0%,transparent 10%,black 25%);mask:radial-gradient(circle at 50% 50%,transparent 0%,transparent 10%,black 25%);animation:boot-transform 2s infinite alternate, boot-opacity 4s infinite;animation-timing-function:cubic-bezier(0.6,0.8,0.5,1);"></div>
+        </div>
         <div id="bootText"></div>
     </div>
 </div>
 
-<!-- 全新加入的引导页 -->
-<div id="introScreen">
-    <div class="intro-orb orb1"></div>
-    <div class="intro-orb orb2"></div>
+<style>
+    @keyframes floatOrb { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 30px) scale(1.1); } }
+    .slide .anim-item { opacity: 0; transform: translateY(-160px) scale(0.5); filter: blur(15px); transition: opacity 0.8s ease, transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.8s ease; }
+    .slide.active { opacity: 1; pointer-events: auto; }
+    .slide.active .anim-item { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    .slide.active .delay-1 { transition-delay: 0.1s; }
+    .slide.active .delay-2 { transition-delay: 0.35s; }
+    .slide.active .delay-3 { transition-delay: 0.6s; }
+    .slide.active .delay-4 { transition-delay: 0.85s; }
+    .dot.active { width: 28px; border-radius: 4px; background: #2e7d32; }
+    .intro-btn:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(46,125,50,0.4); }
+    .intro-btn:active { transform: scale(0.96); }
+    .skip-btn:hover { color: #2e7d32; transform: scale(1.05); }
+    .feature-pill:hover { transform: translateY(-2px); background: rgba(46,125,50,0.15); }
+    @keyframes boot-transform { 0% { transform: translate(-55%); } 100% { transform: translate(55%); } }
+    @keyframes boot-opacity { 0%, 100% { opacity: 0; } 15% { opacity: 1; } 65% { opacity: 0; } }
+    .boot-letter { display: inline-block; opacity: 0; animation: boot-letter-anim 4s infinite linear; z-index: 2; white-space: pre; }
+    @keyframes boot-letter-anim { 0% { opacity: 0; } 5% { opacity: 1; text-shadow: 0 0 4px #fff; transform: scale(1.1) translateY(-2px); } 20% { opacity: 0.2; } 100% { opacity: 0; } }
+    .boot-loader-wrapper.fade-out { opacity: 0; pointer-events: none; }
+</style>
 
-    <div class="slides-wrap">
-        <!-- Slide 1 -->
-        <div id="introSlide0" class="intro-slide active">
-            <div class="intro-icon anim-item delay-1">
-                <!-- 高质量社区广场图标（带渐变+立体感） -->
-                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 20C8 12.268 14.268 6 22 6H26C33.732 6 40 12.268 40 20V26C40 33.732 33.732 40 26 40H20L10 46V40C8.791 40 8 39.209 8 38V20Z" fill="white" fill-opacity="0.9"/>
-                    <path d="M16 18H32M16 26H28" stroke="#2e7d32" stroke-width="3" stroke-linecap="round"/>
-                    <circle cx="36" cy="12" r="6" fill="#ff6b6b" stroke="white" stroke-width="2"/>
-                </svg>
-            </div>
-            <div class="intro-title anim-item delay-2">社区广场</div>
-            <div class="intro-desc anim-item delay-3">帖子广场、实时聊天群、匿名留言板<br>发布动态，随便聊聊</div>
-        </div>
-
-        <!-- Slide 2 -->
-        <div id="introSlide1" class="intro-slide">
-            <div class="intro-icon anim-item delay-1" style="background: linear-gradient(135deg, #a855f7, #7e22ce);">
-                <!-- 高质量游戏手柄图标 -->
-                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16 18C10 18 6 24 6 32C6 38 10 42 14 42C18 42 20 40 22 36H26C28 40 30 42 34 42C38 42 42 38 42 32C42 24 38 18 32 18H16Z" fill="white" fill-opacity="0.9"/>
-                    <circle cx="18" cy="30" r="4" fill="#7e22ce"/>
-                    <path d="M32 26V34M28 30H36" stroke="#c084fc" stroke-width="3" stroke-linecap="round"/>
-                </svg>
-            </div>
-            <div class="intro-title anim-item delay-2">互动游戏</div>
-            <div class="intro-desc anim-item delay-3">开个房间，和朋友一起玩<br>斗地主、五子棋等</div>
-        </div>
-
-        <!-- Slide 3 -->
-        <div id="introSlide2" class="intro-slide">
-            <div class="intro-icon anim-item delay-1" style="background: linear-gradient(135deg, #fbbf24, #d97706);">
-                <!-- 高质量购物袋图标 -->
-                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 18H36L38 42H10L12 18Z" fill="white" fill-opacity="0.9"/>
-                    <path d="M18 18V12C18 8.686 20.686 6 24 6C27.314 6 30 8.686 30 12V18" stroke="white" stroke-width="3" stroke-linecap="round"/>
-                    <circle cx="24" cy="28" r="4" fill="#d97706"/>
-                </svg>
-            </div>
-            <div class="intro-title anim-item delay-2">皮肤商城</div>
-            <div class="intro-desc anim-item delay-3">45 款精美气泡皮肤任你挑<br>每日签到赚小七币</div>
-        </div>
-
-        <!-- Slide 4 -->
-        <div id="introSlide3" class="intro-slide">
-            <div class="intro-icon anim-item delay-1" style="background: linear-gradient(135deg, #38bdf8, #0284c7);">
-                <!-- 高质量邮件图标 -->
-                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="6" y="12" width="36" height="24" rx="4" fill="white" fill-opacity="0.9"/>
-                    <path d="M6 16L24 28L42 16" stroke="#0284c7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                    <circle cx="36" cy="32" r="6" fill="#f87171" stroke="white" stroke-width="2"/>
-                    <path d="M34 32H38M36 30V34" stroke="white" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-            </div>
-            <div class="intro-title anim-item delay-2">匿名留言</div>
-            <div class="intro-desc anim-item delay-3">无需登录，随写随发<br>每天 3 条额度，安全审核</div>
-        </div>
-    </div>
-
-    <div class="intro-footer">
-        <div class="intro-dots" id="introDots">
-            <div class="dot active"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-        </div>
-        <button id="introNextBtn" class="intro-btn">下一步</button>
-        <button id="introSkipBtn" class="skip-btn">跳过，直接进入 →</button>
-    </div>
+<div class="login-card">
+<div class="login-header">
+<div class="login-logo">
+<svg viewBox="0 0 24 24">
+<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+<path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+</svg>
+<span>Seven</span>戚
+</div>
+<div class="lang-switch">
+<button class="lang-btn active" data-lang="zh">中文</button>
+<button class="lang-btn" data-lang="en">EN</button>
+</div>
 </div>
 
-<div id="authScreen">
-    <div class="login-card">
-        <div class="login-header"><div class="login-logo"><span>Seven</span>戚</div></div>
-        
-        <div id="loginCard" class="auth-card active">
-            <div class="login-title"><span>欢迎回来</span><span>登录以继续</span></div>
-            <div class="login-form">
-                <div class="oauth-row">
-                    <button class="oauth-btn" onclick="alert('Google 登录暂未配置，请使用邮箱登录')">
-                        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Google
-                    </button>
-                    <button class="oauth-btn" onclick="alert('Github 登录暂未配置，请使用邮箱登录')">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="#24292e"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg> Github
-                    </button>
-                </div>
-                <div class="oauth-divider"><div></div><span>或</span><div></div></div>
-                <div class="field-group"><label>邮箱账号</label><input type="email" id="loginEmail" placeholder="请输入真实邮箱" /></div>
-                <div class="field-group"><label>密码</label><input type="password" id="loginPassword" placeholder="请输入密码" /></div>
-                <button class="login-continue" id="loginBtn">登录</button>
-                <div class="login-error" id="loginError"></div>
-            </div>
-            <div class="login-footer"><span>没有账号？</span><button class="switch-link" id="toRegisterBtn">去注册</button></div>
-        </div>
+<!-- ===== 登录卡片 ===== -->
+<div id="loginCard" class="auth-card active">
+<div class="login-title">
+<span id="loginMainTitle">欢迎回来</span>
+<span id="loginSubTitle">登录以继续</span>
+</div>
+<div class="login-form">
+<div class="oauth-row">
+<button class="oauth-btn" id="googleBtn">
+<svg class="icon" viewBox="0 0 24 24">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+</svg>
+<span id="googleText">Google</span>
+</button>
+<button class="oauth-btn" id="githubBtn">
+<svg class="icon" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+<path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+</svg>
+<span id="githubText">Github</span>
+</button>
+</div>
+<div class="separator">
+<div></div>
+<span id="orText">或</span>
+<div></div>
+</div>
+<div class="field-group">
+<label id="phoneLabel">手机号 / UID</label>
+<input type="text" id="loginPhone" placeholder="手机号或自定义UID" maxlength="11" oninput="checkUidLive(this.value, true)" />
+<div id="loginPhoneHint" class="field-hint"></div>
+</div>
+<div class="field-group">
+<label id="passwordLabel">密码</label>
+<input type="password" id="loginPassword" placeholder="请输入密码" />
+</div>
+<button class="login-continue" id="loginBtn">
+<span id="loginBtnText">登录</span>
+<svg class="icon" viewBox="0 0 24 24">
+<path d="m6 17 5-5-5-5"/>
+<path d="m13 17 5-5-5-5"/>
+</svg>
+</button>
+<div class="login-error" id="loginError"></div>
+</div>
+<div class="login-footer">
+<span id="noAccountText">没有账号？</span>
+<button class="switch-link" id="toRegisterBtn">去注册</button>
+</div>
+</div>
 
-        <div id="registerCard" class="auth-card">
-            <div class="login-title"><span>创建账户</span><span>加入 Seven戚 社区</span></div>
-            <div class="login-form">
-                <div class="field-group"><label>昵称</label><input type="text" id="regNick" maxlength="12" placeholder="请输入昵称" /></div>
-                <div class="field-group">
-                    <label>邮箱账号</label>
-                    <input type="email" id="regEmail" placeholder="请输入国内邮箱 (QQ/163等)" />
-                    <div id="regEmailHint" class="field-hint"></div>
-                </div>
-                <div class="field-group"><label>密码</label><input type="password" id="regPassword" placeholder="密码至少6位" /></div>
-                <div class="field-group"><label>确认密码</label><input type="password" id="regPassword2" placeholder="再次输入密码" /></div>
-                <button class="login-continue" id="registerBtn">注册</button>
-                <div class="login-error" id="registerError"></div>
-            </div>
-            <div class="login-footer"><span>已有账号？</span><button class="switch-link" id="toLoginBtn">去登录</button></div>
-        </div>
-    </div>
+<!-- ===== 注册卡片 ===== -->
+<div id="registerCard" class="auth-card">
+<div class="login-title">
+<span id="registerMainTitle">创建账户</span>
+<span id="registerSubTitle">加入 Seven戚 社区</span>
+</div>
+
+<!-- 设备检测提示 -->
+<div class="device-hint" id="deviceHint" style="margin-bottom:0.9em;">
+<svg viewBox="0 0 24 24">
+<rect x="5" y="2" width="14" height="20" rx="2"/>
+<line x1="12" y1="18" x2="12.01" y2="18"/>
+</svg>
+<span id="deviceHintText">正在检测本设备…</span>
+</div>
+
+<div class="login-form">
+<div class="field-group">
+<label id="regNickLabel">昵称</label>
+<input type="text" id="regNick" placeholder="请输入昵称" maxlength="12" />
+</div>
+<div class="field-group">
+<label id="regPhoneLabel">自定义UID</label>
+<input type="text" id="regPhone" placeholder="例如：abc12345" maxlength="10" oninput="this.value=this.value.replace(/[^a-zA-Z0-9]/g,''); checkUidLive(this.value)" />
+<div id="regPhoneHint" class="field-hint"></div>
+</div>
+<div class="field-group">
+<label id="regPassLabel">密码</label>
+<input type="password" id="regPassword" placeholder="请设置密码（至少6位）" />
+</div>
+<div class="field-group">
+<label id="regPass2Label">确认密码</label>
+<input type="password" id="regPassword2" placeholder="请再次输入密码" />
+</div>
+<button class="login-continue" id="registerBtn">
+<span id="registerBtnText">注册</span>
+<svg class="icon" viewBox="0 0 24 24">
+<path d="m6 17 5-5-5-5"/>
+<path d="m13 17 5-5-5-5"/>
+</svg>
+</button>
+<div class="login-error" id="registerError"></div>
+</div>
+<div class="login-footer">
+<span id="hasAccountText">已有账号？</span>
+<button class="switch-link" id="toLoginBtn">去登录</button>
+</div>
+</div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ===== 通用提示弹窗 ===== -->
+<div class="modal-overlay" id="uiModal">
+<div class="modal-box">
+<div class="modal-icon" id="uiModalIconWrap">
+<svg id="uiModalIcon" viewBox="0 0 24 24">
+<path d="M8 9h.01M16 9h.01M8.5 15a4 4 0 0 0 7 0"/>
+</svg>
+</div>
+<div class="modal-title" id="uiModalTitle">提示</div>
+<div class="modal-body" id="uiModalBody">内容</div>
+<div class="modal-actions">
+<button class="btn-secondary" id="uiModalSecondaryBtn" style="display:none;"></button>
+<button class="btn-primary" id="uiModalBtn">知道了</button>
+</div>
+</div>
 </div>
 
 <script>
-var SUPABASE_URL = "https://ljbxeuqnlxiffvbnwepv.supabase.co";
-var SUPABASE_ANON_KEY = "sb_publishable_OT_i4T2SnTxA8bHKnSQ1sw_0Es4l8SP";
-if (!window.sb) window.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ============================================================
+// Supabase 配置
+// ============================================================
+var SUPABASE_URL = "https://ulvhuqtpdafspbdvkogs.supabase.co";
+var SUPABASE_ANON_KEY = "sb_publishable_b3zSRFSj9k73_tIxO1yJYw_IEK9tPLg";
+window.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-var DOMESTIC_EMAIL_REGEX = /^[a-zA-Z0-9_.-]+@(qq|vip\.qq|foxmail|163|126|yeah|sina|sohu|139|189|aliyun)\.(com|cn|net)$/i;
+// ============================================================
+// 设备 ID 相关
+// ============================================================
+var MAX_ACCOUNTS_PER_DEVICE = 2;
 
-async function fetchMyProfileServer() {
-    try {
-        var r = await window.sb.rpc('get_my_profile');
-        if (!r.error && r.data) return Array.isArray(r.data) ? r.data[0] : r.data;
-    } catch (e) {}
-    try {
-        var s = await window.sb.auth.getUser();
-        var me = s && s.data && s.data.user;
-        if (!me) return null;
-        var q = await window.sb.from('users').select('*').eq('id', me.id).maybeSingle();
-        if (!q.error && q.data) return q.data;
-    } catch (e) {}
-    return null;
+function getDeviceId() {
+var id = localStorage.getItem('sq_device_id');
+if (!id) {
+if (window.crypto && crypto.randomUUID) {
+id = 'dev_' + crypto.randomUUID();
+} else {
+id = 'dev_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+}
+localStorage.setItem('sq_device_id', id);
+}
+return id;
 }
 
-async function ensureProfileFromAuth(nickname) {
-    try {
-        var s = await window.sb.auth.getUser();
-        var me = s && s.data && s.data.user;
-        if (!me) return null;
-        var nick = nickname || (me.user_metadata && me.user_metadata.nickname) || (me.email || '').split('@')[0];
-        var ip = '0.0.0.0';
-        try { var res = await fetch('https://api.ipify.org?format=json'); ip = (await res.json()).ip; } catch(e) {}
-        
-        var r = await window.sb.rpc('register_profile', { p_nickname: nick, p_ip: ip });
-        if (!r.error) return await fetchMyProfileServer();
-        
-        var ins = await window.sb.from('users').insert([{ id: me.id, nickname: nick, ip_address: ip }]).select();
-        if (!ins.error && ins.data[0]) return ins.data[0];
-        return await fetchMyProfileServer();
-    } catch (e) { return null; }
+async function getDeviceRegisterCount(deviceId) {
+try {
+var res = await window.sb.rpc('get_device_register_count', { p_device_id: deviceId });
+if (res.error) throw res.error;
+return res.data || 0;
+} catch (e) {
+console.warn('设备检测失败:', e);
+return 0;
+}
 }
 
-function saveLocalSession(profile) {
-    if (!profile) return;
-    var o = {}; ['id', 'nickname', 'avatar_url', 'is_admin', 'coins', 'banned_until'].forEach(k => { if (profile[k] !== undefined) o[k] = profile[k]; });
-    localStorage.setItem('sq_user_session', JSON.stringify(o));
+async function recordDeviceRegistration(deviceId, userId, phone) {
+try {
+await window.sb.rpc('record_device_registration', {
+p_device_id: deviceId,
+p_user_id: userId,
+p_phone: phone
+});
+} catch (e) {
+console.warn('设备记录写入失败:', e);
+}
 }
 
-async function doLogin() {
-    var email = document.getElementById('loginEmail').value.trim();
-    var password = document.getElementById('loginPassword').value;
-    var errEl = document.getElementById('loginError');
-    if (!email || !password) return errEl.textContent = '请填写邮箱和密码';
+async function refreshDeviceHint() {
+var hintEl = document.getElementById('deviceHint');
+var textEl = document.getElementById('deviceHintText');
+var t = T();
+var deviceId = getDeviceId();
+var count = await getDeviceRegisterCount(deviceId);
+var remain = MAX_ACCOUNTS_PER_DEVICE - count;
+
+if (remain <= 0) {
+hintEl.classList.add('warn');
+textEl.textContent = t.deviceLimitReached.replace('{n}', MAX_ACCOUNTS_PER_DEVICE);
+document.getElementById('registerBtn').disabled = true;
+} else {
+hintEl.classList.remove('warn');
+textEl.textContent = t.deviceHintLeft.replace('{n}', remain).replace('{total}', MAX_ACCOUNTS_PER_DEVICE);
+}
+}
+
+// ============================================================
+// 多语言
+// ============================================================
+var LANGS = {
+zh: {
+loginMainTitle: '欢迎回来',
+loginSubTitle: '登录以继续',
+registerMainTitle: '创建账户',
+registerSubTitle: '加入 Seven戚 社区',
+phoneLabel: '手机号 / UID',
+phonePh: '请输入手机号或自定义UID',
+passwordLabel: '密码',
+passwordPh: '请输入密码',
+regNickLabel: '昵称',
+regNickPh: '请输入昵称',
+regPhoneLabel: '自定义UID',
+regPhonePh: '5-10位数字加字母组合',
+regPassLabel: '密码',
+regPassPh: '请设置密码（至少6位）',
+regPass2Label: '确认密码',
+regPass2Ph: '请再次输入密码',
+loginBtnText: '登录',
+registerBtnText: '注册',
+orText: '或',
+noAccountText: '没有账号？',
+toRegisterBtn: '去注册',
+hasAccountText: '已有账号？',
+toLoginBtn: '去登录',
+googleText: 'Google',
+githubText: 'Github',
+modalTitle: '无法登录',
+modalDescGoogle: '哪来的乐乐？你有谷歌账号吗就用',
+modalDescGithub: '哪来的乐乐？你有 Github 账号吗就用',
+fillAll: '请填写完整信息',
+badPhone: '格式不对哦：手机号需11位纯数字，UID需5-10位字母+数字组合',
+    uidPureNum: '请不要只填数字，UID必须带字母（例如：abc123）',
+    uidPureLetter: '请不要只填字母，UID必须带数字（例如：123abc）',
+    uidTooShort: 'UID至少要有5位哦',
+    uidValid: '✅ 格式正确',
+shortPwd: '密码至少6位',
+pwdMismatch: '两次密码不一致',
+nicknameTaken: '该昵称不可用，请使用其他名称',
+phoneExists: '该账号已注册',
+loginSuccess: '登录成功！',
+registerSuccess: '注册成功，请登录',
+logging: '登录中...',
+registering: '注册中...',
+loginFail: '账号未注册或密码错误',
+deviceHintLeft: '本设备还可注册 {n} 个账号（上限 {total} 个）',
+deviceLimitReached: '本设备已注册 {n} 个账号，无法继续注册',
+deviceLimitTitle: '设备已达上限',
+deviceLimitFeedbackBtn: '去反馈说明情况',
+deviceLimitBody: '本设备已注册 {n} 个账号，无法继续注册新账号。\n\n如有特殊情况，请提交反馈说明原因，管理员会尽快处理。',
+netError: '网络异常，请检查网络后重试'
+},
+en: {
+loginMainTitle: 'Welcome back',
+loginSubTitle: 'Sign in to continue',
+registerMainTitle: 'Create account',
+registerSubTitle: 'Join Seven Qi Community',
+phoneLabel: 'Phone / UID',
+phonePh: 'Enter phone or custom UID',
+passwordLabel: 'Password',
+passwordPh: 'Enter password',
+regNickLabel: 'Nickname',
+regNickPh: 'Enter nickname',
+regPhoneLabel: 'Custom UID',
+regPhonePh: '5-10 chars (letters & numbers)',
+regPassLabel: 'Password',
+regPassPh: 'At least 6 characters',
+regPass2Label: 'Confirm password',
+regPass2Ph: 'Re-enter password',
+loginBtnText: 'Login',
+registerBtnText: 'Register',
+orText: 'OR',
+noAccountText: "Don't have an account?",
+toRegisterBtn: 'Sign up',
+hasAccountText: 'Already have an account?',
+toLoginBtn: 'Log in',
+googleText: 'Google',
+githubText: 'Github',
+modalTitle: 'Login Unavailable',
+modalDescGoogle: "Where'd you come from? You got a Google account?",
+modalDescGithub: "Where'd you come from? You got a Github account?",
+fillAll: 'Please fill in all fields',
+badPhone: 'Invalid format. Phone: 11 digits; UID: 5-10 letters+numbers',
+    uidPureNum: 'UID cannot be pure numbers, please add letters',
+    uidPureLetter: 'UID cannot be pure letters, please add numbers',
+    uidTooShort: 'UID must be at least 5 characters',
+    uidValid: '✅ Valid format',
+shortPwd: 'Password must be at least 6 characters',
+pwdMismatch: 'Passwords do not match',
+nicknameTaken: 'This nickname is unavailable',
+phoneExists: 'Account already registered',
+loginSuccess: 'Login successful!',
+registerSuccess: 'Registered, please log in',
+logging: 'Logging in...',
+registering: 'Registering...',
+loginFail: 'Account not registered or wrong password',
+deviceHintLeft: 'This device can register {n} more account(s) (max {total})',
+deviceLimitReached: 'This device has registered {n} accounts. Registration disabled.',
+deviceLimitTitle: 'Device Limit Reached',
+deviceLimitFeedbackBtn: 'Submit feedback',
+deviceLimitBody: 'This device has registered {n} accounts. You cannot register more.\n\nIf you need an exception, please submit feedback and an admin will review it.',
+netError: 'Network error, please check your connection and try again'
+}
+};
+var currentLang = 'zh';
+
+// ============================================================
+// 首次访问引导页逻辑
+// ============================================================
+(function initFirstVisitIntro() {
+    var hasSeenIntro = localStorage.getItem('seven_intro_shown');
+    if (hasSeenIntro) return; // 如果不是第一次访问，直接退出，显示登录框
     
-    errEl.textContent = '登录中...';
-    try {
-        var res = await window.sb.auth.signInWithPassword({ email, password });
-        if (res.error) throw new Error('账号或密码错误');
-        
-        var profile = await fetchMyProfileServer() || await ensureProfileFromAuth();
-        if (!profile) throw new Error('档案补建失败');
-        
-        if (profile.is_admin === true) {
-            var code = prompt('【管理员验证】请输入 6 位验证码：');
-            if(!code) throw new Error('必须输入验证码');
-            var v = await window.sb.rpc('verify_admin_otp', { p_code: code.trim() });
-            if (v.error || (v.data && !v.data.ok)) throw new Error('验证码错误');
-        }
-        
-        saveLocalSession(profile);
-        document.getElementById('authScreen').classList.add('hide');
-        setTimeout(() => window.location.href = './posts.html', 400);
-    } catch (e) { errEl.textContent = e.message; }
-}
-
-async function doRegister() {
-    var nickname = document.getElementById('regNick').value.trim();
-    var email = document.getElementById('regEmail').value.trim();
-    var pwd = document.getElementById('regPassword').value;
-    var pwd2 = document.getElementById('regPassword2').value;
-    var errEl = document.getElementById('registerError');
-    
-    if (!nickname || !email || !pwd) return errEl.textContent = '请填写完整信息';
-    if (!DOMESTIC_EMAIL_REGEX.test(email)) return errEl.textContent = '仅支持 QQ、163、126 等国内常用邮箱';
-    if (pwd !== pwd2) return errEl.textContent = '两次密码不一致';
-    
-    errEl.textContent = '注册中...';
-    try {
-        var res = await window.sb.auth.signUp({ email, password: pwd, options: { data: { nickname: nickname } } });
-        
-        if (res.error) {
-            var msg = res.error.message;
-            if (msg.includes('rate limit') || msg.includes('Email rate limit exceeded')) {
-                errEl.innerHTML = '⚠️ <b>今日邮箱发送数量已达上限</b><br>请直接添加 <b>站主QQ：2103686588</b><br>让站主为您在后台添加账号。';
-                return;
-            }
-            if (msg.includes('already registered')) throw new Error('该邮箱已注册');
-            throw new Error(msg);
-        }
-        
-        if (!res.data.session) {
-            alert('注册成功，请去邮箱查收验证邮件后再登录。\n(注：如未收到邮件，请检查垃圾箱或联系站主QQ 2103686588)');
-            switchCard('login');
-            document.getElementById('loginEmail').value = email;
-            return;
-        }
-        
-        await ensureProfileFromAuth(nickname);
-        document.getElementById('authScreen').classList.add('hide');
-        setTimeout(() => window.location.href = './posts.html', 400);
-    } catch (e) { errEl.textContent = e.message; }
-}
-
-function switchCard(which) {
-    ['loginCard', 'registerCard'].forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) el.classList.toggle('active', id === which + 'Card');
-    });
-    document.getElementById('loginError').textContent = '';
-    document.getElementById('registerError').textContent = '';
-    if (which === 'login') document.getElementById('regEmailHint').textContent = '';
-}
-
-(async function init() {
+    var introOverlay = document.getElementById('introOverlay');
+    var bootOverlay = document.getElementById('bootOverlay');
     var bootText = document.getElementById('bootText');
-    var text = 'Seven戚  出品';
-    text.split('').forEach(function(c, i) {
-        var span = document.createElement('span');
-        span.className = 'boot-letter';
-        span.style.animationDelay = (0.1 + i * 0.105).toFixed(3) + 's';
-        span.textContent = c;
-        bootText.appendChild(span);
-    });
+    var introBtn = document.getElementById('introBtn');
+    var introBtnText = document.getElementById('introBtnText');
+    var skipBtn = document.getElementById('skipBtn');
+    var dots = document.querySelectorAll('.dot');
+    var slides = document.querySelectorAll('.slide');
+    var currentSlide = 0;
+    var totalSlides = slides.length;
 
-    var isBootShown = sessionStorage.getItem('index_boot_shown');
-    var minTimePromise = Promise.resolve();
+    if (!introOverlay) return;
     
-    if (isBootShown) {
-        document.getElementById('bootScreen').style.display = 'none';
-    } else {
-        sessionStorage.setItem('index_boot_shown', '1');
-        minTimePromise = new Promise(resolve => setTimeout(resolve, 1800));
+    // 显示遮罩层
+    introOverlay.style.display = 'flex';
+    
+    // 初始化启动文字
+    if (bootText) {
+        const text = 'Seven戚  出品';
+        const chars = text.split('');
+        chars.forEach((c, i) => {
+            const span = document.createElement('span');
+            span.className = 'boot-letter';
+            span.style.animationDelay = (0.1 + i * 0.105).toFixed(3) + 's';
+            span.textContent = c;
+            bootText.appendChild(span);
+        });
     }
 
-    document.getElementById('toRegisterBtn').onclick = () => switchCard('register');
-    document.getElementById('toLoginBtn').onclick = () => switchCard('login');
-    document.getElementById('loginBtn').onclick = doLogin;
-    document.getElementById('registerBtn').onclick = doRegister;
-    document.getElementById('loginPassword').addEventListener('keydown', e => e.key === 'Enter' && doLogin());
-    document.getElementById('regPassword2').addEventListener('keydown', e => e.key === 'Enter' && doRegister());
-
-    document.getElementById('regEmail').addEventListener('input', function() {
-        var val = this.value.trim();
-        var hint = document.getElementById('regEmailHint');
-        if (!val) { hint.textContent = ''; hint.className = 'field-hint'; return; }
-        if (DOMESTIC_EMAIL_REGEX.test(val)) {
-            hint.textContent = '✅ 邮箱格式正确';
-            hint.className = 'field-hint success';
-        } else {
-            hint.textContent = '❌ 仅支持 QQ、163、126、foxmail 等国内邮箱';
-            hint.className = 'field-hint error';
+    // 初始第一页动画
+    setTimeout(() => {
+        if(slides[0]) {
+            slides[0].classList.add('active');
+            dots[0].classList.add('active');
         }
-    });
+    }, 100);
 
-    var currentSlide = 0, totalSlides = 4;
-    function updateSlide(idx) {
+    const goToSlide = (idx) => {
+        if(slides[currentSlide]) slides[currentSlide].classList.remove('active');
+        if(dots[currentSlide]) dots[currentSlide].classList.remove('active');
         currentSlide = idx;
-        document.querySelectorAll('.intro-slide').forEach((el, i) => el.classList.toggle('active', i === idx));
-        document.querySelectorAll('.intro-dots .dot').forEach((el, i) => el.classList.toggle('active', i === idx));
-        document.getElementById('introNextBtn').textContent = idx === totalSlides - 1 ? '开启体验' : '下一步';
-    }
-    document.getElementById('introNextBtn').onclick = function() {
-        if (currentSlide < totalSlides - 1) updateSlide(currentSlide + 1);
-        else finishIntro();
+        if(slides[currentSlide]) slides[currentSlide].classList.add('active');
+        if(dots[currentSlide]) dots[currentSlide].classList.add('active');
+        if (currentSlide === totalSlides - 1) {
+            if(introBtnText) introBtnText.textContent = '开启体验';
+        } else {
+            if(introBtnText) introBtnText.textContent = '下一步';
+        }
     };
-    document.getElementById('introSkipBtn').onclick = finishIntro;
-    
-    function finishIntro() {
-        localStorage.setItem('seven_intro_shown_v6', '1');
-        document.getElementById('introScreen').classList.add('hide');
-        setTimeout(() => {
-            document.getElementById('introScreen').style.display = 'none';
-            window.location.href = './messages.html';
-        }, 400);
-    }
 
-    var authPromise = (async function() {
-        try {
-            var s = await window.sb.auth.getSession();
-            if (s.data && s.data.session) {
-                var p = await fetchMyProfileServer() || await ensureProfileFromAuth();
-                if (p) { saveLocalSession(p); return 'AUTHED'; }
+    const finishIntro = () => {
+        // 记录已展示过，以后不再弹
+        localStorage.setItem('seven_intro_shown', '1');
+        
+        introOverlay.style.opacity = '0';
+        setTimeout(() => { 
+            introOverlay.style.display = 'none'; 
+            bootOverlay.style.display = 'flex';
+            
+            // 启动动画 4 秒后淡出，露出底下的登录框
+            setTimeout(() => {
+                bootOverlay.classList.add('fade-out');
+                setTimeout(() => { 
+                    bootOverlay.style.display = 'none'; 
+                }, 1000);
+            }, 4000); 
+        }, 800);
+    };
+
+    if (introBtn) {
+        introBtn.onclick = function() {
+            if (currentSlide < totalSlides - 1) {
+                goToSlide(currentSlide + 1);
+            } else {
+                finishIntro();
             }
-        } catch(e) {}
-        return 'GUEST';
-    })();
-
-    var results = await Promise.all([minTimePromise, authPromise]);
-    var status = results[1];
-
-    if (!isBootShown) {
-        document.getElementById('bootScreen').classList.add('hide');
-        setTimeout(() => document.getElementById('bootScreen').style.display = 'none', 800);
+        };
     }
 
-    if (status === 'AUTHED') {
-        window.location.replace('./posts.html');
+    if (skipBtn) {
+        skipBtn.onclick = finishIntro;
+    }
+})();
+
+var currentLang = 'zh';
+function T() { return LANGS[currentLang]; }
+
+function applyLang(lang) {
+currentLang = lang;
+var t = T();
+document.documentElement.lang = lang;
+
+document.querySelectorAll('.lang-btn').forEach(function(b) {
+b.classList.toggle('active', b.dataset.lang === lang);
+});
+
+document.getElementById('loginMainTitle').textContent = t.loginMainTitle;
+document.getElementById('loginSubTitle').textContent = t.loginSubTitle;
+document.getElementById('phoneLabel').textContent = t.phoneLabel;
+document.getElementById('passwordLabel').textContent = t.passwordLabel;
+document.getElementById('loginPhone').placeholder = t.phonePh;
+document.getElementById('loginPassword').placeholder = t.passwordPh;
+document.getElementById('loginBtnText').textContent = t.loginBtnText;
+document.getElementById('orText').textContent = t.orText;
+document.getElementById('noAccountText').textContent = t.noAccountText;
+document.getElementById('toRegisterBtn').textContent = t.toRegisterBtn;
+document.getElementById('googleText').textContent = t.googleText;
+document.getElementById('githubText').textContent = t.githubText;
+
+document.getElementById('registerMainTitle').textContent = t.registerMainTitle;
+document.getElementById('registerSubTitle').textContent = t.registerSubTitle;
+document.getElementById('regNickLabel').textContent = t.regNickLabel;
+document.getElementById('regPhoneLabel').textContent = t.regPhoneLabel;
+document.getElementById('regPassLabel').textContent = t.regPassLabel;
+document.getElementById('regPass2Label').textContent = t.regPass2Label;
+document.getElementById('regNick').placeholder = t.regNickPh;
+document.getElementById('regPhone').placeholder = t.regPhonePh;
+document.getElementById('regPassword').placeholder = t.regPassPh;
+document.getElementById('regPassword2').placeholder = t.regPass2Ph;
+document.getElementById('registerBtnText').textContent = t.registerBtnText;
+document.getElementById('hasAccountText').textContent = t.hasAccountText;
+document.getElementById('toLoginBtn').textContent = t.toLoginBtn;
+
+if (document.getElementById('registerCard').classList.contains('active')) {
+refreshDeviceHint();
+}
+}
+
+// ============================================================
+// 工具
+// ============================================================
+function showToast(msg) {
+var toast = document.getElementById('toast');
+toast.textContent = msg;
+toast.classList.add('show');
+clearTimeout(window.toastTimer);
+window.toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2500);
+}
+
+function showModal(title, body, isWarn, secondary) {
+document.getElementById('uiModalTitle').textContent = title;
+document.getElementById('uiModalBody').textContent = body;
+var iconWrap = document.getElementById('uiModalIconWrap');
+if (isWarn) iconWrap.classList.add('warn');
+else iconWrap.classList.remove('warn');
+
+var modal = document.getElementById('uiModal');
+var primaryBtn = document.getElementById('uiModalBtn');
+var secondaryBtn = document.getElementById('uiModalSecondaryBtn');
+
+// 每次调用都重置按钮行为，避免上一次的回调残留
+primaryBtn.onclick = function() {
+    modal.classList.remove('active');
+};
+
+if (secondary && secondary.text) {
+    secondaryBtn.textContent = secondary.text;
+    secondaryBtn.style.display = '';
+    secondaryBtn.onclick = function() {
+        modal.classList.remove('active');
+        if (typeof secondary.onClick === 'function') secondary.onClick();
+    };
+} else {
+    secondaryBtn.style.display = 'none';
+    secondaryBtn.onclick = null;
+}
+
+modal.classList.add('active');
+}
+document.getElementById('uiModalBtn').onclick = function() {
+document.getElementById('uiModal').classList.remove('active');
+};
+document.getElementById('uiModal').addEventListener('click', function(e) {
+if (e.target === this) this.classList.remove('active');
+});
+
+function phoneToEmail(phone) { return phone + '@sevenqi.com'; }
+
+async function hashPassword(password) {
+var encoder = new TextEncoder();
+var data = encoder.encode(password);
+var hashBuffer = await crypto.subtle.digest('SHA-256', data);
+var hashArray = Array.from(new Uint8Array(hashBuffer));
+return hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+}
+
+function generateDefaultAvatar(nickname) {
+var colors = ["#6ee7b7", "#fbbf24", "#f87171", "#a78bfa", "#f472b6", "#38bdf8", "#2e7d32", "#e67e22"];
+var color = colors[Math.floor(Math.random() * colors.length)];
+var initial = nickname.charAt(0).toUpperCase();
+var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">' +
+'<rect width="100" height="100" fill="' + color + '" rx="50"/>' +
+'<text x="50" y="58" font-size="40" text-anchor="middle" fill="white" font-family="sans-serif">' + initial + '</text></svg>';
+return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+// ============================================================
+// 卡片切换
+// ============================================================
+function showLoginCard() {
+document.getElementById('loginCard').classList.add('active');
+document.getElementById('registerCard').classList.remove('active');
+document.getElementById('loginError').textContent = '';
+document.getElementById('registerError').textContent = '';
+}
+function showRegisterCard() {
+document.getElementById('registerCard').classList.add('active');
+document.getElementById('loginCard').classList.remove('active');
+document.getElementById('loginError').textContent = '';
+document.getElementById('registerError').textContent = '';
+refreshDeviceHint();
+}
+document.getElementById('toRegisterBtn').onclick = showRegisterCard;
+document.getElementById('toLoginBtn').onclick = showLoginCard;
+
+// ============================================================
+// 登录/注册
+// ============================================================
+function genUserNo() {
+var d = new Date();
+var p = function(n){ return (n<10?'0':'')+n; };
+var ts = '' + d.getFullYear() + p(d.getMonth()+1) + p(d.getDate()) + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+var letters = 'abcdefghijklmnopqrstuvwxyz';
+var r = '';
+for (var i=0;i<3;i++) r += letters.charAt(Math.floor(Math.random()*26));
+return ts + r;
+}
+
+async function registerUser(uid, password, nickname) {
+var email = uid + '@sevenqi.com';
+// 0. 查重（RPC）
+try {
+var exist = await window.sb.rpc('get_login_email_by_uid', { p_uid: uid });
+if (exist.data) throw new Error(T().phoneExists);
+} catch (e) {
+if (e.message === T().phoneExists) throw e;
+}
+// 1. Auth 注册
+var signRes;
+try {
+signRes = await window.sb.auth.signUp({ email: email, password: password });
+} catch (netErr) {
+throw new Error(T().netError);
+}
+if (signRes.error) {
+var emsg = ((signRes.error.message || '') + ' ' + (signRes.error.error_description || '')).toLowerCase();
+if (emsg.indexOf('already') >= 0 || emsg.indexOf('registered') >= 0 || signRes.error.status === 422)
+throw new Error(T().phoneExists);
+throw new Error(signRes.error.message || T().netError);
+}
+var authId = signRes.data && signRes.data.user ? signRes.data.user.id : null;
+// 2. 写业务表
+var avatar = generateDefaultAvatar(nickname);
+var res = await window.sb.rpc('create_user_profile', {
+p_phone: null, p_nickname: nickname, p_avatar: avatar,
+p_user_no: genUserNo(), p_auth_id: authId, p_custom_uid: uid
+});
+if (res.error) {
+if (res.error.code === '23505' || ((res.error.message || '').toLowerCase().indexOf('duplicate') >= 0)) throw new Error(T().phoneExists);
+throw res.error;
+}
+return res.data;
+}
+
+async function loginUser(account, password) {
+try { await window.sb.auth.signOut(); } catch (e) {}
+
+var email = '';
+if (/^\d{11}$/.test(account) || /^[a-zA-Z0-9]{5,10}$/.test(account)) {
+email = account + '@sevenqi.com';
+} else {
+throw new Error(T().badPhone);
+}
+
+var signRes = await window.sb.auth.signInWithPassword({ email: email, password: password });
+
+if (signRes.error) {
+// 老用户兼容
+var hashed = await hashPassword(password);
+var oldRes = await window.sb.rpc('legacy_auth_lookup', { p_phone: account, p_hash: hashed });
+var oldUser = oldRes.data;
+if (oldUser) {
+var su = await window.sb.auth.signUp({ email: email, password: password });
+if (su.error && (su.error.message || '').toLowerCase().indexOf('already') < 0) throw su.error;
+// 先登录建立会话（让 auth.uid() 有值），再绑定
+var si = await window.sb.auth.signInWithPassword({ email: email, password: password });
+var curUid = si.data && si.data.session ? si.data.session.user.id : null;
+if (curUid) {
+await window.sb.rpc('bind_auth_to_phone', { p_phone: account, p_hash: hashed, p_auth_id: curUid });
+oldUser.auth_id = curUid;
+}
+return oldUser;
+}
+throw new Error(T().loginFail);
+}
+
+var authUser = signRes.data.user;
+var q = await window.sb.rpc('get_my_profile');
+var user = q.data || null;
+if (!user) {
+var q2 = await window.sb.rpc('claim_user_by_phone', { p_phone: account });
+user = q2.data;
+}
+if (!user) throw new Error(T().loginFail);
+return user;
+}
+
+// 实时检查 UID 格式
+function checkUidLive(val, isLogin) {
+    var hintId = isLogin ? 'loginPhoneHint' : 'regPhoneHint';
+    var hintEl = document.getElementById(hintId);
+    if (!hintEl) return;
+    var t = T();
+    val = val.trim();
+    if (!val) { hintEl.textContent = ''; hintEl.className = 'field-hint'; return; }
+
+    // 11位纯数字当作手机号（登录允许，注册不允许）
+    if (/^\d{11}$/.test(val)) {
+        if (isLogin) { hintEl.textContent = '✅ 手机号格式'; hintEl.className = 'field-hint success'; }
+        else { hintEl.textContent = '⚠️ 这是手机号，请设置字母+数字的UID'; hintEl.className = 'field-hint error'; }
         return;
     }
 
-    var urlParams = new URLSearchParams(location.search);
-    var isLoginIntent = urlParams.get('login') === '1';
-    var hasSeenIntro = localStorage.getItem('seven_intro_shown_v6');
-    var isReferrerInternal = document.referrer && document.referrer.includes(window.location.host);
-
-    if (isLoginIntent || isReferrerInternal) {
-        document.getElementById('authScreen').style.display = 'flex';
-    } else if (!hasSeenIntro) {
-        document.getElementById('introScreen').style.display = 'flex';
-    } else {
-        window.location.replace('./messages.html');
+    // 校验长度
+    if (val.length < 5) {
+        hintEl.textContent = t.uidTooShort;
+        hintEl.className = 'field-hint error';
+        return;
     }
+    if (val.length > 10) {
+        hintEl.textContent = '⚠️ UID不能超过10位';
+        hintEl.className = 'field-hint error';
+        return;
+    }
+
+    // 检查混合
+    var hasLetter = /[a-zA-Z]/.test(val);
+    var hasNum = /\d/.test(val);
+    
+    if (!hasLetter && hasNum) {
+        hintEl.textContent = t.uidPureNum;
+        hintEl.className = 'field-hint error';
+    } else if (hasLetter && !hasNum) {
+        hintEl.textContent = t.uidPureLetter;
+        hintEl.className = 'field-hint error';
+    } else if (hasLetter && hasNum) {
+        hintEl.textContent = t.uidValid;
+        hintEl.className = 'field-hint success';
+    }
+}
+
+function handleLogin() {
+var t = T();
+var account = document.getElementById('loginPhone').value.trim();
+var password = document.getElementById('loginPassword').value.trim();
+var errEl = document.getElementById('loginError');
+var btn = document.getElementById('loginBtn');
+
+if (!account || !password) { errEl.textContent = t.fillAll; return; }
+if (/^\d{11}$/.test(account)) {
+  // 手机号放行
+} else if (!/^[a-zA-Z0-9]{5,10}$/.test(account)) {
+  errEl.textContent = t.badPhone; return;
+} else if (!/[a-zA-Z]/.test(account) || !/\d/.test(account)) {
+  // 专门拦截只有数字或只有字母的 UID
+  errEl.textContent = t.badPhone; return;
+}
+if (password.length < 6) { errEl.textContent = t.shortPwd; return; }
+
+errEl.textContent = t.logging;
+btn.disabled = true;
+
+loginUser(account, password)
+.then(function(user) {
+errEl.textContent = '';
+localStorage.setItem('sq_user_session', JSON.stringify(user));
+showToast(t.loginSuccess);
+setTimeout(function() {
+window.location.href = '/liuyanban/posts.html';
+}, 400);
+})
+.catch(function(err) {
+errEl.textContent = err.message || t.loginFail;
+btn.disabled = false;
+});
+}
+
+async function handleRegister() {
+var t = T();
+var nickname = document.getElementById('regNick').value.trim();
+var uid = document.getElementById('regPhone').value.trim();
+var password = document.getElementById('regPassword').value.trim();
+var password2 = document.getElementById('regPassword2').value.trim();
+var errEl = document.getElementById('registerError');
+var btn = document.getElementById('registerBtn');
+
+if (!nickname || !uid || !password || !password2) { errEl.textContent = t.fillAll; return; }
+if (nickname.toLowerCase() === 'seven戚') { errEl.textContent = t.nicknameTaken; return; }
+if (!/^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]{5,10}$/.test(uid)) { 
+    if (/^\d{11}$/.test(uid)) { errEl.textContent = '这是手机号，请不要填在UID框里'; }
+    else if (!/\d/.test(uid)) { errEl.textContent = t.uidPureLetter; }
+    else if (!/[a-zA-Z]/.test(uid)) { errEl.textContent = t.uidPureNum; }
+    else { errEl.textContent = t.badPhone; }
+    return; 
+  }
+if (password.length < 6) { errEl.textContent = t.shortPwd; return; }
+if (password !== password2) { errEl.textContent = t.pwdMismatch; return; }
+
+var deviceId = getDeviceId();
+btn.disabled = true;
+errEl.textContent = t.registering;
+
+var count = await getDeviceRegisterCount(deviceId);
+if (count >= MAX_ACCOUNTS_PER_DEVICE) {
+errEl.textContent = '';
+btn.disabled = false;
+showModal(t.deviceLimitTitle, t.deviceLimitBody.replace('{n}', MAX_ACCOUNTS_PER_DEVICE), true, {
+    text: t.deviceLimitFeedbackBtn,
+    onClick: function() { window.location.href = '/liuyanban/profile.html?view=feedback'; }
+});
+return;
+}
+
+registerUser(uid, password, nickname)
+.then(async function(newUser) {
+errEl.textContent = '';
+if (newUser && newUser.id) {
+await recordDeviceRegistration(deviceId, newUser.id, uid);
+}
+showToast(t.registerSuccess);
+showLoginCard();
+document.getElementById('loginPhone').value = uid;
+document.getElementById('loginPassword').value = '';
+document.getElementById('loginPassword').focus();
+document.getElementById('regNick').value = '';
+document.getElementById('regPhone').value = '';
+document.getElementById('regPassword').value = '';
+document.getElementById('regPassword2').value = '';
+btn.disabled = false;
+})
+.catch(function(err) {
+errEl.textContent = err.message || '注册失败';
+btn.disabled = false;
+});
+}
+
+document.getElementById('loginBtn').onclick = handleLogin;
+document.getElementById('registerBtn').onclick = handleRegister;
+
+// 第三方登录
+document.getElementById('googleBtn').onclick = function(e) {
+e.preventDefault();
+showModal(T().modalTitle, T().modalDescGoogle);
+};
+document.getElementById('githubBtn').onclick = function(e) {
+e.preventDefault();
+showModal(T().modalTitle, T().modalDescGithub);
+};
+
+// 语言切换
+document.querySelectorAll('.lang-btn').forEach(function(btn) {
+btn.onclick = function() { applyLang(this.dataset.lang); };
+});
+
+// 回车提交
+document.querySelectorAll('input').forEach(function(inp) {
+inp.addEventListener('keydown', function(e) {
+if (e.key === 'Enter') {
+if (document.getElementById('loginCard').classList.contains('active')) handleLogin();
+else handleRegister();
+}
+});
+});
+
+// 已登录自动跳转
+(async function checkSession() {
+try {
+if (window.sb) {
+var r = await window.sb.auth.getSession();
+var authSession = r.data && r.data.session;
+if (authSession && authSession.user) {
+var q = await window.sb.rpc('get_my_profile');
+var u = q.data || null;
+if (u) {
+localStorage.setItem('sq_user_session', JSON.stringify(u));
+window.location.href = '/liuyanban/posts.html';
+return;
+}
+}
+}
+} catch (e) {}
+var session = localStorage.getItem('sq_user_session');
+if (session) {
+try {
+var user = JSON.parse(session);
+if (user && user.id) {
+window.location.href = '/liuyanban/posts.html';
+return;
+}
+} catch (e) {}
+}
+applyLang('zh');
+showLoginCard();
 })();
+
+document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
 </script>
 </body>
 </html>
