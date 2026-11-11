@@ -62,91 +62,52 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 @keyframes spin{to{transform:rotate(360deg)}}
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:10px 24px;border-radius:99px;opacity:0;transition:.4s;z-index:9999;pointer-events:none}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(-10px)}
-.detail-overlay{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;z-index:999}
-.detail-overlay.active{display:flex}
-.detail-header{display:flex;align-items:center;padding:12px 16px;background:var(--bg-card);border-bottom:1px solid var(--border);flex-shrink:0;gap:8px}
-.detail-header .back-btn{background:none;border:none;cursor:pointer;padding:4px;color:var(--text);display:flex}
-.detail-header .back-btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.detail-content{flex:1;overflow-y:auto;padding:16px 20px}
-.detail-post{margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px}
-.detail-post .post-author{display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap}
-.detail-post .post-author .avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;color:#fff;background:var(--primary);background-size:cover;background-position:center}
-.detail-post .post-author .name{font-weight:600;font-size:.9em}
-.detail-post .post-author .official-tag{background:var(--official-blue);color:#fff;font-size:.55em;padding:0 6px;border-radius:99px}
-.detail-post .post-author .time{font-size:.7em;color:var(--text-muted);margin-left:auto}
-.detail-post .post-author .report-btn-detail{background:none;border:none;color:var(--warning);cursor:pointer;font-size:.7em;display:inline-flex;align-items:center;gap:3px;padding:4px 8px;border-radius:99px;font-family:inherit}
-.detail-post .post-title{font-weight:700;font-size:1.1em;margin:4px 0 8px 0}
-.detail-post .post-content{font-size:.95em;color:var(--text);line-height:1.6;word-break:break-word}
-.detail-post .post-content img{max-width:100%;border-radius:8px;margin:6px 0}
-.detail-comments{flex:1;margin-top:8px}
-.detail-comments .comment-item{display:flex;gap:10px;padding:10px 4px;border-bottom:1px solid var(--border)}
-.detail-comments .comment-item .avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:12px;color:#fff;background:var(--primary);background-size:cover;background-position:center}
-.detail-comments .comment-item .body{flex:1}
-.detail-comments .comment-item .meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.detail-comments .comment-item .meta .name{font-weight:600;font-size:.85em}
-.detail-comments .comment-item .meta .official-tag{background:var(--official-blue);color:#fff;font-size:.5em;padding:0 4px;border-radius:99px}
-.detail-comments .comment-item .meta .time{font-size:.65em;color:var(--text-muted)}
-.detail-comments .comment-item .meta .reply-btn{background:none;border:none;color:var(--text-muted);font-size:.65em;cursor:pointer;margin-left:auto;font-family:inherit;}
-.detail-comments .comment-item .txt{font-size:.85em;line-height:1.5;margin-top:2px}
-.detail-comments .comment-item .reply-to{background:var(--bg-input);padding:4px 8px;border-radius:4px;font-size:.8em;color:var(--text-muted);margin-top:4px;border-left:2px solid var(--primary);}
-.detail-input-area{display:flex;gap:8px;padding:12px 16px;background:var(--bg-card);border-top:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;}
-.detail-input-area input{flex:1;padding:10px;border-radius:99px;border:2px solid var(--border);font-family:inherit;font-size:.85em;outline:none}
-.detail-input-area button{padding:10px 20px;border-radius:99px;border:none;background:var(--primary);color:#fff;font-weight:700;cursor:pointer;font-family:inherit}
-.cancel-reply{display:none;width:100%;font-size:.7em;color:var(--text-muted);margin-bottom:4px;cursor:pointer;text-align:right;}
-.cancel-reply.active{display:block;}
 </style>
 </head>
 <body>
 <div id="mainApp">
-<div id="header-container"></div>
-<div class="banned-banner" id="bannedBanner">账号已被封禁，无法发布新帖或评论。解封时间：<span id="bannedUntilDisplay"></span></div>
-<div class="app-content" id="postContent">
-<div class="posts-header">
-<div class="left" id="categoryFilter"><button class="category-btn active" data-cat="全部" onclick="setCategory('全部', this)">全部</button></div>
-<div style="display:flex;gap:6px;">
-<button class="new-post-btn" id="adminPanelBtn" style="display:none;background:var(--danger);" onclick="openAdminPanel()">管理</button>
-<a href="./new-post.html" class="new-post-btn" id="newPostBtn">发帖</a>
-</div>
-</div>
-<div id="postList"><div class="loading-state"><div class="spinner"></div>加载中...</div></div>
-</div>
-<div id="footer-container"></div>
+  <div id="header-container"></div>
+  <div class="banned-banner" id="bannedBanner">账号已被封禁，无法发布新帖或评论。解封时间：<span id="bannedUntilDisplay"></span></div>
+  <div class="app-content" id="postContent">
+    <div class="posts-header">
+      <div class="left" id="categoryFilter"><button class="category-btn active" data-cat="全部" onclick="setCategory('全部', this)">全部</button></div>
+      <div style="display:flex;gap:6px;">
+        <button class="new-post-btn" id="adminPanelBtn" style="display:none;background:var(--danger);" onclick="openAdminPanel()">管理</button>
+        <a href="./new-post.html" class="new-post-btn" id="newPostBtn">发帖</a>
+      </div>
+    </div>
+    <div id="postList"><div class="loading-state"><div class="spinner"></div>加载中...</div></div>
+  </div>
+  <div id="footer-container"></div>
 </div>
 <a href="./new-post.html" class="floating-post-btn" id="floatingPostBtn">
-<svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  <svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
 </a>
 
-<div class="detail-overlay" id="detailOverlay">
-<div style="display:flex;flex-direction:column;height:100%;">
-<div class="detail-header">
-<button class="back-btn" id="closeDetail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
-<span style="font-weight:700;font-size:1em;">帖子详情</span>
-</div>
-<div class="detail-content" id="detailContent"></div>
-<div class="detail-input-area">
-<div class="cancel-reply" id="cancelReplyBtn">取消回复</div>
-<input type="text" id="detailCommentInput" placeholder="写评论…" maxlength="200" />
-<button id="detailSendCommentBtn">发送</button>
-</div>
-</div>
-</div>
-
 <div id="toast"></div>
+
 <script src="./common.js"></script>
 <script>
-var currentUser = getSessionUser();
-if (!currentUser || !currentUser.id) window.location.href = './index.html';
-var isAdmin = (currentUser.is_admin === true);
-if (isAdmin) document.getElementById('adminPanelBtn').style.display = 'inline-flex';
-renderHeader('帖子广场', 'posts');
-renderFooter('posts');
+// ==========================================
+// 1. 基础依赖与身份验证
+// ==========================================
+if (!window.sb) {
+  alert('Supabase 未加载，请检查 common.js');
+}
 
 function showToast(msg) {
     var t = document.getElementById('toast');
-    if(!t) return; t.textContent = msg; t.classList.add('show');
-    clearTimeout(window.toastTimer); window.toastTimer = setTimeout(function() { t.classList.remove('show'); }, 3000);
+    if(!t) return;
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(window.toastTimer);
+    window.toastTimer = setTimeout(function() { t.classList.remove('show'); }, 3000);
 }
-function escapeHtml(s) { if (!s) return ''; return String(s).replace(/[&<>"']/g, function(c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function escapeHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/[&<>"']/g, function(c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+}
 function getUserAvatar(user) {
     if (user && user.avatar_url) return user.avatar_url;
     var name = user ? user.nickname : 'U';
@@ -154,16 +115,39 @@ function getUserAvatar(user) {
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 
-var categories = [], posts = [], currentCategory = '全部', commentCountMap = {}, profilesMapCache = null;
+var currentUser = getSessionUser();
+if (!currentUser || !currentUser.id) window.location.href = './index.html';
+var isAdmin = (currentUser.is_admin === true);
+if (isAdmin) document.getElementById('adminPanelBtn').style.display = 'inline-flex';
+
+// 渲染头部和底部
+renderHeader('帖子广场', 'posts');
+renderFooter('posts');
+
+// ==========================================
+// 2. 数据拉取
+// ==========================================
+var categories = [];
+var posts = [];
+var currentCategory = '全部';
+var commentCountMap = {};
+var profilesMapCache = null;
 
 async function fetchProfilesMap(force) {
     if (!force && profilesMapCache) return profilesMapCache;
     var r = await window.sb.from('public_profiles').select('id, nickname, avatar_url');
-    if (r.error) return {};
-    var map = {}; (r.data || []).forEach(function(u) { map[u.id] = u; });
-    profilesMapCache = map; return map;
+    if (r.error) return {}; // 容错
+    var map = {};
+    (r.data || []).forEach(function(u) { map[u.id] = u; });
+    profilesMapCache = map;
+    return map;
 }
-async function fetchCategories() { var res = await window.sb.from('categories').select('*').order('sort_order'); return res.data || []; }
+
+async function fetchCategories() {
+    var res = await window.sb.from('categories').select('*').order('sort_order');
+    return res.data || [];
+}
+
 async function fetchPosts() {
     var res = await window.sb.from('posts').select('*').order('created_at', { ascending: false });
     if (res.error) throw res.error;
@@ -174,6 +158,7 @@ async function fetchPosts() {
     } catch (e) {}
     return data;
 }
+
 async function fetchAllCommentCounts() {
     var res = await window.sb.from('post_comments').select('post_id');
     if (!res.error) {
@@ -182,6 +167,9 @@ async function fetchAllCommentCounts() {
     }
 }
 
+// ==========================================
+// 3. 渲染逻辑
+// ==========================================
 function renderCategoryFilter() {
     var container = document.getElementById('categoryFilter');
     var html = '<button class="category-btn active" data-cat="全部" onclick="setCategory(\'全部\', this)">全部</button>';
@@ -190,9 +178,12 @@ function renderCategoryFilter() {
     });
     container.innerHTML = html;
 }
+
 function setCategory(cat, btn) {
     document.querySelectorAll('#categoryFilter .category-btn').forEach(function(b) { b.classList.remove('active'); });
-    btn.classList.add('active'); currentCategory = cat; renderPosts();
+    btn.classList.add('active');
+    currentCategory = cat;
+    renderPosts();
 }
 window.setCategory = setCategory;
 
@@ -210,26 +201,36 @@ function renderPostContent(post) {
 
 async function renderPosts() {
     var list = document.getElementById('postList');
-    var filtered = posts.filter(function(p) { return currentCategory === '全部' || p.category_id === currentCategory; });
+    var filtered = posts.filter(function(p) {
+        return currentCategory === '全部' || p.category_id === currentCategory;
+    });
     if (!filtered.length) { list.innerHTML = '<div class="empty-state">暂无帖子</div>'; return; }
+    
     var html = '';
     for (var i = 0; i < filtered.length; i++) {
-        var p = filtered[i], user = p.users || null;
+        var p = filtered[i];
+        var user = p.users || null;
         var name = user ? user.nickname : (p.author || '匿名');
         var avatar = user ? (user.avatar_url || getUserAvatar(user)) : getUserAvatar({ nickname: p.author });
         var time = new Date(p.created_at).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         var catName = '';
-        if (p.category_id) { var _cat = categories.find(function(c) { return c.id === p.category_id; }); if (_cat && _cat.name && _cat.name !== '未分类') catName = _cat.name; }
+        if (p.category_id) {
+            var _cat = categories.find(function(c) { return c.id === p.category_id; });
+            if (_cat && _cat.name && _cat.name !== '未分类') catName = _cat.name;
+        }
+        var content = renderPostContent(p);
         var raw = p.content ? p.content.replace(/<[^>]*>/g, '') : '';
-        var clamped = raw.length > 150 || (p.content && p.content.split('\n').length > 5);
+        var clamped = raw.length > 150;
         var commentCount = commentCountMap[p.id] || 0;
         var canDelete = isAdmin || (currentUser && currentUser.id === p.user_id);
+
         var delBtn = canDelete ? '<button class="del-btn" data-action="delete" data-id="' + p.id + '">删除</button>' : '';
         var reportBtn = '';
         if (currentUser && currentUser.id !== p.user_id && p.user_id) {
             var snapshot = ((p.title || '') + ' ' + (p.content || '').replace(/<[^>]*>/g, '')).substring(0, 200);
             reportBtn = '<button class="report-btn" data-action="report" data-id="' + p.id + '" data-uid="' + p.user_id + '" data-snapshot="' + escapeHtml(snapshot) + '">举报</button>';
         }
+
         html += '<div class="post-card" data-postid="' + p.id + '">';
         html += '<div class="post-author">';
         html += '<div class="avatar" style="' + (avatar && avatar.startsWith('http') ? 'background-image:url(' + avatar + ');background-size:cover;background-position:center;' : '') + '">' + (avatar && !avatar.startsWith('http') ? name.charAt(0).toUpperCase() : '') + '</div>';
@@ -239,20 +240,18 @@ async function renderPosts() {
         html += '<span class="time">' + time + '</span>';
         html += '</div>';
         if (p.title) html += '<div class="post-title">' + escapeHtml(p.title) + '</div>';
-        html += '<div class="post-content ' + (clamped ? 'clamped' : '') + '">' + renderPostContent(p) + '</div>';
-        html += '<div class="post-footer"><span class="comment-count">评论 ' + commentCount + '</span><div class="actions">' + reportBtn + delBtn + '</div></div></div>';
+        html += '<div class="post-content ' + (clamped ? 'clamped' : '') + '">' + content + '</div>';
+        html += '<div class="post-footer">';
+        html += '<span class="comment-count">评论 ' + commentCount + '</span>';
+        html += '<div class="actions">' + reportBtn + delBtn + '</div>';
+        html += '</div></div>';
     }
     list.innerHTML = html;
-    list.querySelectorAll('.post-card').forEach(function(card) {
-        card.addEventListener('click', function(e) {
-            if (e.target.closest('button')) return;
-            openPostDetail(this.dataset.postid);
-        });
-    });
+
     list.querySelectorAll('.report-btn').forEach(function(btn) {
         btn.addEventListener('click', function(e) {
             e.stopPropagation();
-            window.openReportDialog(this.dataset.uid, 'post', this.dataset.id, this.dataset.snapshot);
+            openReportDialog(this.dataset.uid, 'post', this.dataset.id, this.dataset.snapshot);
         });
     });
     list.querySelectorAll('.del-btn').forEach(function(btn) {
@@ -260,156 +259,39 @@ async function renderPosts() {
             e.stopPropagation();
             if(confirm('确定删除这篇帖子吗？')) {
                 window.sb.from('posts').delete().eq('id', this.dataset.id).then(function(r){
-                    if(r.error) showToast('删除失败'); else { showToast('已删除'); loadAll(); }
+                    if(r.error) showToast('删除失败');
+                    else { showToast('已删除'); loadAll(); }
                 });
             }
         });
     });
 }
 
+// ==========================================
+// 4. 初始化
+// ==========================================
 async function loadAll() {
     document.getElementById('postList').innerHTML = '<div class="loading-state"><div class="spinner"></div>加载中...</div>';
     try {
-        categories = await fetchCategories(); renderCategoryFilter();
+        categories = await fetchCategories();
+        renderCategoryFilter();
         posts = await fetchPosts();
         await fetchAllCommentCounts();
         await renderPosts();
-    } catch (e) { document.getElementById('postList').innerHTML = '<div class="empty-state">加载失败：' + escapeHtml(e.message) + '</div>'; }
-}
-
-var currentDetailPost = null;
-var replyToUserId = null;
-var replyToName = null;
-
-async function openPostDetail(postId) {
-    var overlay = document.getElementById('detailOverlay');
-    var box = document.getElementById('detailContent');
-    overlay.classList.add('active');
-    box.innerHTML = '<div class="loading-state"><div class="spinner"></div>加载中...</div>';
-    var p = posts.find(function(x) { return x.id === postId; });
-    if (!p) { box.innerHTML = '<div class="empty-state">帖子不存在</div>'; return; }
-    currentDetailPost = p;
-    var user = p.users || null;
-    var name = user ? user.nickname : (p.author || '匿名');
-    var avatar = user ? (user.avatar_url || getUserAvatar(user)) : getUserAvatar({ nickname: name });
-    var time = new Date(p.created_at).toLocaleString('zh-CN');
-    var reportBtn = '';
-    if (currentUser.id !== p.user_id && p.user_id) {
-        var snapshot = ((p.title || '') + ' ' + (p.content || '').replace(/<[^>]*>/g, '')).substring(0, 200);
-        reportBtn = '<button class="report-btn-detail" onclick="window.openReportDialog(\'' + p.user_id + '\', \'post\', \'' + p.id + '\', \'' + escapeHtml(snapshot) + '\')">举报</button>';
-    }
-    var h = '<div class="detail-post"><div class="post-author">';
-    h += '<div class="avatar" style="' + (avatar.startsWith('http') ? 'background-image:url(' + avatar + ');background-size:cover;background-position:center;' : '') + '">' + (avatar.startsWith('http') ? '' : name.charAt(0).toUpperCase()) + '</div>';
-    h += '<span class="name">' + escapeHtml(name) + '</span>';
-    if (p.is_official) h += '<span class="official-tag">官方</span>';
-    h += '<span class="time">' + time + '</span>';
-    h += reportBtn;
-    h += '</div>';
-    if (p.title) h += '<div class="post-title">' + escapeHtml(p.title) + '</div>';
-    h += '<div class="post-content">' + renderPostContent(p) + '</div></div>';
-    h += '<div class="detail-comments" id="detailCommentList"><div class="loading-state"><div class="spinner"></div>加载评论...</div></div>';
-    box.innerHTML = h;
-    cancelReplyMode();
-    loadComments(postId);
-}
-
-async function loadComments(postId) {
-    var cl = document.getElementById('detailCommentList');
-    try {
-        var res = await window.sb.from('post_comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
-        var comments = res.data || [];
-        if (!comments.length) { cl.innerHTML = '<div class="empty-state">还没有评论，来说两句</div>'; return; }
-        var map = await fetchProfilesMap(false);
-        var h = '';
-        comments.forEach(function(c) {
-            var cu = map[c.user_id] || null;
-            var cn = cu ? cu.nickname : (c.author || '匿名');
-            var cav = cu ? (cu.avatar_url || getUserAvatar(cu)) : getUserAvatar({nickname: cn});
-            var replyName = c.reply_to_user_id ? (map[c.reply_to_user_id] ? map[c.reply_to_user_id].nickname : '某用户') : null;
-            h += '<div class="comment-item">';
-            h += '<div class="avatar" style="' + (cav.startsWith('http') ? 'background-image:url(' + cav + ');background-size:cover;background-position:center;' : '') + '">' + (cav.startsWith('http') ? '' : cn.charAt(0).toUpperCase()) + '</div>';
-            h += '<div class="body">';
-            h += '<div class="meta"><span class="name">' + escapeHtml(cn) + '</span>';
-            h += '<span class="time">' + new Date(c.created_at).toLocaleString('zh-CN', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) + '</span>';
-            h += '<button class="reply-btn" onclick="startReply(\'' + c.user_id + '\', \'' + escapeHtml(cn) + '\')">回复</button></div>';
-            if (replyName) h += '<div class="reply-to">回复 @' + escapeHtml(replyName) + '</div>';
-            h += '<div class="txt">' + escapeHtml(c.content) + '</div>';
-            h += '</div></div>';
-        });
-        cl.innerHTML = h;
     } catch (e) {
-        cl.innerHTML = '<div class="empty-state">评论加载失败</div>';
+        document.getElementById('postList').innerHTML = '<div class="empty-state">加载失败：' + escapeHtml(e.message) + '</div>';
     }
 }
 
-window.startReply = function(uid, name) {
-    replyToUserId = uid;
-    replyToName = name;
-    var input = document.getElementById('detailCommentInput');
-    input.placeholder = '回复 @' + name + '…';
-    input.focus();
-    document.getElementById('cancelReplyBtn').classList.add('active');
-};
-function cancelReplyMode() {
-    replyToUserId = null;
-    replyToName = null;
-    var input = document.getElementById('detailCommentInput');
-    input.placeholder = '写评论…';
-    input.value = '';
-    document.getElementById('cancelReplyBtn').classList.remove('active');
-}
-document.getElementById('cancelReplyBtn').onclick = cancelReplyMode;
-
-document.getElementById('detailSendCommentBtn').onclick = async function() {
-    var input = document.getElementById('detailCommentInput');
-    var text = input.value.trim();
-    if (!text) return;
-    this.disabled = true;
-    try {
-        var row = {
-            post_id: currentDetailPost.id,
-            user_id: currentUser.id,
-            author: currentUser.nickname,
-            content: text
-        };
-        if (replyToUserId) row.reply_to_user_id = replyToUserId;
-        var res = await window.sb.from('post_comments').insert([row]);
-        if (res.error) throw res.error;
-        showToast('评论成功');
-        cancelReplyMode();
-        await loadComments(currentDetailPost.id);
-        await fetchAllCommentCounts();
-        await renderPosts();
-        try {
-            if (currentDetailPost.user_id && currentDetailPost.user_id !== currentUser.id) {
-                await window.sb.from('notifications').insert([{
-                    user_id: currentDetailPost.user_id,
-                    type: 'comment',
-                    notification_type: 'comment',
-                    post_id: currentDetailPost.id,
-                    comment_author_id: currentUser.id,
-                    extra_text: replyToName ? ('回复了 @' + replyToName + '：' + text) : text,
-                    is_read: false
-                }]);
-            }
-        } catch (_ignore) {}
-    } catch(e) {
-        showToast('评论失败：' + (e.message || '网络错误'));
-    } finally {
-        this.disabled = false;
-    }
-};
-
-document.getElementById('closeDetail').onclick = function() {
-    document.getElementById('detailOverlay').classList.remove('active');
-};
-
-function openAdminPanel() {
-    window.location.href = './profile.html?view=settings';
-}
-window.openAdminPanel = openAdminPanel;
-
+// 启动
 loadAll();
+
+// 监听封号状态
+window.addEventListener('sq-ban-changed', function(e){
+    if(e.detail && e.detail.banned_until) {
+        document.getElementById('bannedBanner').classList.add('active');
+    }
+});
 </script>
 </body>
 </html>

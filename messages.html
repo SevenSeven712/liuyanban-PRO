@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <link rel="manifest" href="./manifest.json" />
 <meta name="theme-color" content="#2e7d32" />
+<link rel="apple-touch-icon" href="./icon.svg" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Seven戚 · 留言板</title>
 <script src="./vendor/supabase.js"></script>
@@ -31,6 +32,8 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .tab-btn .tab-icon svg{width:100%;height:100%;display:block;stroke:currentColor;fill:none}
 .tab-btn.active{color:var(--primary)}
 .tab-btn.active::after{content:'';position:absolute;top:-1px;left:30%;right:30%;height:3px;background:var(--primary);border-radius:0 0 4px 4px}
+.banned-banner{flex-shrink:0;background:#ffebee;color:#c62828;padding:6px 16px;font-size:.8em;font-weight:600;text-align:center;border-bottom:1px solid #ffcdd2;display:none}
+.banned-banner.active{display:block}
 .app-content{flex:1;min-height:0;display:flex;flex-direction:column}
 .msg-list{flex:1;overflow-y:auto;padding:16px 20px 8px;display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch}
 .msg{display:flex;gap:12px;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);flex-shrink:0}
@@ -45,6 +48,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .msg .ip .comment-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:13px;display:flex;align-items:center;gap:4px;padding:2px 6px;border-radius:999px;font-family:inherit}
 .msg .ip .comment-btn:hover{background:rgba(0,0,0,0.05);color:var(--text)}
 .msg .ip .del-btn{background:none;border:none;color:var(--danger);cursor:pointer;font-size:13px;opacity:0.6;padding:0 4px;margin-left:auto;display:flex;align-items:center;gap:4px}
+.msg.pinned{border-color:var(--primary);box-shadow:0 0 12px var(--primary-glow)}
 .empty-state{text-align:center;color:var(--text-muted);padding:40px 20px;font-size:0.85em}
 .loading-state{text-align:center;color:var(--text-muted);padding:40px 20px;font-size:0.9em}
 .fixed-input-area{flex-shrink:0;padding:10px 20px calc(10px + var(--safe-bottom));background:var(--bg);border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -52,9 +56,12 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .fixed-input-area input{flex:1;padding:10px 14px;border-radius:99px;border:2px solid var(--border);background:var(--bg-input);font-family:inherit;font-size:0.85em;outline:none;color:var(--text);min-width:0}
 .fixed-input-area input:focus{border-color:var(--primary)}
 .fixed-input-area button{padding:8px 20px;border-radius:99px;border:none;background:var(--primary);color:#fff;font-weight:700;font-size:0.85em;cursor:pointer;font-family:inherit;white-space:nowrap}
+.fixed-input-area button:hover{background:var(--primary-light)}
+/* 评论弹窗 */
 .comment-overlay{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;}
 .comment-overlay.active{display:flex;}
-.comment-panel{background:var(--bg-card);border-radius:20px 20px 0 0;max-width:100%;width:100%;max-height:80vh;display:flex;flex-direction:column;}
+.comment-panel{background:var(--bg-card);border-radius:20px 20px 0 0;max-width:100%;width:100%;max-height:80vh;display:flex;flex-direction:column;animation:slideUp .3s;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .comment-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);}
 .comment-close{background:none;border:none;font-size:1.2em;color:var(--text-muted);cursor:pointer;}
 .comment-list{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
@@ -71,6 +78,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 <body>
 <div id="mainApp">
   <div id="header-container"></div>
+  <div class="banned-banner" id="bannedBanner">账号已被封禁，无法发布留言。解封时间：<span id="bannedUntilDisplay"></span></div>
   <div class="app-content">
     <div class="msg-list" id="messageList">
       <div class="loading-state">加载中...</div>
@@ -85,6 +93,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   <div id="footer-container"></div>
 </div>
 
+<!-- 评论弹窗 -->
 <div class="comment-overlay" id="commentOverlay">
   <div class="comment-panel">
     <div class="comment-header">
@@ -105,21 +114,53 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 var currentUser = getSessionUser();
 var isAdmin = currentUser && currentUser.is_admin === true;
 
-function renderHeaderUI() {
+// 动态渲染头部（修复状态不同步）
+function updateHeaderUI() {
     var headerContainer = document.getElementById('header-container');
     var u = currentUser || {};
     var name = u.nickname || '用户';
     var has = u.avatar_url && String(u.avatar_url).indexOf('http') === 0;
+    
     var userAreaHtml = '';
     if (currentUser && currentUser.id) {
-        userAreaHtml = `<div class="user-area" onclick="window.location.href='./user.html'"><div class="avatar" style="${has ? 'background-image:url(\'' + safeUrl(u.avatar_url) + '\');background-size:cover;background-position:center;' : ''}">${has ? '' : escapeHtml(name.charAt(0).toUpperCase())}</div><span class="user-name">${escapeHtml(name)}</span></div>`;
+        userAreaHtml = `
+            <div class="user-area" onclick="window.location.href='./user.html'">
+                <div class="avatar" style="${has ? 'background-image:url(\'' + safeUrl(u.avatar_url) + '\');background-size:cover;background-position:center;' : ''}">
+                    ${has ? '' : escapeHtml(name.charAt(0).toUpperCase())}
+                </div>
+                <span class="user-name">${escapeHtml(name)}</span>
+            </div>
+        `;
     } else {
-        userAreaHtml = `<div class="user-area" style="background:var(--primary);color:#fff;border-radius:99px;padding:6px 16px;font-weight:700;font-size:0.85em;cursor:pointer;" onclick="window.location.href='./index.html?login=1'">登录 / 注册</div>`;
+        userAreaHtml = `
+            <div class="user-area" style="background:var(--primary);color:#fff;border-radius:99px;padding:6px 16px;font-weight:700;font-size:0.85em;box-shadow:0 4px 12px rgba(46,125,50,0.25);cursor:pointer;" onclick="window.location.href='./index.html?login=1'">
+                登录 / 注册
+            </div>
+        `;
     }
-    headerContainer.innerHTML = `<div class="app-header"><div class="brand" onclick="window.location.href='./posts.html'">Seven<span>戚</span><small>· 留言板</small></div>${userAreaHtml}</div>`;
+
+    headerContainer.innerHTML = `
+        <div class="app-header">
+            <div class="brand" onclick="window.location.href='./posts.html'">
+                Seven<span>戚</span><small>· 留言板</small>
+            </div>
+            ${userAreaHtml}
+        </div>
+    `;
 }
-renderHeaderUI();
+
+updateHeaderUI();
 renderFooter('messages');
+
+// 监听身份确认
+window.addEventListener('sq-user-ready', function(e) {
+    if (e.detail && e.detail.user) {
+        currentUser = e.detail.user;
+        isAdmin = currentUser.is_admin === true;
+        updateHeaderUI();
+        loadMessages();
+    }
+});
 
 function showToast(msg) {
     var t = document.getElementById('toast');
@@ -128,7 +169,12 @@ function showToast(msg) {
     clearTimeout(window.toastTimer);
     window.toastTimer = setTimeout(function() { t.classList.remove('show'); }, 3000);
 }
-function escapeHtml(s) { if (!s) return ''; return String(s).replace(/[&<>"']/g, function(c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function escapeHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/[&<>"']/g, function(c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+}
 function safeUrl(u){if(!u)return '';var s=String(u).trim();if(!/^https?:\/\//.test(s))return '';if(/[()'"<>;]/.test(s))return '';return escapeHtml(s);}
 
 var messages = [];
@@ -141,40 +187,50 @@ async function loadMessages() {
         if(res.error) throw res.error;
         messages = res.data || [];
         renderMessages();
-    } catch(e) { list.innerHTML = '<div class="empty-state">加载失败：' + escapeHtml(e.message) + '</div>'; }
+    } catch(e) {
+        list.innerHTML = '<div class="empty-state">加载失败：' + escapeHtml(e.message) + '</div>';
+    }
 }
 
 function renderMessages() {
     var list = document.getElementById('messageList');
-    if(!messages.length) { list.innerHTML = '<div class="empty-state">暂无留言，快来抢沙发！</div>'; return; }
+    if(!messages.length) {
+        list.innerHTML = '<div class="empty-state">暂无留言，快来抢沙发！</div>';
+        return;
+    }
     var html = '';
     messages.filter(m => !m.parent_id).forEach(function(m) {
         var isOfficial = m.is_official || m.name === 'Seven戚';
         var timeStr = new Date(m.created_at).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         var delBtn = isAdmin ? '<button class="del-btn" data-id="'+m.id+'">删除</button>' : '';
+
         html += '<div class="msg">';
         html += '<div class="avatar" style="background:' + (m.color || 'var(--primary)') + '">' + escapeHtml(m.name.charAt(0).toUpperCase()) + '</div>';
         html += '<div class="body">';
-        html += '<div class="meta"><span class="name">' + escapeHtml(m.name) + '</span>' + (isOfficial ? '<span class="official-tag">官方</span>' : '') + '<span class="time">' + timeStr + '</span></div>';
+        html += '<div class="meta">';
+        html += '<span class="name">' + escapeHtml(m.name) + '</span>';
+        if(isOfficial) html += '<span class="official-tag">官方</span>';
+        html += '<span class="time">' + timeStr + '</span>';
+        html += '</div>';
         html += '<div class="txt">' + escapeHtml(m.text) + '</div>';
         html += '<div class="ip">';
         html += '<span>' + escapeHtml(m.ip || '未知IP') + '</span>';
-        
-        // 恢复评论按钮的 SVG 图标
-        html += '<button class="comment-btn" data-id="'+m.id+'">' +
-                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
-                '评论</button>';
-                
+        html += '<button class="comment-btn" data-id="'+m.id+'">评论</button>';
         html += delBtn;
         html += '</div></div></div>';
     });
     list.innerHTML = html;
 
-    list.querySelectorAll('.comment-btn').forEach(btn => { btn.onclick = function() { openComment(this.dataset.id); }; });
+    list.querySelectorAll('.comment-btn').forEach(btn => {
+        btn.onclick = function() { openComment(this.dataset.id); };
+    });
     list.querySelectorAll('.del-btn').forEach(btn => {
         btn.onclick = async function() {
             if(!confirm('确定删除此留言？')) return;
-            try { await window.sb.from('messages').delete().eq('id', this.dataset.id); showToast('已删除'); loadMessages(); } catch(e) { showToast('删除失败'); }
+            try {
+                await window.sb.from('messages').delete().eq('id', this.dataset.id);
+                showToast('已删除'); loadMessages();
+            } catch(e) { showToast('删除失败'); }
         };
     });
 }
@@ -183,14 +239,40 @@ document.getElementById('sendMsgBtn').onclick = async function() {
     var input = document.getElementById('msgInput');
     var text = input.value.trim();
     if(!text) return showToast('请输入内容');
-    if(!currentUser) { showToast('请先登录后留言'); setTimeout(()=> window.location.href='./index.html?login=1', 1000); return; }
-    var btn = this; btn.disabled = true;
+    
+    if(!currentUser) {
+        showToast('请先登录后留言');
+        setTimeout(()=> window.location.href='./index.html?login=1', 1000);
+        return;
+    }
+    if(currentUser.banned_until && new Date(currentUser.banned_until) > new Date()) {
+        return showToast('账号被封禁，无法留言');
+    }
+
+    var btn = this;
+    btn.disabled = true;
     try {
+        var name = currentUser.nickname;
         var ip = window.sqClientGeo ? window.sqClientGeo.ip : '0.0.0.0';
-        var res = await window.sb.from('messages').insert([{ name: currentUser.nickname, text: text, ip: ip, is_official: false, user_id: currentUser.id }]);
+        
+        // 这里假设后端支持直接插入，或者有强制防刷拦截
+        var res = await window.sb.from('messages').insert([{
+            name: name, text: text, ip: ip, is_official: false, user_id: currentUser.id
+        }]);
+        
         if(res.error) throw res.error;
-        input.value = ''; showToast('留言成功'); loadMessages();
-    } catch(e) { showToast('发送失败：' + e.message); } finally { btn.disabled = false; }
+        input.value = '';
+        showToast('留言成功');
+        loadMessages();
+    } catch(e) {
+        if(e.message.includes('spam') || e.message.includes('banned')) {
+            showToast('操作过于频繁，触发防刷限制');
+        } else {
+            showToast('发送失败：' + e.message);
+        }
+    } finally {
+        btn.disabled = false;
+    }
 };
 
 function openComment(parentId) {
@@ -199,8 +281,12 @@ function openComment(parentId) {
     document.getElementById('commentInput').value = '';
     renderComments();
 }
-document.getElementById('closeComment').onclick = function() { document.getElementById('commentOverlay').classList.remove('active'); };
-document.getElementById('commentOverlay').onclick = function(e) { if(e.target === this) this.classList.remove('active'); };
+document.getElementById('closeComment').onclick = function() {
+    document.getElementById('commentOverlay').classList.remove('active');
+};
+document.getElementById('commentOverlay').onclick = function(e) {
+    if(e.target === this) this.classList.remove('active');
+};
 
 async function renderComments() {
     var box = document.getElementById('commentList');
@@ -208,26 +294,44 @@ async function renderComments() {
     try {
         var res = await window.sb.from('messages').select('*').eq('parent_id', currentParentId).order('created_at');
         var list = res.data || [];
-        if(!list.length) { box.innerHTML = '<div class="empty-state">还没有评论</div>'; return; }
+        if(!list.length) {
+            box.innerHTML = '<div class="empty-state">还没有评论</div>';
+            return;
+        }
         box.innerHTML = list.map(c => {
             var time = new Date(c.created_at).toLocaleString('zh-CN', {hour:'2-digit', minute:'2-digit'});
             return '<div class="comment-item"><div class="c-meta"><b>'+escapeHtml(c.name)+'</b><span>'+time+'</span></div><div class="c-txt">'+escapeHtml(c.text)+'</div></div>';
         }).join('');
         box.scrollTop = box.scrollHeight;
-    } catch(e) { box.innerHTML = '加载失败'; }
+    } catch(e) {
+        box.innerHTML = '加载失败';
+    }
 }
 
 document.getElementById('sendCommentBtn').onclick = async function() {
     var input = document.getElementById('commentInput');
     var text = input.value.trim();
     if(!text) return;
-    if(!currentUser) { showToast('请先登录后评论'); setTimeout(()=> window.location.href='./index.html?login=1', 1000); return; }
-    var btn = this; btn.disabled = true;
+    if(!currentUser) {
+        showToast('请先登录后评论');
+        setTimeout(()=> window.location.href='./index.html?login=1', 1000);
+        return;
+    }
+    
+    var btn = this;
+    btn.disabled = true;
     try {
-        var res = await window.sb.from('messages').insert([{ name: currentUser.nickname, text: text, parent_id: currentParentId, user_id: currentUser.id }]);
+        var res = await window.sb.from('messages').insert([{
+            name: currentUser.nickname, text: text, parent_id: currentParentId, user_id: currentUser.id
+        }]);
         if(res.error) throw res.error;
-        input.value = ''; renderComments();
-    } catch(e) { showToast('评论失败：' + e.message); } finally { btn.disabled = false; }
+        input.value = '';
+        renderComments();
+    } catch(e) {
+        showToast('评论失败：' + e.message);
+    } finally {
+        btn.disabled = false;
+    }
 };
 
 loadMessages();
