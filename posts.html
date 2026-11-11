@@ -266,6 +266,11 @@ function renderPosts() {
         html += '</div>';
         if (p.title) html += '<div class="post-title">' + escapeHtml(p.title) + '</div>';
         html += '<div class="post-content">' + (window.DOMPurify ? DOMPurify.sanitize(p.content) : escapeHtml(p.content)) + '</div>';
+        
+        var delBtn = (isAdmin || (currentUser && String(currentUser.id) === String(p.user_id))) ? '<button class="del-btn" data-id="' + p.id + '" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.85em;">删除</button>' : '';
+        var reportBtn = (currentUser && String(currentUser.id) !== String(p.user_id)) ? '<button class="report-btn" data-id="' + p.id + '" data-uid="' + p.user_id + '" data-snapshot="' + escapeHtml(p.content.substring(0,50)) + '" style="background:none;border:none;color:#F59E0B;cursor:pointer;font-size:0.85em;">举报</button>' : '';
+        
+        html += '<div class="post-footer" style="display:flex;justify-content:flex-end;gap:12px;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">' + reportBtn + delBtn + '</div>';
         html += '</div>';
     });
     list.innerHTML = html;
@@ -507,6 +512,33 @@ window.deleteComment = async function(id) {
         }
     }, 100);
 })();
+</script>
+
+<script>
+window.showCustomConfirm = function(title, desc) {
+  return new Promise(function(resolve) {
+    var mask = document.createElement('div');
+    mask.style.cssText = 'position:fixed;inset:0;background:rgba(17,24,39,0.4);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;';
+    mask.innerHTML = '<div style="background:#fff;border-radius:16px;width:80%;max-width:320px;padding:24px;text-align:center;transform:scale(.9);transition:transform .2s;box-shadow:0 20px 40px rgba(0,0,0,.1);"><h3 style="margin-bottom:12px;font-size:1.1em;color:var(--text);font-weight:700;">'+title+'</h3><p style="color:var(--text-muted);margin-bottom:24px;font-size:.9em;line-height:1.6;">'+desc+'</p><div style="display:flex;gap:12px;"><button id="mc" style="flex:1;padding:12px;border-radius:99px;border:none;background:#F1F5F9;color:#64748B;font-weight:600;cursor:pointer;">取消</button><button id="mo" style="flex:1;padding:12px;border-radius:99px;border:none;background:var(--brand);color:#fff;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.3);">确定</button></div></div>';
+    document.body.appendChild(mask);
+    requestAnimationFrame(() => { mask.style.opacity = '1'; mask.children[0].style.transform = 'scale(1)'; });
+    var close = function(val) { mask.style.opacity = '0'; mask.children[0].style.transform = 'scale(.9)'; setTimeout(() => { document.body.removeChild(mask); resolve(val); }, 200); };
+    mask.querySelector('#mc').onclick = () => close(false);
+    mask.querySelector('#mo').onclick = () => close(true);
+  });
+};
+window.showCustomPrompt = function(title, placeholder) {
+  return new Promise(function(resolve) {
+    var mask = document.createElement('div');
+    mask.style.cssText = 'position:fixed;inset:0;background:rgba(17,24,39,0.4);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;';
+    mask.innerHTML = '<div style="background:#fff;border-radius:16px;width:80%;max-width:320px;padding:24px;text-align:center;transform:scale(.9);transition:transform .2s;box-shadow:0 20px 40px rgba(0,0,0,.1);"><h3 style="margin-bottom:12px;font-size:1.1em;color:var(--text);font-weight:700;">'+title+'</h3><input id="pi" placeholder="'+placeholder+'" style="width:100%;padding:12px;border:1px solid #E2E8F0;border-radius:12px;margin-bottom:20px;outline:none;font-size:.9em;background:#F8FAFC;"><div style="display:flex;gap:12px;"><button id="pc" style="flex:1;padding:12px;border-radius:99px;border:none;background:#F1F5F9;color:#64748B;font-weight:600;cursor:pointer;">取消</button><button id="po" style="flex:1;padding:12px;border-radius:99px;border:none;background:var(--brand);color:#fff;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.3);">确定</button></div></div>';
+    document.body.appendChild(mask);
+    requestAnimationFrame(() => { mask.style.opacity = '1'; mask.children[0].style.transform = 'scale(1)'; mask.querySelector('#pi').focus(); });
+    var close = function(val) { mask.style.opacity = '0'; mask.children[0].style.transform = 'scale(.9)'; setTimeout(() => { document.body.removeChild(mask); resolve(val); }, 200); };
+    mask.querySelector('#pc').onclick = () => close(null);
+    mask.querySelector('#po').onclick = () => close(mask.querySelector('#pi').value);
+  });
+};
 </script>
 </body>
 </html>
