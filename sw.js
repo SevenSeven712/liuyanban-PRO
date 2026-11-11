@@ -1,31 +1,17 @@
 // Seven戚社区 Service Worker
-// v2：修复缓存导致的「改了代码页面还是旧的 / 打不开」问题
-var CACHE_VERSION = 'sevenqi-v2';
-var CACHE_NAME = CACHE_VERSION;
-
+var CACHE_NAME = 'sevenqi-v1';
 var PRECACHE_URLS = [
-  './index.html',
-  './posts.html',
-  './chats.html',
-  './messages.html',
-  './user.html',
-  './profile.html',
-  './shop.html',
-  './activity.html',
-  './assets.html',
-  './new-post.html',
-  './set-uid.html',
-  './room.html',
-  './doudizhu.html',
-  './common.js',
-  './gomoku.js',
-  './bubbles.css',
-  './vendor/supabase.js',
-  './vendor/purify.min.js',
-  './icon.svg',
-  './icon-192.png',
-  './icon-512.png',
-  './manifest.json'
+  '/liuyanban/index.html',
+  '/liuyanban/posts.html',
+  '/liuyanban/chats.html',
+  '/liuyanban/messages.html',
+  '/liuyanban/room.html',
+  '/liuyanban/profile.html',
+  '/liuyanban/shop.html',
+  '/liuyanban/common.js',
+  '/liuyanban/bubbles.css',
+  '/liuyanban/icon.svg',
+  '/liuyanban/manifest.json'
 ];
 
 self.addEventListener('install', function (e) {
@@ -49,17 +35,10 @@ self.addEventListener('activate', function (e) {
   );
 });
 
-// 页面可主动要求跳过等待，立即接管
-self.addEventListener('message', function (e) {
-  if (e.data === 'SKIP_WAITING') self.skipWaiting();
-});
-
-// 接口/登录态一律不缓存
+// 这些路径一律不缓存（登录态/实时数据/上传）
 function isBypass(url) {
-  // 原代码这里被写成了注释，导致正则永久失效
-  if (/(auth|rest|realtime|storage|functions)\/v1\//.test(url.pathname)) return true;
-  if (url.pathname.indexOf('/api/') > -1) return true;
-  return false;
+  return //(auth|rest|realtime|storage)/v1//.test(url.pathname) ||
+         url.pathname.indexOf('/liuyanban/api/') === 0;
 }
 
 self.addEventListener('fetch', function (e) {
@@ -71,20 +50,19 @@ self.addEventListener('fetch', function (e) {
 
   // 跨域（Supabase、CDN 等）直接走网络，不缓存
   if (url.origin !== self.location.origin) return;
+  // 鉴权/数据接口不缓存
   if (isBypass(url)) return;
 
-  // 导航请求 + HTML：网络优先，失败回缓存，再失败给离线提示
+  // 导航请求：网络优先，失败回缓存，再失败给离线提示
   if (req.mode === 'navigate') {
     e.respondWith(
       fetch(req).then(function (res) {
-        if (res && res.status === 200) {
-          var copy = res.clone();
-          caches.open(CACHE_NAME).then(function (c) { c.put(req, copy); });
-        }
+        var copy = res.clone();
+        caches.open(CACHE_NAME).then(function (c) { c.put(req, copy); });
         return res;
       }).catch(function () {
         return caches.match(req).then(function (hit) {
-          return hit || caches.match('./posts.html').then(function (p) {
+          return hit || caches.match('/liuyanban/posts.html').then(function (p) {
             return p || new Response('<h3 style="font-family:sans-serif;padding:24px">当前处于离线状态，请联网后重试</h3>', {
               status: 200,
               headers: { 'Content-Type': 'text/html; charset=utf-8' }
@@ -96,7 +74,7 @@ self.addEventListener('fetch', function (e) {
     return;
   }
 
-  // 静态资源：缓存优先，命中后后台更新
+  // 静态资源：缓存优先，命中直接返回并后台更新
   e.respondWith(
     caches.match(req).then(function (hit) {
       if (hit) {
@@ -122,11 +100,11 @@ self.addEventListener('fetch', function (e) {
 
 self.addEventListener('notificationclick', function (e) {
   e.notification.close();
-  var url = (e.notification.data && e.notification.data.url) || './chats.html';
+  var url = (e.notification.data && e.notification.data.url) || '/liuyanban/chats.html';
   e.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (list) {
       for (var i = 0; i < list.length; i++) {
-        if ('focus' in list[i]) return list[i].focus();
+        if (list[i].url.indexOf('/liuyanban/') >= 0 && 'focus' in list[i]) return list[i].focus();
       }
       if (self.clients.openWindow) return self.clients.openWindow(url);
     })

@@ -2,8 +2,8 @@
 // 初始化 Supabase 客户端
 // ============================================================
 if (!window.sb) {
-    var SUPABASE_URL = "https://ljbxeuqnlxiffvbnwepv.supabase.co";
-    var SUPABASE_ANON_KEY = "sb_publishable_OT_i4T2SnTxA8bHKnSQ1sw_0Es4l8SP";
+    var SUPABASE_URL = "https://ulvhuqtpdafspbdvkogs.supabase.co";
+    var SUPABASE_ANON_KEY = "sb_publishable_b3zSRFSj9k73_tIxO1yJYw_IEK9tPLg";
     window.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
@@ -52,20 +52,13 @@ if (!window.sb) {
         wrap.appendChild(inner);
         document.body.appendChild(wrap);
 
-        // 修复：原来固定黑屏 3.8 秒才淡出，脚本一报错就永久黑屏（看着像「页面打不开」）
-        // 现在 1.1 秒就淡出，并且 load / error 时立刻兜底移除
-        var closed = false;
-        function finish() {
-            if (closed) return;
-            closed = true;
-            wrap.classList.add('fade-out');
-            document.documentElement.classList.remove('sq-boot-hide');
-            setTimeout(function () { if (wrap.parentNode) wrap.remove(); }, 500);
-        }
-        setTimeout(finish, 1100);
-        window.addEventListener('load', function () { setTimeout(finish, 600); });
-        window.addEventListener('error', finish);
-        setTimeout(finish, 4000);   // 最终兜底，绝不长期遮挡
+        setTimeout(function() {
+            setTimeout(function() {
+                wrap.classList.add('fade-out');
+                document.documentElement.classList.remove('sq-boot-hide');
+                setTimeout(function() { wrap.remove(); }, 1000);
+            }, 300);
+        }, 3500);
     }
     insert();
 })();
@@ -74,25 +67,16 @@ if (!window.sb) {
 // 页面加载转圈（所有页面通用）
 // ============================================================
 (function pageLoading() {
-    // 注入样式（咖啡杯 loader）
+    // 注入样式
     if (!document.getElementById('page-loading-styles')) {
         var st = document.createElement('style');
         st.id = 'page-loading-styles';
         st.textContent =
             '.page-loading-mask{position:fixed;inset:0;z-index:999999;background:var(--bg,#f5faf5);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;transition:opacity .35s ease;}' +
             '.page-loading-mask.fade-out{opacity:0;pointer-events:none;}' +
-            '.page-loading-cup{position:relative;width:100px;height:80px;display:flex;align-items:center;justify-content:center;}' +
-            '.page-loading-cup .cup{position:absolute;width:25px;height:18px;background-color:#fff;border:1px solid #2e2e2e;z-index:1;border-radius:2px 2px 10px 10px;animation:sqCupExpansion 6s infinite ease-in-out;transform-origin:center;}' +
-            '.page-loading-cup .cup::after{content:"";position:absolute;top:-2px;width:calc(100% - 2px);height:2px;background:#fed59fca;border:1px solid #2e2e2ebe;border-radius:50%;}' +
-            '.page-loading-cup .cup::before{content:"";position:absolute;top:15px;width:calc(100% - 2px);height:4px;background:#ffffff00;border:1px solid #2e2e2e;border-top:none;border-radius:50%;z-index:-1;}' +
-            '.page-loading-cup .cup .cup-handle{position:absolute;width:5px;height:10px;background-color:#fff;border:1px solid #2e2e2e;right:-5px;top:2px;border-radius:2px 10px 20px 2px;}' +
-            '.page-loading-cup .cup .smoke{position:absolute;bottom:100%;left:50%;width:15px;height:25px;background:rgba(107,102,102,0.433);border-radius:50%;transform:translateX(-50%);animation:sqCupRise 6s infinite ease-in-out;filter:blur(8px);}' +
-            '.page-loading-cup .cup .smoke.one{animation-delay:0s;}' +
-            '.page-loading-cup .cup .smoke.two{animation-delay:1s;}' +
-            '.page-loading-cup .cup .smoke.three{animation-delay:2s;}' +
-            '.page-loading-cup .load{position:absolute;font-size:10px;opacity:.7;top:45%;left:50%;transform:translateX(-50%);z-index:-1;letter-spacing:-1px;color:var(--text-muted,#5a7a6a);}' +
-            '@keyframes sqCupExpansion{0%{width:25px;transform:translateX(0);}40%{width:100%;transform:translateX(0);}80%{width:25px;transform:translateX(64px);}90%{width:100%;transform:translateX(0);}100%{width:25px;transform:translateX(0);}}' +
-            '@keyframes sqCupRise{0%{transform:translate(-50%,0) scale(.4);opacity:0;}30%{opacity:.7;}60%{opacity:.4;}100%{transform:translate(-50%,-120px) scale(1);opacity:0;}}';
+            '.page-loading-spinner{width:40px;height:40px;border:3px solid var(--border,#c8e0c8);border-top-color:var(--primary,#2e7d32);border-radius:50%;animation:pageLoadSpin .8s linear infinite;}' +
+            '@keyframes pageLoadSpin{to{transform:rotate(360deg);}}' +
+            '.page-loading-text{font-size:.8em;color:var(--text-muted,#5a7a6a);font-family:var(--font,system-ui,sans-serif);}';
         document.head.appendChild(st);
     }
 
@@ -101,16 +85,7 @@ if (!window.sb) {
         var mask = document.createElement('div');
         mask.className = 'page-loading-mask';
         mask.id = 'pageLoadingMask';
-        mask.innerHTML =
-            '<div class="page-loading-cup">' +
-              '<div class="cup">' +
-                '<div class="cup-handle"></div>' +
-                '<div class="smoke one"></div>' +
-                '<div class="smoke two"></div>' +
-                '<div class="smoke three"></div>' +
-              '</div>' +
-              '<div class="load">..........................</div>' +
-            '</div>';
+        mask.innerHTML = '<div class="page-loading-spinner"></div><div class="page-loading-text">加载中…</div>';
         document.body.appendChild(mask);
     }
 
@@ -130,11 +105,8 @@ if (!window.sb) {
         // 延迟一点，避免闪一下就消失
         setTimeout(hide, 200);
     });
-    // 脚本报错时立即撤掉遮罩，避免「转圈转到天荒地老」
-    window.addEventListener('error', function() { setTimeout(hide, 300); });
-    window.addEventListener('unhandledrejection', function() { setTimeout(hide, 300); });
-    // 兜底：最多 4 秒后强制隐藏（防卡死）
-    setTimeout(hide, 4000);
+    // 兜底：最多 8 秒后强制隐藏（防卡死）
+    setTimeout(hide, 8000);
     // 暴露给页面，数据加载完后可主动调用（更精准）
     window.hidePageLoading = hide;
 })();
@@ -255,196 +227,46 @@ if (document.readyState === 'loading') {
 }
 window.initGeoIP = initGeoIP;
 
-// ============================================================
-// ★ 可信身份（Trust）
-// 本地 localStorage 只作首屏缓存，绝不能作为权限依据。
-// 所有权限字段（is_admin / role / banned_* / coins）一律以服务端返回为准，
-// 且在服务端确认之前，一律按「最低权限」对待（fail-closed）。
-// ============================================================
-window.sqTrust = window.sqTrust || { ready: false, user: null, error: null, at: 0 };
-var SQ_TRUST_TTL = 60 * 1000;   // 60 秒内复用，避免每页重复请求
-
-// 允许缓存在本地的字段（不含任何可用于提权的敏感字段签名）
-function sanitizeLocalUser(u) {
-    if (!u) return null;
-    var o = {};
-    var allow = ['id', 'nickname', 'avatar_url', 'custom_uid', 'phone', 'created_at',
-                 'banned_until', 'banned_reason', 'is_admin', 'role', 'role_color',
-                 'is_official', 'coins', 'signature'];
-    allow.forEach(function (k) { if (u[k] !== undefined) o[k] = u[k]; });
-    o.__verified_at = Date.now();
-    return o;
-}
-
-// ★ 读当前用户：服务端确认过就用服务端数据，否则返回降权的本地缓存
 function getSessionUser() {
-    if (window.sqTrust.ready && window.sqTrust.user) return window.sqTrust.user;
-
     var stored = localStorage.getItem('sq_user_session');
-    if (!stored) return null;
-    var u = null;
-    try { u = JSON.parse(stored); } catch (e) { return null; }
-    if (!u || !u.id) return null;
-
-    // 未经服务端确认：抹掉一切权限，只保留展示用的基本信息
-    u.is_admin = false;
-    u.role = null;
-    u.role_color = null;
-    u.__unverified = true;
-    return u;
+    if (stored) { try { return JSON.parse(stored); } catch (e) { return null; } }
+    return null;
 }
-
-function setSessionUser(user) {
-    if (!user) { localStorage.removeItem('sq_user_session'); return; }
-    localStorage.setItem('sq_user_session', JSON.stringify(sanitizeLocalUser(user)));
-    // 本地写入不改变可信状态：只有 syncSessionFromAuth 能提升权限
-}
-
-// 权限判定统一入口：只有服务端明确返回 is_admin === true 才算管理员
-function isAdminUser() {
-    return !!(window.sqTrust.ready && window.sqTrust.user && window.sqTrust.user.is_admin === true);
-}
-window.isAdminUser = isAdminUser;
-
-// 关键操作前的守卫：非管理员直接拦下并抛错
-function assertAdmin() {
-    if (!isAdminUser()) {
-        var err = new Error('无管理员权限');
-        err.code = 'NOT_ADMIN';
-        if (typeof showToast === 'function') showToast('无管理员权限');
-        throw err;
-    }
-    return true;
-}
-window.assertAdmin = assertAdmin;
-
+function setSessionUser(user) { localStorage.setItem('sq_user_session', JSON.stringify(user)); }
 async function clearSession() {
     localStorage.removeItem('sq_user_session');
-    window.sqTrust = { ready: false, user: null, error: null, at: 0 };
     try { if (window.sb) await window.sb.auth.signOut(); } catch (e) {}
 }
 
-// ============================================================
-// 从服务端读取自己的档案
-// 1) 优先 RPC get_my_profile（SECURITY DEFINER，可控字段白名单）
-// 2) 退化：直接读 users 表本人行（依赖 RLS：只能读自己）
-// ============================================================
-async function fetchMyProfileServer() {
+// 用 Supabase Auth 的真实会话校验并刷新本地缓存
+// （防止用户篡改 localStorage 里的 user 冒充他人/管理员）
+async function syncSessionFromAuth() {
     if (!window.sb) return null;
-
     try {
-        var r = await window.sb.rpc('get_my_profile');
-        if (!r.error && r.data) return Array.isArray(r.data) ? r.data[0] : r.data;
-    } catch (e) {}
-
-    try {
-        var s = await window.sb.auth.getUser();
-        var me = s && s.data && s.data.user;
-        if (!me) return null;
-        var q = await window.sb.from('users')
-            .select('id, nickname, avatar_url, custom_uid, phone, created_at, banned_until, banned_reason, is_admin, coins')
-            .eq('id', me.id).maybeSingle();
-        if (!q.error && q.data) return q.data;
-    } catch (e) {}
-
-    return null;
-}
-window.fetchMyProfileServer = fetchMyProfileServer;
-
-// ============================================================
-// 会话同步：拿服务端档案覆盖本地缓存
-// 校验失败 → 清空缓存并降权（绝不沿用本地 is_admin）
-// ============================================================
-var __syncPromise = null;
-function syncSessionFromAuth(force) {
-    if (!window.sb) return Promise.resolve(null);
-    if (!force && window.sqTrust.ready && (Date.now() - window.sqTrust.at) < SQ_TRUST_TTL) {
-        return Promise.resolve(window.sqTrust.user);
-    }
-    if (__syncPromise) return __syncPromise;
-
-    __syncPromise = (async function () {
-        try {
-            var r = await window.sb.auth.getSession();
-            var session = r && r.data && r.data.session;
-            if (!session || !session.user) {
+        var r = await window.sb.auth.getSession();
+        var session = r.data && r.data.session;
+        if (!session || !session.user) {
+            // Auth 无会话 -> 本地缓存无效，清除
+            if (localStorage.getItem('sq_user_session')) {
                 localStorage.removeItem('sq_user_session');
-                window.sqTrust = { ready: true, user: null, error: 'no-session', at: Date.now() };
-                dispatchUserReady();
-                return null;
             }
-
-            var user = await fetchMyProfileServer();
-            if (user && user.id) {
-                window.sqTrust = { ready: true, user: user, error: null, at: Date.now() };
-                localStorage.setItem('sq_user_session', JSON.stringify(sanitizeLocalUser(user)));
-                dispatchUserReady(user);
-                if (user.phone && !user.custom_uid && typeof checkAndPromptUidChange === 'function') {
-                    checkAndPromptUidChange(user);
-                }
-                return user;
-            }
-
-            // Auth 有会话但档案读不到：不信任本地缓存
-            window.sqTrust = { ready: true, user: null, error: 'no-profile', at: Date.now() };
-            dispatchUserReady();
             return null;
-        } catch (e) {
-            // 网络异常等：保持 fail-closed（不提升权限），但不清空展示缓存
-            window.sqTrust = { ready: true, user: null, error: 'network', at: Date.now() };
-            dispatchUserReady();
-            return null;
-        } finally {
-            __syncPromise = null;
         }
-    })();
-
-    return __syncPromise;
+        var q = await window.sb.rpc('get_my_profile');
+        var user = q.data || null;
+        if (user) {
+            localStorage.setItem('sq_user_session', JSON.stringify(user));
+            if (user.phone && !user.custom_uid) {
+                checkAndPromptUidChange(user);
+            }
+            return user;
+        }
+        return null;
+    } catch (e) {
+        return null;
+    }
 }
 window.syncSessionFromAuth = syncSessionFromAuth;
-
-function dispatchUserReady(user) {
-    try {
-        window.dispatchEvent(new CustomEvent('sq-user-ready', { detail: { user: user || null } }));
-    } catch (e) {}
-}
-
-// 页面可 await 这个函数，等身份确认后再渲染需要权限的内容
-function whenUserReady() {
-    if (window.sqTrust.ready) return Promise.resolve(window.sqTrust.user);
-    return syncSessionFromAuth(true);
-}
-window.whenUserReady = whenUserReady;
-
-// ============================================================
-// 老用户 UID 引导（原代码调用了但未定义）
-// ============================================================
-function checkAndPromptUidChange(user) {
-    try {
-        if (!user || !user.phone || user.custom_uid) return;
-        if (sessionStorage.getItem('sq_uid_prompt_shown') === '1') return;
-        sessionStorage.setItem('sq_uid_prompt_shown', '1');
-        if (typeof showToast === 'function') showToast('请先设置一个自定义 UID');
-        setTimeout(function () {
-            if (confirm('你还没有设置自定义 UID，现在去设置吗？')) {
-                window.location.href = './set-uid.html';
-            }
-        }, 600);
-    } catch (e) {}
-}
-window.checkAndPromptUidChange = checkAndPromptUidChange;
-
-// ============================================================
-// 启动时校验一次
-// ============================================================
-(function bootstrapSession() {
-    function run() { syncSessionFromAuth(); }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () { setTimeout(run, 100); });
-    } else {
-        setTimeout(run, 100);
-    }
-})();
 
 // 页面加载时后台校验一次；若会话失效则跳登录（仅在已登录页面）
 (function bootstrapSession() {
@@ -508,22 +330,22 @@ function renderHeader(title, activeTab) {
         }
         var uidBtn = '';
         if (user.phone && !user.custom_uid) {
-            uidBtn = '<a href="./set-uid.html" onclick="event.stopPropagation()" style="margin-left:6px;font-size:11px;padding:4px 9px;background:linear-gradient(135deg,#ff6b6b,#ee5253);color:#fff;border-radius:20px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:3px;box-shadow:0 2px 8px rgba(238,82,83,0.45);animation:sq-uid-pulse 2s infinite;">' +
+            uidBtn = '<a href="/liuyanban/set-uid.html" onclick="event.stopPropagation()" style="margin-left:6px;font-size:11px;padding:4px 9px;background:linear-gradient(135deg,#ff6b6b,#ee5253);color:#fff;border-radius:20px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:3px;box-shadow:0 2px 8px rgba(238,82,83,0.45);animation:sq-uid-pulse 2s infinite;">' +
                      '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' +
                      '设置UID</a>';
         }
-        userAreaHtml = '<div class="user-area" onclick="window.location.href=\'./user.html\'">' +
+        userAreaHtml = '<div class="user-area" onclick="window.location.href=\'/liuyanban/user.html\'">' +
             '<div class="avatar" style="' + avatarStyle + '">' + avatarContent + '</div>' +
             '<span class="user-name">' + escapeHtml(displayName) + '</span>' +
             uidBtn +
             '<span class="chevron">▾</span>' +
             '</div>';
     } else {
-        userAreaHtml = '<div class="user-area" style="background:var(--primary);color:#fff;border-radius:99px;padding:6px 16px;font-weight:700;font-size:0.85em;box-shadow:0 4px 12px rgba(46,125,50,0.25);" onclick="window.location.href=\'./index.html\'">登录 / 注册</div>';
+        userAreaHtml = '<div class="user-area" style="background:var(--primary);color:#fff;border-radius:99px;padding:6px 16px;font-weight:700;font-size:0.85em;box-shadow:0 4px 12px rgba(46,125,50,0.25);" onclick="window.location.href=\'/liuyanban/index.html\'">登录 / 注册</div>';
     }
 
     headerContainer.innerHTML = '<div class="app-header">' +
-        '<div class="brand" onclick="window.location.href=\'./posts.html\'">' +
+        '<div class="brand" onclick="window.location.href=\'/liuyanban/posts.html\'">' +
         'Seven<span>戚</span><small>· ' + escapeHtml(title) + '</small>' +
         '</div>' + userAreaHtml + '</div>';
 }
@@ -554,10 +376,10 @@ var FOOTER_ICONS = {
 
 function renderFooterBase(activeTab) {
     var tabs = [
-        { id: 'posts', name: '帖子', href: './posts.html' },
-        { id: 'messages', name: '留言板', href: './messages.html' },
-        { id: 'chats', name: '消息', href: './chats.html' },
-        { id: 'profile', name: '个人', href: './user.html' }
+        { id: 'posts', name: '帖子', href: '/liuyanban/posts.html' },
+        { id: 'messages', name: '留言板', href: '/liuyanban/messages.html' },
+        { id: 'chats', name: '消息', href: '/liuyanban/chats.html' },
+        { id: 'profile', name: '个人', href: '/liuyanban/user.html' }
     ];
 
     var footerHtml = '<div class="app-tabs">';
@@ -598,7 +420,7 @@ async function updateChatBadge() {
     try { unread = await getUnreadChatCount(user.id); } catch (e) { return; }
     var footerContainer = document.getElementById('footer-container');
     if (!footerContainer) return;
-    var chatTab = footerContainer.querySelector('a[href="./chats.html"]');
+    var chatTab = footerContainer.querySelector('a[href="/liuyanban/chats.html"]');
     if (!chatTab) return;
     var old = chatTab.querySelector('.badge');
     if (old) old.remove();
@@ -662,7 +484,7 @@ function showChatNotificationBanner() {
     banner.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#2e7d32;color:white;padding:12px 28px;border-radius:50px;z-index:99999;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,0.3);font-family:"Space Grotesk","PingFang SC",sans-serif;font-weight:600;font-size:0.9em;display:flex;align-items:center;gap:8px;white-space:nowrap;';
     banner.innerHTML = svgIcon('bell', 18) + '<span>收到一条新消息</span>';
     banner.addEventListener('click', function () {
-        window.location.href = './chats.html';
+        window.location.href = '/liuyanban/chats.html';
         banner.remove();
     });
     document.body.appendChild(banner);
@@ -694,7 +516,7 @@ async function initializeGlobalChatListener() {
             if (!window.location.href.includes('chats.html')) {
                 showChatNotificationBanner();
                 var nm = newMsg.content || newMsg.text || '收到一条新消息';
-                showSystemNotification('Seven戚 · 新消息', String(nm).substring(0, 50), './chats.html');
+                showSystemNotification('Seven戚 · 新消息', String(nm).substring(0, 50), '/liuyanban/chats.html');
             }
         })
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'chats' }, function () {
@@ -727,7 +549,7 @@ async function updateNotificationBadge() {
         if (res.error) throw res.error;
         var footerContainer = document.getElementById('footer-container');
         if (!footerContainer) return;
-        var profileTab = footerContainer.querySelector('a[href="./user.html"]');
+        var profileTab = footerContainer.querySelector('a[href="/liuyanban/profile.html"]');
         if (!profileTab) return;
         var old = profileTab.querySelector('.badge');
         if (old) old.remove();
@@ -753,7 +575,7 @@ function showTopBanner(text) {
     banner.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#2e7d32;color:#fff;padding:12px 28px;border-radius:50px;z-index:99999;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,0.3);font-family:"Space Grotesk","PingFang SC",sans-serif;font-weight:600;font-size:0.9em;display:flex;align-items:center;gap:8px;white-space:nowrap;';
     banner.innerHTML = svgIcon('bell', 18) + '<span>' + (text || '收到新消息') + '</span>';
     banner.addEventListener('click', function () {
-        window.location.href = './profile.html?view=messages';
+        window.location.href = '/liuyanban/profile.html?view=messages';
         banner.remove();
         clearTimeout(topBannerTimeout);
     });
@@ -957,7 +779,7 @@ function showAvatarPrompt() {
     };
     document.getElementById('avatarPromptGo').onclick = function() {
         sessionStorage.setItem('sq_avatar_prompt_shown', '1');
-        window.location.href = './profile.html?view=avatar';
+        window.location.href = '/liuyanban/profile.html?view=avatar';
     };
     overlay.addEventListener('click', function(e) {
         if (e.target === overlay) {
@@ -1147,107 +969,54 @@ window.showAvatarPrompt = showAvatarPrompt;
     } else {
       banner.classList.remove('active');
       banner.style.display = 'none';
-      ['newPostBtn', 'floatingPostBtn', 'sendBtn', 'submitBtn'].forEach(function (id) {
+      ['newPostBtn','floatingPostBtn'].forEach(function(id){
         var el = document.getElementById(id);
         if (el) { el.style.opacity = ''; el.style.pointerEvents = ''; }
       });
     }
   }
 
-  function run() {
-    updateBanner();
-    // 登录态变化（同标签页 / 跨标签页）时同步刷新
-    window.addEventListener('sq-ban-changed', updateBanner);
-    window.addEventListener('storage', function (e) {
-      if (e.key === 'sq_user_session') updateBanner();
-    });
+  // 初次渲染
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(updateBanner, 100); });
+  } else {
+    setTimeout(updateBanner, 100);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () { setTimeout(run, 300); });
-  } else {
-    setTimeout(run, 300);
-  }
+  // 封号变化时刷新
+  window.addEventListener('sq-ban-changed', function(){ setTimeout(updateBanner, 50); });
+
+  // 页面切换可见时刷新一次
+  document.addEventListener('visibilitychange', function(){
+    if (!document.hidden) updateBanner();
+  });
+
+  // 暴露给页面主动调用
+  window.updateGlobalBanBanner = updateBanner;
 })();
 
 // ============================================================
-// 系统通知（Web Notification）
-// 原先 common.js 里调用了但从未定义，导致实时消息回调抛错
+// PWA：Service Worker + 系统通知
 // ============================================================
-function showSystemNotification(title, body, url) {
-  try {
-    if (!('Notification' in window)) return;
-    if (Notification.permission !== 'granted') return;
-    var n = new Notification(title || 'Seven戚', {
-      body: body || '',
-      icon: './icon-192.png',
-      badge: './icon-192.png',
-      tag: 'sq-chat',
-      renotify: true
-    });
-    n.onclick = function () {
-      try { window.focus(); } catch (e) {}
-      if (url) window.location.href = url;
-      n.close();
-    };
-    setTimeout(function () { try { n.close(); } catch (e) {} }, 8000);
-  } catch (e) {}
-}
-window.showSystemNotification = showSystemNotification;
 
-async function requestNotificationPermission() {
-  try {
-    if (!('Notification' in window)) return 'unsupported';
-    if (Notification.permission === 'granted') return 'granted';
-    if (Notification.permission === 'denied') return 'denied';
-    return await Notification.requestPermission();
-  } catch (e) { return 'error'; }
-}
-window.requestNotificationPermission = requestNotificationPermission;
 
 // ============================================================
-// PWA 安装
-// 原代码多个页面调用 installPWA() 却没有定义，点了直接报错
+// F12 / 开发者工具 控制台大字提醒
 // ============================================================
-window.__deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', function (e) {
-    e.preventDefault();
-    window.__deferredPrompt = e;
-});
-
-function installPWA() {
-    if (window.__deferredPrompt) {
-        window.__deferredPrompt.prompt();
-        window.__deferredPrompt = null;
-        return;
+(function devtoolsConsoleAlert() {
+    function printAlert() {
+        console.clear();
+        console.log('%cSeven戚社区提醒', 'font-size: 36px; font-weight: 900; color: #ffd54f; background: #1a0505; padding: 10px 20px; border-radius: 8px; text-shadow: 2px 2px 0 #c62828, 4px 4px 0 #2e7d32; box-shadow: 0 4px 12px rgba(0,0,0,0.5);');
+        console.log('%c爬虫千千万，我的小网站就算了吧！', 'font-size: 18px; font-weight: bold; color: #2e7d32; background: #e8f5e9; padding: 8px 16px; border-radius: 8px; margin-top: 10px; border: 2px dashed #4caf50;');
+        console.log('%c如果想看代码，直接按 F12 就可以啦，不用扒我的小网站啦~ 欢迎交流技术！', 'font-size: 14px; color: #888; margin-top: 10px;');
     }
-    try {
-        if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
-            showToast('你已经添加到桌面了');
-            return;
-        }
-    } catch (e) {}
-    if (typeof showToast === 'function') showToast('请用浏览器菜单「添加到主屏幕」');
-}
-window.installPWA = installPWA;
-
-// ============================================================
-// 全局 Service Worker 注册（原来只有部分页面注册，导致缓存行为不一致）
-// ============================================================
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js').then(function (reg) {
-            // 有新版本时立即接管，避免用户永远看到旧页面
-            if (reg.waiting) reg.waiting.postMessage('SKIP_WAITING');
-            reg.addEventListener('updatefound', function () {
-                var w = reg.installing;
-                if (!w) return;
-                w.addEventListener('statechange', function () {
-                    if (w.state === 'installed' && navigator.serviceWorker.controller) {
-                        w.postMessage('SKIP_WAITING');
-                    }
-                });
-            });
-        }).catch(function () {});
-    });
-}
+    setTimeout(printAlert, 1000);
+    if (window.console && console.clear) {
+        const originalClear = console.clear;
+        console.clear = function() {
+            originalClear.apply(console, arguments);
+            clearTimeout(window.__devtoolsPrintTimer);
+            window.__devtoolsPrintTimer = setTimeout(printAlert, 500);
+        };
+    }
+})();
