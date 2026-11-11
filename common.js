@@ -2,7 +2,7 @@
 // 初始化 Supabase 客户端
 // ============================================================
 if (!window.sb) {
-    var SUPABASE_URL = "https://你的新项目ID.supabase.co";
+    var SUPABASE_URL = "https://bdflblooezmhgawkzhkv.supabase.co";
     var SUPABASE_ANON_KEY = "sb_publishable_mQbWq3yUoa8U5fmlk61WnA_W_rsrqCL";
     if (window.supabase) {
         window.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -116,6 +116,7 @@ function renderFooter(activeTab) {
 window.hidePageLoading = function () {
     var m = document.getElementById('pageLoadingMask');
     if (m) m.remove();
+    if (window.hideLoading) window.hideLoading();
 };
 
 // ============================================================

@@ -1,645 +1,649 @@
-<!DOCTYPE html>
-<html lang="zh">
-<head>
-<meta charset="UTF-8" />
-<link rel="manifest" href="./manifest.json" />
-<meta name="theme-color" content="#10B981" />
-<link rel="apple-touch-icon" href="./icon.svg" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>Seven戚 · 用户主页</title>
-<link rel="stylesheet" href="./theme.css" />
-<script src="./vendor/supabase.js"></script>
-<script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/script>');</script>
-<style>
-.loading-state{text-align:center;padding:40px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;}
-.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
-@keyframes spin{to{transform:rotate(360deg)}}
+user.html，共 645 行：
 
-/* 个人卡片重制 */
-.profile-hero{
-  background: linear-gradient(135deg, var(--brand-light), var(--brand));
-  border-radius: var(--radius-lg); padding: 24px 20px; color: #FFFFFF;
-  position: relative; overflow: hidden; box-shadow: 0 12px 32px rgba(16, 185, 129, 0.3);
-}
-.profile-hero::after{ content:'';position:absolute;right:-30px;top:-30px;width:150px;height:150px;background:rgba(255,255,255,.2);border-radius:50%;filter:blur(20px); }
-.hero-main{display:flex;align-items:center;gap:16px;position:relative;z-index:1}
-.hero-avatar{ width:76px;height:76px;border-radius:50%;background:rgba(255,255,255,.2); color:#fff;display:grid;place-items:center;font-size:28px;font-weight:700; background-size:cover;background-position:center;flex-shrink:0; border:3px solid rgba(255,255,255,.6); box-shadow: 0 4px 12px rgba(0,0,0,.1); }
-.hero-info{flex:1;min-width:0}
-.hero-name{font-size:1.4em;font-weight:700;margin-bottom:8px;letter-spacing:-0.5px;display:flex;align-items:center;gap:6px;}
-.hero-stats{display:flex;gap:24px;align-items:baseline}
-.hero-stat{display:flex;align-items:baseline;gap:4px}
-.hero-stat .num{font-size:1.1em;font-weight:700}
-.hero-stat .lbl{font-size:.75em;font-weight:500;opacity:.9}
-.hero-line2{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:.75em;font-weight:500;opacity:.9}
-.hero-bio{font-size:.85em;opacity:.95;margin-top:16px;line-height:1.6;position:relative;z-index:1;word-break:break-word;padding-top:14px;border-top:1px solid rgba(255,255,255,.25)}
-.hero-actions{display:flex;gap:10px;margin-top:20px;position:relative;z-index:1}
-.btn-follow{ flex:1;padding:12px;border:2px solid transparent;border-radius:var(--radius-sm); font-weight:600;font-family:inherit;font-size:.9em;cursor:pointer; background:#fff;color:var(--brand-dark);transition:var(--transition-smooth); box-shadow:0 4px 12px rgba(0,0,0,.08); }
-.btn-follow:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.12)}
-.btn-follow:active{transform:scale(.96)}
-.btn-follow.following{background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.5);box-shadow:none}
-.btn-edit-profile{ display:inline-flex;align-items:center;justify-content:center;gap:6px;width:auto; padding:10px 20px;border:2px solid rgba(255,255,255,.6);border-radius:var(--radius-sm); font-weight:600;font-family:inherit;font-size:.88em;cursor:pointer; background:rgba(255,255,255,.15);color:#fff; backdrop-filter:blur(8px);transition:var(--transition-smooth); }
-.btn-edit-profile:hover{background:#fff;color:var(--brand-dark);transform:translateY(-1px)}
-.btn-edit-profile:active{transform:scale(.96)}
-.btn-edit-profile svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+1: <!DOCTYPE html>
+2: <html lang="zh">
+3: <head>
+4: <meta charset="UTF-8" />
+5: <link rel="manifest" href="./manifest.json" />
+6: <meta name="theme-color" content="#10B981" />
+7: <link rel="apple-touch-icon" href="./icon.svg" />
+8: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+9: <title>Seven戚 · 用户主页</title>
+10: <link rel="stylesheet" href="./theme.css" />
+11: <script src="./vendor/supabase.js"></script>
+12: <script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/script>');</script>
+13: <style>
+14: .loading-state{text-align:center;padding:40px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;}
+15: .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
+16: @keyframes spin{to{transform:rotate(360deg)}}
+17: 
+18: /* 个人卡片重制 */
+19: .profile-hero{
+20:   background: linear-gradient(135deg, var(--brand-light), var(--brand));
+21:   border-radius: var(--radius-lg); padding: 24px 20px; color: #FFFFFF;
+22:   position: relative; overflow: hidden; box-shadow: 0 12px 32px rgba(16, 185, 129, 0.3);
+23: }
+24: .profile-hero::after{ content:'';position:absolute;right:-30px;top:-30px;width:150px;height:150px;background:rgba(255,255,255,.2);border-radius:50%;filter:blur(20px); }
+25: .hero-main{display:flex;align-items:center;gap:16px;position:relative;z-index:1}
+26: .hero-avatar{ width:76px;height:76px;border-radius:50%;background:rgba(255,255,255,.2); color:#fff;display:grid;place-items:center;font-size:28px;font-weight:700; background-size:cover;background-position:center;flex-shrink:0; border:3px solid rgba(255,255,255,.6); box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+27: .hero-info{flex:1;min-width:0}
+28: .hero-name{font-size:1.4em;font-weight:700;margin-bottom:8px;letter-spacing:-0.5px;display:flex;align-items:center;gap:6px;}
+29: .hero-stats{display:flex;gap:24px;align-items:baseline}
+30: .hero-stat{display:flex;align-items:baseline;gap:4px}
+31: .hero-stat .num{font-size:1.1em;font-weight:700}
+32: .hero-stat .lbl{font-size:.75em;font-weight:500;opacity:.9}
+33: .hero-line2{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:.75em;font-weight:500;opacity:.9}
+34: .hero-bio{font-size:.85em;opacity:.95;margin-top:16px;line-height:1.6;position:relative;z-index:1;word-break:break-word;padding-top:14px;border-top:1px solid rgba(255,255,255,.25)}
+35: .hero-actions{display:flex;gap:10px;margin-top:20px;position:relative;z-index:1}
+36: .btn-follow{ flex:1;padding:12px;border:2px solid transparent;border-radius:var(--radius-sm); font-weight:600;font-family:inherit;font-size:.9em;cursor:pointer; background:#fff;color:var(--brand-dark);transition:var(--transition-smooth); box-shadow:0 4px 12px rgba(0,0,0,.08); }
+37: .btn-follow:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.12)}
+38: .btn-follow:active{transform:scale(.96)}
+39: .btn-follow.following{background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.5);box-shadow:none}
+40: .btn-edit-profile{ display:inline-flex;align-items:center;justify-content:center;gap:6px;width:auto; padding:10px 20px;border:2px solid rgba(255,255,255,.6);border-radius:var(--radius-sm); font-weight:600;font-family:inherit;font-size:.88em;cursor:pointer; background:rgba(255,255,255,.15);color:#fff; backdrop-filter:blur(8px);transition:var(--transition-smooth); }
+41: .btn-edit-profile:hover{background:#fff;color:var(--brand-dark);transform:translateY(-1px)}
+42: .btn-edit-profile:active{transform:scale(.96)}
+43: .btn-edit-profile svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+44: 
+45: /* 管理员专属 */
+46: .admin-badge { background: #F59E0B; color: #fff; font-size: 0.5em; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+47: .nav-cell.admin-cell .ic { background: #FEF3C7; color: #D97706; border-color: #FDE68A; }
+48: 
+49: /* 宫格导航栏 */
+50: .nav-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 8px;margin:24px 0 8px}
+51: .nav-cell{background:none;border:none;padding:8px 2px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:var(--transition-smooth);text-align:center}
+52: .nav-cell:hover{transform:translateY(-2px)}
+53: .nav-cell:active{transform:scale(.94)}
+54: .nav-cell .ic{ width:52px;height:52px;border-radius:18px;background:var(--bg-surface);display:grid;place-items:center; color:var(--text-muted);transition:var(--transition-smooth); box-shadow:var(--shadow-sm);border:1px solid var(--border); }
+55: .nav-cell:hover .ic{background:var(--brand-bg);color:var(--brand);border-color:var(--brand-light);box-shadow:var(--shadow-md)}
+56: .nav-cell .ic svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:var(--transition-smooth)}
+57: .nav-cell:hover .ic svg{stroke-width:2}
+58: .nav-cell .tx{font-size:.75em;font-weight:600;color:var(--text-muted);transition:var(--transition-smooth)}
+59: .nav-cell:hover .tx{color:var(--text)}
+60: 
+61: /* 帖子列表 */
+62: .tabs{display:flex;gap:8px;margin:16px 0 16px;border-bottom:1px solid var(--border-subtle)}
+63: .tab{padding:10px 4px;border:none;background:none;font-family:inherit;font-size:.9em;font-weight:600;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;margin-right:12px;transition:var(--transition-smooth)}
+64: .tab.active{color:var(--text);border-bottom-color:var(--brand)}
+65: .post-card{background:var(--bg-surface);border-radius:var(--radius-md);padding:16px;margin-bottom:12px;border:1px solid var(--border);box-shadow:var(--shadow-sm);cursor:pointer;transition:var(--transition-smooth)}
+66: .post-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+67: .post-card:active{transform:scale(.98)}
+68: .post-card .post-title{font-weight:600;font-size:1em;margin-bottom:8px;color:var(--text)}
+69: .post-card .post-body{font-size:.85em;color:var(--text-muted);line-height:1.6;max-height:60px;overflow:hidden}
+70: .post-card .post-foot{font-size:.75em;color:var(--text-light);margin-top:12px;display:flex;gap:12px;border-top:1px solid var(--border);padding-top:10px}
+71: .empty{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:.9em}
+72: 
+73: /* 多视图切换 */
+74: .view{display:none;width:100%;max-width:640px;margin:0 auto;}
+75: .view.active{display:block;animation:fadeIn .35s ease;}
+76: @keyframes fadeIn{from{opacity:0;transform:translateY(10px) scale(0.99)}to{opacity:1;transform:translateY(0) scale(1)}}
+77: 
+78: /* 内部设置卡片 */
+79: .settings-card{background:var(--bg-surface);border-radius:var(--radius-md);padding:1.5em;width:100%;box-shadow:var(--shadow-sm);border:1px solid var(--border);margin-bottom:16px;}
+80: .settings-title{font-size:.8em;font-weight:600;color:var(--text-muted);letter-spacing:.05em;margin-bottom:16px}
+81: .settings-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+82: .settings-item:last-child{border-bottom:none;}
+83: .settings-item .item-left{display:flex;align-items:center;gap:12px}
+84: .settings-item .item-icon{width:36px;height:36px;border-radius:50%;background:var(--brand-bg);display:grid;place-items:center;flex-shrink:0;color:var(--brand)}
+85: .settings-item .item-icon svg{width:18px;height:18px}
+86: .settings-item .item-label{font-size:.95em;font-weight:600;color:var(--text)}
+87: 
+88: .field-group{margin-bottom:20px}
+89: .field-group label{display:block;font-size:.8em;font-weight:600;color:var(--text-muted);margin-bottom:8px}
+90: .field-group textarea,.field-group input{width:100%;padding:12px;border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-family:inherit;font-size:.9em;outline:none;background:var(--bg);color:var(--text);box-sizing:border-box;transition:var(--transition-smooth)}
+91: .field-group textarea:focus,.field-group input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-bg)}
+92: .field-group textarea{min-height:100px;resize:vertical}
+93: 
+94: /* 消息中心专属 UI */
+95: .msg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+96: .msg-title { font-weight: 700; font-size: 1.2em; color: var(--text); }
+97: .msg-read-btn { background: none; border: none; color: var(--brand); font-size: 0.9em; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: var(--radius-sm); transition: var(--transition-smooth); }
+98: .msg-read-btn:hover { background: var(--brand-bg); }
+99: 
+100: .msg-tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 4px; scrollbar-width: none; }
+101: .msg-tabs::-webkit-scrollbar { display: none; }
+102: .msg-tab { padding: 8px 16px; border-radius: var(--radius-pill); border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-muted); font-size: 0.85em; font-weight: 600; cursor: pointer; white-space: nowrap; transition: var(--transition-smooth); }
+103: .msg-tab.active { background: var(--brand); color: #fff; border-color: var(--brand); box-shadow: 0 4px 10px rgba(16,185,129,0.2); }
+104: 
+105: .msg-list { display: flex; flex-direction: column; gap: 12px; }
+106: .ntf-card { display: flex; align-items: flex-start; gap: 16px; padding: 16px; border-radius: var(--radius-md); background: var(--bg-surface); border: 1px solid var(--border); cursor: pointer; transition: var(--transition-smooth); position: relative; overflow: hidden; }
+107: .ntf-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+108: .ntf-card.unread { background: linear-gradient(to right, var(--brand-bg), var(--bg-surface) 40%); border-color: var(--brand-light); }
+109: .ntf-card.unread::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 4px; height: 60%; background: var(--brand); border-radius: 0 4px 4px 0; }
+110: 
+111: .ntf-type-icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; background: var(--bg); color: var(--text-muted); box-shadow: var(--shadow-sm); }
+112: .ntf-type-icon.comment { background: #EFF6FF; color: #3B82F6; }
+113: .ntf-type-icon.system { background: #FEF2F2; color: #EF4444; }
+114: 
+115: .ntf-body { flex: 1; min-width: 0; }
+116: .ntf-title { font-size: 0.95em; font-weight: 700; color: var(--text); line-height: 1.4; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+117: .ntf-title .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--danger); display: inline-block; }
+118: .ntf-snippet { font-size: 0.88em; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px; }
+119: .ntf-meta { font-size: 0.75em; color: var(--text-light); display: flex; align-items: center; gap: 8px; font-weight: 500; }
+120: 
+121: .ntf-empty { text-align: center; padding: 60px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+122: .ntf-empty svg { width: 64px; height: 64px; stroke: var(--border-subtle); fill: none; stroke-width: 1.5; }
+123: .ntf-empty .text { color: var(--text-muted); font-size: 0.95em; font-weight: 500; }
+124: </style>
+125: </head>
+126: <body>
+127: <div id="mainApp">
+128:   <div id="header-container"></div>
+129: 
+130:   <div class="page-content" id="pageContent">
+131:     <div class="view active" id="homeView">
+132:       <!-- 个人卡片骨架屏 -->
+133:       <div id="profileHeroContainer">
+134:         <div class="profile-hero" style="background:var(--border); box-shadow:none;">
+135:           <div class="hero-main">
+136:             <div class="skeleton" style="width:76px;height:76px;border-radius:50%;flex-shrink:0;"></div>
+137:             <div style="flex:1;">
+138:               <div class="skeleton" style="width:40%;height:24px;margin-bottom:12px;"></div>
+139:               <div style="display:flex;gap:24px;">
+140:                 <div class="skeleton" style="width:40px;height:16px;"></div>
+141:                 <div class="skeleton" style="width:40px;height:16px;"></div>
+142:                 <div class="skeleton" style="width:40px;height:16px;"></div>
+143:               </div>
+144:             </div>
+145:           </div>
+146:           <div class="skeleton" style="width:80%;height:14px;margin-top:20px;"></div>
+147:           <div class="skeleton" style="width:60%;height:14px;margin-top:8px;"></div>
+148:         </div>
+149:       </div>
+150:       <!-- 宫格导航骨架屏 -->
+151:       <div id="navGridContainer">
+152:          <div class="nav-grid">
+153:             <div class="skeleton" style="width:52px;height:52px;border-radius:18px;margin:0 auto;"></div>
+154:             <div class="skeleton" style="width:52px;height:52px;border-radius:18px;margin:0 auto;"></div>
+155:             <div class="skeleton" style="width:52px;height:52px;border-radius:18px;margin:0 auto;"></div>
+156:             <div class="skeleton" style="width:52px;height:52px;border-radius:18px;margin:0 auto;"></div>
+157:          </div>
+158:       </div>
+159:       <!-- 帖子列表骨架屏 -->
+160:       <div id="postsContainer">
+161:         <div class="skeleton-card" style="margin-top:20px;">
+162:           <div class="skeleton skeleton-line" style="width:40%;margin-bottom:8px;"></div>
+163:           <div class="skeleton skeleton-line"></div>
+164:           <div class="skeleton skeleton-line short"></div>
+165:         </div>
+166:         <div class="skeleton-card">
+167:           <div class="skeleton skeleton-line" style="width:50%;margin-bottom:8px;"></div>
+168:           <div class="skeleton skeleton-line"></div>
+169:         </div>
+170:       </div>
+171:     </div>
+172: 
+173:     <div class="view" id="messagesView">
+174:       <div class="msg-header">
+175:         <span class="msg-title">消息中心</span>
+176:         <button onclick="markAllRead()" class="msg-read-btn">全部已读</button>
+177:       </div>
+178:       
+179:       <!-- 分类 Tabs -->
+180:       <div class="msg-tabs">
+181:         <button class="msg-tab active" data-type="all" onclick="switchMsgTab('all')">全部</button>
+182:         <button class="msg-tab" data-type="unread" onclick="switchMsgTab('unread')">未读</button>
+183:         <button class="msg-tab" data-type="comment" onclick="switchMsgTab('comment')">互动</button>
+184:         <button class="msg-tab" data-type="system" onclick="switchMsgTab('system')">系统</button>
+185:       </div>
+186: 
+187:       <div id="notificationList" class="msg-list">
+188:         <!-- 会被 JS 替换为骨架屏或内容 -->
+189:       </div>
+190:     </div>
+191: 
+192:     <div class="view" id="settingsView">
+193:       <div class="settings-card">
+194:         <div class="settings-title">设置中心</div>
+195:         <div class="settings-item">
+196:           <div class="item-left">
+197:             <div class="item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></div>
+198:             <div class="item-label">提醒音效</div>
+199:           </div>
+200:           <label class="toggle-switch">
+201:             <input class="toggle-input" type="checkbox" id="soundToggle" />
+202:             <label class="toggle-label" for="soundToggle"></label>
+203:           </label>
+204:         </div>
+205:       </div>
+206:       <button class="btn btn-danger" style="width:100%" onclick="doLogout()">退出登录</button>
+207:     </div>
+208: 
+209:     <div class="view" id="feedbackView">
+210:       <div class="settings-card">
+211:         <div class="settings-title">反馈 Bug</div>
+212:         <div class="field-group">
+213:           <label>问题描述</label>
+214:           <textarea id="fbContent" placeholder="请详细描述你遇到的问题..."></textarea>
+215:         </div>
+216:         <div class="field-group">
+217:           <label>联系方式（选填）</label>
+218:           <input type="text" id="fbContact" placeholder="QQ / 微信" />
+219:         </div>
+220:         <button class="btn btn-primary" style="width:100%" onclick="submitFeedback()">提交反馈</button>
+221:       </div>
+222:     </div>
+223: 
+224:     <div class="view" id="editView">
+225:       <div class="settings-card" style="text-align: center;">
+226:         <div class="settings-title" style="text-align: left;">编辑资料</div>
+227:         
+228:         <div style="position: relative; width: 80px; height: 80px; margin: 0 auto 20px;">
+229:           <img id="editAvatarPreview" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--brand-bg); box-shadow: var(--shadow-md);" src="" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'" />
+230:           <label style="position: absolute; bottom: 0; right: 0; background: var(--brand); color: white; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; border: 2px solid white; box-shadow: var(--shadow-sm);">
+231:             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+232:             <input type="file" id="editAvatarInput" accept="image/*" style="display: none;" onchange="handleAvatarChange(this)">
+233:           </label>
+234:         </div>
+235: 
+236:         <div class="field-group" style="text-align: left;">
+237:           <label>专属 UID (不可修改)</label>
+238:           <input type="text" id="editUID" readonly style="opacity: 0.6; cursor: not-allowed;" />
+239:         </div>
+240:         <div class="field-group" style="text-align: left;">
+241:           <label>昵称</label>
+242:           <input type="text" id="editNickname" placeholder="输入昵称" maxlength="20" />
+243:         </div>
+244:         <div class="field-group" style="text-align: left;">
+245:           <label>个性签名</label>
+246:           <textarea id="editBio" placeholder="介绍一下自己..."></textarea>
+247:         </div>
+248:         <button class="btn btn-primary" style="width:100%; margin-top: 10px;" onclick="saveProfile()">保存修改</button>
+249:       </div>
+250:     </div>
+251: 
+252:     <div class="view" id="aboutView">
+253:       <div class="settings-card" style="text-align:center;padding:40px 20px;">
+254:         <img src="https://i.ibb.co/Y4rD6F2Y/b-8ee0f1b16f3c823eeff690735ca17e1f.jpg" style="width:96px;height:96px;border-radius:50%;margin-bottom:20px;box-shadow:var(--shadow-md);">
+255:         <h2 style="margin-bottom:8px;font-weight:700;">Seven戚</h2>
+256:         <div style="font-size:.85em;color:var(--text-muted);margin-bottom:24px;font-weight:500;">全栈开发者 · 社区创始人</div>
+257:         <div style="font-size:.95em;line-height:1.6;color:var(--text);">多多推广本网站，谢谢你们 Thanks♪(･ω･)ﾉ</div>
+258:       </div>
+259:     </div>
+260:   </div>
+261: 
+262:   <div id="footer-container"></div>
+263: </div>
+264: 
+265: <script src="./common.js"></script>
+266: <script>
+267: var currentUser = getSessionUser();
+268: if (!currentUser || !currentUser.id) window.location.href = './index.html';
+269: 
+270: var viewingUser = null;
+271: var isSelf = false;
+272: var iFollowed = false;
+273: var myPosts = [];
+274: 
+275: function $(id){ return document.getElementById(id); }
+276: function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+277: function showToast(msg){ alert(msg); }
+278: 
+279: async function loadUser(){
+280:   var t = new URLSearchParams(location.search);
+281:   var id = t.get('id');
+282:   var isViewingSelf = (!id) || (id === currentUser.id);
+283:   var q = isViewingSelf ? window.sb.rpc('get_my_profile') : window.sb.from('public_profiles').select('*').eq('id', id).single();
+284:   var res = await q;
+285:   if (res.error) return false;
+286:   var row = Array.isArray(res.data) ? res.data[0] : res.data;
+287:   if (!row) return false;
+288:   viewingUser = row;
+289:   isSelf = (viewingUser.id === currentUser.id);
+290:   return true;
+291: }
+292: 
+293: async function loadFollow(){
+294:   if (isSelf) return;
+295:   var r = await window.sb.from('follows').select('id').eq('follower_id', currentUser.id).eq('following_id', viewingUser.id);
+296:   iFollowed = !!(r.data && r.data.length);
+297: }
+298: 
+299: async function loadCounts(){
+300:   var f1 = await window.sb.from('follows').select('id', { count:'exact', head:true }).eq('following_id', viewingUser.id);
+301:   var f2 = await window.sb.from('follows').select('id', { count:'exact', head:true }).eq('follower_id', viewingUser.id);
+302:   return { fans: f1.count || 0, following: f2.count || 0 };
+303: }
+304: 
+305: async function loadPosts(){
+306:   var r = await window.sb.from('posts').select('*').eq('user_id', viewingUser.id).order('created_at', { ascending:false });
+307:   myPosts = r.data || [];
+308: }
+309: 
+310: async function render() {
+311:   try {
+312:     var isViewingSelf = !new URLSearchParams(location.search).get('id') || new URLSearchParams(location.search).get('id') === currentUser.id;
+313:     
+314:     // ★ 缓存直出：如果是自己主页，先立刻用缓存渲染头部
+315:     if (isViewingSelf) {
+316:       var cached = getSessionUser();
+317:       if (cached && cached.nickname) {
+318:         var avStyle = (cached.avatar_url && cached.avatar_url.indexOf('http')===0) ? 'background-image:url('+cached.avatar_url+');background-size:cover;background-position:center;' : '';
+319:         var quickHero = '<div class="profile-hero"><div class="hero-main"><div class="hero-avatar" style="'+avStyle+'">' + (avStyle?'':escapeHtml(cached.nickname.charAt(0).toUpperCase())) + '</div><div class="hero-info"><div class="hero-name">' + escapeHtml(cached.nickname) + '</div><div class="hero-stats"><span style="opacity:0.6;font-size:0.8em;">正在加载动态...</span></div></div></div></div>';
+320:         $('profileHeroContainer').innerHTML = quickHero;
+321:       }
+322:     }
+323: 
+324:     if (!(await loadUser())) {
+325:       $('profileHeroContainer').innerHTML = '<div class="empty">用户不存在或加载失败</div>';
+326:       return;
+327:     }
+328:     
+329:     // ★ 请求并行：同时拉取关注状态、帖子、粉丝数、未读消息
+330:     var [_, _, counts, unreadCount] = await Promise.all([
+331:       loadFollow(),
+332:       loadPosts(),
+333:       loadCounts(),
+334:       (async function(){
+335:         try {
+336:           var res = await window.sb.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', currentUser.id).eq('is_read', false);
+337:           return res.count || 0;
+338:         } catch(e) { return 0; }
+339:       })()
+340:     ]);
+341: 
+342:     var hero = '<div class="profile-hero">';
+343:     hero += '<div class="hero-main">';
+344:     var avStyle = (viewingUser.avatar_url && viewingUser.avatar_url.indexOf('http')===0) ? 'background-image:url('+viewingUser.avatar_url+');background-size:cover;background-position:center;' : '';
+345:     hero += '<div class="hero-avatar" style="'+avStyle+'">' + (avStyle?'':escapeHtml(String(viewingUser.nickname||'U').charAt(0).toUpperCase())) + '</div>';
+346:     hero += '<div class="hero-info">';
+347:     
+348:     var tagHtml = '';
+349:     if (viewingUser.is_admin) {
+350:        tagHtml = ' <span class="admin-badge">官方管理员</span>';
+351:     }
+352:     
+353:     hero += '<div class="hero-name">' + escapeHtml(viewingUser.nickname || '用户') + tagHtml + '</div>';
+354:     hero += '<div class="hero-stats"><div class="hero-stat"><span class="num">' + myPosts.length + '</span><span class="lbl">帖子</span></div><div class="hero-stat"><span class="num">' + counts.fans + '</span><span class="lbl">粉丝</span></div><div class="hero-stat"><span class="num">' + counts.following + '</span><span class="lbl">关注</span></div></div>';
+355:     var uidDisplay = viewingUser.custom_uid;
+356:     if (!uidDisplay || uidDisplay.indexOf('@') >= 0) uidDisplay = viewingUser.id.slice(0, 8);
+357:     hero += '<div class="hero-line2"><span class="hero-no">ID: ' + escapeHtml(uidDisplay) + '</span></div>';
+358:     hero += '</div></div>';
+359:     hero += '<div class="hero-bio">' + (viewingUser.bio ? escapeHtml(viewingUser.bio) : '这个人很懒，没有写简介') + '</div>';
+360:     hero += '<div class="hero-actions">';
+361:     if (isSelf) hero += '<button class="btn-edit-profile" onclick="switchView(\'edit\')"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>编辑资料</button>';
+362:     else hero += '<button class="btn-follow' + (iFollowed?' following':'') + '" onclick="toggleFollow()">' + (iFollowed?'已关注':'+ 关注') + '</button>';
+363:     hero += '</div></div>';
+364: 
+365:     var navHtml = '';
+366:     if (isSelf) {
+367:       navHtml = '<div class="nav-grid">' +
+368:         '<div class="nav-cell" onclick="switchView(\'messages\')"><div class="ic" style="position:relative;"><svg viewBox="0 0 24 24"><path d="M4 4h16v12H5.17L4 17.17V4z"/></svg>' + (unreadCount > 0 ? '<span style="position:absolute;top:-2px;right:-2px;width:12px;height:12px;background:var(--danger);border-radius:50%;border:2px solid var(--bg-surface);"></span>' : '') + '</div><div class="tx">消息中心</div></div>' +
+369:         '<div class="nav-cell" onclick="switchView(\'settings\')"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div><div class="tx">设置中心</div></div>' +
+370:         '<div class="nav-cell" onclick="location.href=\'./shop.html\'"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M3 9h18"/><path d="M9 13a3 3 0 0 0 6 0"/></svg></div><div class="tx">皮肤商店</div></div>' +
+371:         '<div class="nav-cell" onclick="location.href=\'./assets.html\'"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h5M9.5 14.5h5"/></svg></div><div class="tx">我的资产</div></div>' +
+372:         '<div class="nav-cell" onclick="location.href=\'./activity.html\'"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 5.9 6.4.5-4.9 4.2 1.5 6.3L12 15.8 6.6 18.9l1.5-6.3L3.2 8.4l6.4-.5z"/></svg></div><div class="tx">活动</div></div>' +
+373:         '<div class="nav-cell" onclick="switchView(\'about\')"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div><div class="tx">关于我们</div></div>' +
+374:         '<div class="nav-cell" onclick="switchView(\'feedback\')"><div class="ic"><svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="tx">反馈 Bug</div></div>';
+375:         
+376:       // ★ 管理员专属后台入口
+377:       if (currentUser.is_admin === true || viewingUser.is_admin === true) {
+378:         navHtml += '<div class="nav-cell admin-cell" onclick="location.href=\'./admin.html\'"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="tx">后台管理</div></div>';
+379:       }
+380: 
+381:       navHtml += '</div>';
+382:     }
+383: 
+384:     var postsHtml = '<div class="tabs"><button class="tab active">' + (isSelf ? '我的帖子' : '他的帖子') + ' (' + myPosts.length + ')</button></div>';
+385:     if (myPosts.length) {
+386:       postsHtml += myPosts.map(function(p){
+387:         return '<div class="post-card" onclick="location.href=\'./posts.html\'">' +
+388:           (p.title ? '<div class="post-title">' + escapeHtml(p.title) + '</div>' : '') +
+389:           '<div class="post-body">' + escapeHtml(String(p.content||'').replace(/<[^>]*>/g,'').substring(0,120)) + '</div>' +
+390:           '<div class="post-foot"><span>' + new Date(p.created_at).toLocaleDateString('zh-CN') + '</span></div></div>';
+391:       }).join('');
+392:     } else {
+393:       postsHtml += '<div class="empty">还没有发过帖子</div>';
+394:     }
+395: 
+396:     $('profileHeroContainer').innerHTML = hero;
+397:     $('navGridContainer').innerHTML = navHtml;
+398:     $('postsContainer').innerHTML = postsHtml;
+399:   } catch (e) {
+400:     $('profileHeroContainer').innerHTML = '<div class="empty">加载出错：' + e.message + '</div>';
+401:   }
+402: }
+403: 
+404: function renderHeader(isHome, viewName) {
+405:   var hc = $("header-container");
+406:   var backBtnHtml = isHome ? '' : '<button onclick="switchView(\'home\')" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text);display:flex;border-radius:8px;margin-right:4px;transition:var(--transition-smooth);"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>';
+407:   var title = '个人中心';
+408:   if (!isHome) {
+409:     if (viewName === 'messages') title = '消息中心';
+410:     else if (viewName === 'settings') title = '设置中心';
+411:     else if (viewName === 'feedback') title = '反馈 Bug';
+412:     else if (viewName === 'about') title = '关于我们';
+413:     else if (viewName === 'edit') title = '编辑资料';
+414:   }
+415:   hc.innerHTML = '<div class="app-header">' + backBtnHtml +
+416:     '<div class="brand" '+(isHome?'onclick="location.href=\'./posts.html\'"':'')+'>Seven<span>戚</span><small> · ' + title + '</small></div>' +
+417:     '<div class="header-right"><div class="user-area" onclick="switchView(\'home\')">' +
+418:         '<div class="avatar" style="' + (currentUser.avatar_url && currentUser.avatar_url.indexOf('http')===0 ? 'background-image:url('+currentUser.avatar_url+')' : '') + '">' + (currentUser.avatar_url ? '' : (currentUser.nickname||'U').charAt(0).toUpperCase()) + '</div>' +
+419:         '<span class="user-name">' + (currentUser.nickname || '用户') + '</span>' +
+420:     '</div></div></div>';
+421: }
+422: 
+423: function switchView(viewName) {
+424:   var isHome = (viewName === 'home');
+425:   if (isHome && !isSelf) return;
+426: 
+427:   ['homeView', 'messagesView', 'settingsView', 'feedbackView', 'aboutView', 'editView'].forEach(function(id) {
+428:     $(id).classList.toggle('active', id === viewName + 'View');
+429:   });
+430: 
+431:   if (isHome) {
+432:     renderHeader(true);
+433:   } else {
+434:     if (viewName === 'messages') loadNotifications();
+435:     else if (viewName === 'settings') initSoundToggle();
+436:     else if (viewName === 'edit') loadEditProfile();
+437:     renderHeader(false, viewName);
+438:   }
+439: 
+440:   var footer = document.getElementById('footer-container');
+441:   if (footer) footer.style.display = isHome ? 'block' : 'none';
+442: 
+443:   var activeView = document.getElementById(viewName + 'View');
+444:   if (activeView) {
+445:     activeView.style.animation = 'none';
+446:     activeView.offsetHeight;
+447:     activeView.style.animation = 'fadeIn 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
+448:   }
+449: 
+450:   $('pageContent').scrollTop = 0;
+451: }
+452: window.switchView = switchView;
+453: 
+454: var msgTabCurrent = 'all';
+455: var rawNotifications = [];
+456: 
+457: function switchMsgTab(type) {
+458:   msgTabCurrent = type;
+459:   document.querySelectorAll('.msg-tab').forEach(function(btn) {
+460:     btn.classList.toggle('active', btn.dataset.type === type);
+461:   });
+462:   renderNotifications();
+463: }
+464: window.switchMsgTab = switchMsgTab;
+465: 
+466: async function loadNotifications() {
+467:   var listEl = $('notificationList');
+468:   
+469:   listEl.innerHTML = '<div class="empty">加载中...</div>';
+470: 
+471:   try {
+472:     var r = await window.sb.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(50);
+473:     if (r.error) throw r.error;
+474:     rawNotifications = r.data || [];
+475:     renderNotifications();
+476:   } catch(e) {
+477:     listEl.innerHTML = '<div class="ntf-empty"><div class="text">加载失败，请稍后再试</div></div>';
+478:   }
+479: }
+480: 
+481: function renderNotifications() {
+482:   var listEl = $('notificationList');
+483:   var filtered = rawNotifications.filter(function(n) {
+484:     if (msgTabCurrent === 'all') return true;
+485:     if (msgTabCurrent === 'unread') return !n.is_read;
+486:     if (msgTabCurrent === 'comment') return n.type === 'comment' || n.notification_type === 'comment';
+487:     if (msgTabCurrent === 'system') return n.type !== 'comment' && n.notification_type !== 'comment';
+488:     return true;
+489:   });
+490: 
+491:   if (!filtered.length) {
+492:     listEl.innerHTML = '<div class="ntf-empty"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg><div class="text">暂无消息记录</div></div>';
+493:     return;
+494:   }
+495: 
+496:   var h = '';
+497:   filtered.forEach(function(n) {
+498:     var isComment = n.type === 'comment' || n.notification_type === 'comment';
+499:     var iconType = isComment ? 'comment' : 'system';
+500:     var iconSvg = isComment 
+501:       ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>'
+502:       : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
+503: 
+504:     h += '<div class="ntf-card ' + (!n.is_read ? 'unread' : '') + '">';
+505:     h += '<div class="ntf-type-icon ' + iconType + '">' + iconSvg + '</div>';
+506:     h += '<div class="ntf-body">';
+507:     h += '<div class="ntf-title">' + (!n.is_read ? '<span class="dot"></span>' : '') + escapeHtml(n.title || n.extra_text || '新消息') + '</div>';
+508:     h += '<div class="ntf-snippet">' + escapeHtml(n.body || n.extra_text || '') + '</div>';
+509:     h += '<div class="ntf-meta">' + (n.created_at ? new Date(n.created_at).toLocaleString('zh-CN') : '') + '</div>';
+510:     h += '</div></div>';
+511:   });
+512:   listEl.innerHTML = h;
+513: }
+514: 
+515: async function markAllRead() {
+516:   try {
+517:     await window.sb.from('notifications').update({ is_read: true }).eq('user_id', currentUser.id).eq('is_read', false);
+518:     loadNotifications();
+519:   } catch(e) {}
+520: }
+521: window.markAllRead = markAllRead;
+522: 
+523: function initSoundToggle() {
+524:   var soundEnabled = localStorage.getItem('sq_sound_enabled') !== 'false';
+525:   var t = $('soundToggle');
+526:   if (t) {
+527:     t.checked = soundEnabled;
+528:     t.onchange = function() { localStorage.setItem('sq_sound_enabled', this.checked ? 'true' : 'false'); };
+529:   }
+530: }
+531: 
+532: async function submitFeedback() {
+533:   var content = $('fbContent').value.trim();
+534:   var contact = $('fbContact').value.trim();
+535:   if (!content) return alert('请填写问题描述');
+536:   try {
+537:     await window.sb.from('feedback').insert([{ user_id: currentUser.id, content: content, contact: contact, status: 'pending' }]);
+538:     alert('反馈已提交，感谢您！');
+539:     switchView('home');
+540:   } catch (e) { alert('提交失败：' + e.message); }
+541: }
+542: window.submitFeedback = submitFeedback;
+543: 
+544: async function doLogout() {
+545:   if (confirm('确定要退出登录吗？')) {
+546:     localStorage.removeItem('sq_user_session');
+547:     location.href = './index.html';
+548:   }
+549: }
+550: window.doLogout = doLogout;
+551: 
+552: var selectedAvatarFile = null;
+553: 
+554: function loadEditProfile() {
+555:   var u = window.sqTrust ? window.sqTrust.user : currentUser;
+556:   $('editNickname').value = u.nickname || '';
+557:   $('editBio').value = u.bio || '';
+558:   $('editUID').value = u.custom_uid || (u.id ? u.id.slice(0,8) : '未设置');
+559:   $('editAvatarPreview').src = u.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(u.nickname || 'U');
+560:   selectedAvatarFile = null;
+561: }
+562: 
+563: function handleAvatarChange(input) {
+564:   if (input.files && input.files[0]) {
+565:     selectedAvatarFile = input.files[0];
+566:     var reader = new FileReader();
+567:     reader.onload = function(e) {
+568:       $('editAvatarPreview').src = e.target.result;
+569:     };
+570:     reader.readAsDataURL(selectedAvatarFile);
+571:   }
+572: }
+573: window.handleAvatarChange = handleAvatarChange;
+574: 
+575: async function saveProfile() {
+576:   var nick = $('editNickname').value.trim();
+577:   var bio = $('editBio').value.trim();
+578:   if (!nick) return alert('昵称不能为空');
+579:   
+580:   var btn = event.target;
+581:   btn.disabled = true; btn.textContent = '保存中...';
+582: 
+583:   try {
+584:     var avatarUrl = currentUser.avatar_url;
+585:     
+586:     if (selectedAvatarFile) {
+587:       var ext = selectedAvatarFile.name.split('.').pop() || 'png';
+588:       var path = currentUser.id + '/' + Date.now() + '.' + ext;
+589:       var up = await window.sb.storage.from('avatars').upload(path, selectedAvatarFile);
+590:       if (up.error) throw new Error('头像上传失败：' + up.error.message);
+591:       var pub = window.sb.storage.from('avatars').getPublicUrl(path);
+592:       avatarUrl = pub.data.publicUrl;
+593:     }
+594: 
+595:     var r = await window.sb.rpc('update_my_profile', {
+      p_nickname: nick,
+      p_bio: bio,
+      p_avatar_url: avatarUrl
+    });
+600:     
+601:     if (r.error) throw r.error;
+602:     
+603:     alert('修改成功');
+604:     currentUser.nickname = nick;
+605:     currentUser.bio = bio;
+606:     currentUser.avatar_url = avatarUrl;
+607:     setSessionUser(currentUser);
+608:     
+609:     await render();
+610:     switchView('home');
+611:     
+612:   } catch (e) {
+613:     alert('保存失败：' + e.message);
+614:   } finally {
+615:     btn.disabled = false; btn.textContent = '保存修改';
+616:   }
+617: }
+618: window.saveProfile = saveProfile;
+619: 
+620: async function toggleFollow(){
+621:   if (isSelf) return;
+622:   try{
+623:     if (iFollowed) {
+624:       await window.sb.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', viewingUser.id);
+625:       iFollowed = false;
+626:       showToast('已取消关注');
+627:     } else {
+628:       await window.sb.from('follows').insert([{ follower_id: currentUser.id, following_id: viewingUser.id }]);
+629:       iFollowed = true;
+630:       showToast('已关注');
+631:     }
+632:     await render();
+633:   }catch(e){ showToast('操作失败：' + e.message); }
+634: }
+635: window.toggleFollow = toggleFollow;
+636: 
+637: (async function init(){
+638:   renderHeader(true);
+639:   renderFooter('profile');
+640:   await render();
+641:   
+642: })();
+643: </script>
+644: </body>
+645: </html>
 
-/* 管理员专属 */
-.admin-badge { background: #F59E0B; color: #fff; font-size: 0.5em; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
-.nav-cell.admin-cell .ic { background: #FEF3C7; color: #D97706; border-color: #FDE68A; }
-
-/* 宫格导航栏 */
-.nav-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 8px;margin:24px 0 8px}
-.nav-cell{background:none;border:none;padding:8px 2px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:var(--transition-smooth);text-align:center}
-.nav-cell:hover{transform:translateY(-2px)}
-.nav-cell:active{transform:scale(.94)}
-.nav-cell .ic{ width:52px;height:52px;border-radius:18px;background:var(--bg-surface);display:grid;place-items:center; color:var(--text-muted);transition:var(--transition-smooth); box-shadow:var(--shadow-sm);border:1px solid var(--border); }
-.nav-cell:hover .ic{background:var(--brand-bg);color:var(--brand);border-color:var(--brand-light);box-shadow:var(--shadow-md)}
-.nav-cell .ic svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:var(--transition-smooth)}
-.nav-cell:hover .ic svg{stroke-width:2}
-.nav-cell .tx{font-size:.75em;font-weight:600;color:var(--text-muted);transition:var(--transition-smooth)}
-.nav-cell:hover .tx{color:var(--text)}
-
-/* 帖子列表 */
-.tabs{display:flex;gap:8px;margin:16px 0 16px;border-bottom:1px solid var(--border-subtle)}
-.tab{padding:10px 4px;border:none;background:none;font-family:inherit;font-size:.9em;font-weight:600;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;margin-right:12px;transition:var(--transition-smooth)}
-.tab.active{color:var(--text);border-bottom-color:var(--brand)}
-.post-card{background:var(--bg-surface);border-radius:var(--radius-md);padding:16px;margin-bottom:12px;border:1px solid var(--border);box-shadow:var(--shadow-sm);cursor:pointer;transition:var(--transition-smooth)}
-.post-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
-.post-card:active{transform:scale(.98)}
-.post-card .post-title{font-weight:600;font-size:1em;margin-bottom:8px;color:var(--text)}
-.post-card .post-body{font-size:.85em;color:var(--text-muted);line-height:1.6;max-height:60px;overflow:hidden}
-.post-card .post-foot{font-size:.75em;color:var(--text-light);margin-top:12px;display:flex;gap:12px;border-top:1px solid var(--border);padding-top:10px}
-.empty{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:.9em}
-
-/* 多视图切换 */
-.view{display:none;width:100%;max-width:640px;margin:0 auto;}
-.view.active{display:block;animation:fadeIn .35s ease;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px) scale(0.99)}to{opacity:1;transform:translateY(0) scale(1)}}
-
-/* 内部设置卡片 */
-.settings-card{background:var(--bg-surface);border-radius:var(--radius-md);padding:1.5em;width:100%;box-shadow:var(--shadow-sm);border:1px solid var(--border);margin-bottom:16px;}
-.settings-title{font-size:.8em;font-weight:600;color:var(--text-muted);letter-spacing:.05em;margin-bottom:16px}
-.settings-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
-.settings-item:last-child{border-bottom:none;}
-.settings-item .item-left{display:flex;align-items:center;gap:12px}
-.settings-item .item-icon{width:36px;height:36px;border-radius:50%;background:var(--brand-bg);display:grid;place-items:center;flex-shrink:0;color:var(--brand)}
-.settings-item .item-icon svg{width:18px;height:18px}
-.settings-item .item-label{font-size:.95em;font-weight:600;color:var(--text)}
-
-.field-group{margin-bottom:20px}
-.field-group label{display:block;font-size:.8em;font-weight:600;color:var(--text-muted);margin-bottom:8px}
-.field-group textarea,.field-group input{width:100%;padding:12px;border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-family:inherit;font-size:.9em;outline:none;background:var(--bg);color:var(--text);box-sizing:border-box;transition:var(--transition-smooth)}
-.field-group textarea:focus,.field-group input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-bg)}
-.field-group textarea{min-height:100px;resize:vertical}
-
-/* 消息中心专属 UI */
-.msg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.msg-title { font-weight: 700; font-size: 1.2em; color: var(--text); }
-.msg-read-btn { background: none; border: none; color: var(--brand); font-size: 0.9em; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: var(--radius-sm); transition: var(--transition-smooth); }
-.msg-read-btn:hover { background: var(--brand-bg); }
-
-.msg-tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 4px; scrollbar-width: none; }
-.msg-tabs::-webkit-scrollbar { display: none; }
-.msg-tab { padding: 8px 16px; border-radius: var(--radius-pill); border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-muted); font-size: 0.85em; font-weight: 600; cursor: pointer; white-space: nowrap; transition: var(--transition-smooth); }
-.msg-tab.active { background: var(--brand); color: #fff; border-color: var(--brand); box-shadow: 0 4px 10px rgba(16,185,129,0.2); }
-
-.msg-list { display: flex; flex-direction: column; gap: 12px; }
-.ntf-card { display: flex; align-items: flex-start; gap: 16px; padding: 16px; border-radius: var(--radius-md); background: var(--bg-surface); border: 1px solid var(--border); cursor: pointer; transition: var(--transition-smooth); position: relative; overflow: hidden; }
-.ntf-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-.ntf-card.unread { background: linear-gradient(to right, var(--brand-bg), var(--bg-surface) 40%); border-color: var(--brand-light); }
-.ntf-card.unread::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 4px; height: 60%; background: var(--brand); border-radius: 0 4px 4px 0; }
-
-.ntf-type-icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; background: var(--bg); color: var(--text-muted); box-shadow: var(--shadow-sm); }
-.ntf-type-icon.comment { background: #EFF6FF; color: #3B82F6; }
-.ntf-type-icon.system { background: #FEF2F2; color: #EF4444; }
-
-.ntf-body { flex: 1; min-width: 0; }
-.ntf-title { font-size: 0.95em; font-weight: 700; color: var(--text); line-height: 1.4; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-.ntf-title .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--danger); display: inline-block; }
-.ntf-snippet { font-size: 0.88em; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px; }
-.ntf-meta { font-size: 0.75em; color: var(--text-light); display: flex; align-items: center; gap: 8px; font-weight: 500; }
-
-.ntf-empty { text-align: center; padding: 60px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
-.ntf-empty svg { width: 64px; height: 64px; stroke: var(--border-subtle); fill: none; stroke-width: 1.5; }
-.ntf-empty .text { color: var(--text-muted); font-size: 0.95em; font-weight: 500; }
-</style>
-</head>
-<body>
-<div id="mainApp">
-  <div id="header-container"></div>
-
-  <div class="page-content" id="pageContent">
-    <div class="view active" id="homeView">
-      <!-- 个人卡片骨架屏 -->
-      <div id="profileHeroContainer">
-        <div class="profile-hero" style="background:var(--border); box-shadow:none;">
-          <div class="hero-main">
-            <div class="skeleton" style="width:76px;height:76px;border-radius:50%;flex-shrink:0;"></div>
-            <div style="flex:1;">
-              <div class="skeleton" style="width:40%;height:24px;margin-bottom:12px;"></div>
-              <div style="display:flex;gap:24px;">
-                <div class="skeleton" style="width:40px;height:16px;"></div>
-                <div class="skeleton" style="width:40px;height:16px;"></div>
-                <div class="skeleton" style="width:40px;height:16px;"></div>
-              </div>
-            </div>
-          </div>
-          <div class="skeleton" style="width:80%;height:14px;margin-top:20px;"></div>
-          <div class="skeleton" style="width:60%;height:14px;margin-top:8px;"></div>
-        </div>
-      </div>
-      <!-- 宫格导航骨架屏 -->
-      <div id="navGridContainer">
-         <div class="nav-grid">
-            <div class="skeleton" style="width:52px;height:52px;border-radius:18px;margin:0 auto;"></div>
-            <div class="skeleton" style="width:52px;height:52px;border-radius:18px;margin:0 auto;"></div>
-            <div class="skeleton" style="width:52px;height:52px;border-radius:18px;margin:0 auto;"></div>
-            <div class="skeleton" style="width:52px;height:52px;border-radius:18px;margin:0 auto;"></div>
-         </div>
-      </div>
-      <!-- 帖子列表骨架屏 -->
-      <div id="postsContainer">
-        <div class="skeleton-card" style="margin-top:20px;">
-          <div class="skeleton skeleton-line" style="width:40%;margin-bottom:8px;"></div>
-          <div class="skeleton skeleton-line"></div>
-          <div class="skeleton skeleton-line short"></div>
-        </div>
-        <div class="skeleton-card">
-          <div class="skeleton skeleton-line" style="width:50%;margin-bottom:8px;"></div>
-          <div class="skeleton skeleton-line"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="view" id="messagesView">
-      <div class="msg-header">
-        <span class="msg-title">消息中心</span>
-        <button onclick="markAllRead()" class="msg-read-btn">全部已读</button>
-      </div>
-      
-      <!-- 分类 Tabs -->
-      <div class="msg-tabs">
-        <button class="msg-tab active" data-type="all" onclick="switchMsgTab('all')">全部</button>
-        <button class="msg-tab" data-type="unread" onclick="switchMsgTab('unread')">未读</button>
-        <button class="msg-tab" data-type="comment" onclick="switchMsgTab('comment')">互动</button>
-        <button class="msg-tab" data-type="system" onclick="switchMsgTab('system')">系统</button>
-      </div>
-
-      <div id="notificationList" class="msg-list">
-        <!-- 会被 JS 替换为骨架屏或内容 -->
-      </div>
-    </div>
-
-    <div class="view" id="settingsView">
-      <div class="settings-card">
-        <div class="settings-title">设置中心</div>
-        <div class="settings-item">
-          <div class="item-left">
-            <div class="item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></div>
-            <div class="item-label">提醒音效</div>
-          </div>
-          <label class="toggle-switch">
-            <input class="toggle-input" type="checkbox" id="soundToggle" />
-            <label class="toggle-label" for="soundToggle"></label>
-          </label>
-        </div>
-      </div>
-      <button class="btn btn-danger" style="width:100%" onclick="doLogout()">退出登录</button>
-    </div>
-
-    <div class="view" id="feedbackView">
-      <div class="settings-card">
-        <div class="settings-title">反馈 Bug</div>
-        <div class="field-group">
-          <label>问题描述</label>
-          <textarea id="fbContent" placeholder="请详细描述你遇到的问题..."></textarea>
-        </div>
-        <div class="field-group">
-          <label>联系方式（选填）</label>
-          <input type="text" id="fbContact" placeholder="QQ / 微信" />
-        </div>
-        <button class="btn btn-primary" style="width:100%" onclick="submitFeedback()">提交反馈</button>
-      </div>
-    </div>
-
-    <div class="view" id="editView">
-      <div class="settings-card" style="text-align: center;">
-        <div class="settings-title" style="text-align: left;">编辑资料</div>
-        
-        <div style="position: relative; width: 80px; height: 80px; margin: 0 auto 20px;">
-          <img id="editAvatarPreview" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--brand-bg); box-shadow: var(--shadow-md);" src="" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'" />
-          <label style="position: absolute; bottom: 0; right: 0; background: var(--brand); color: white; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; border: 2px solid white; box-shadow: var(--shadow-sm);">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            <input type="file" id="editAvatarInput" accept="image/*" style="display: none;" onchange="handleAvatarChange(this)">
-          </label>
-        </div>
-
-        <div class="field-group" style="text-align: left;">
-          <label>专属 UID (不可修改)</label>
-          <input type="text" id="editUID" readonly style="opacity: 0.6; cursor: not-allowed;" />
-        </div>
-        <div class="field-group" style="text-align: left;">
-          <label>昵称</label>
-          <input type="text" id="editNickname" placeholder="输入昵称" maxlength="20" />
-        </div>
-        <div class="field-group" style="text-align: left;">
-          <label>个性签名</label>
-          <textarea id="editBio" placeholder="介绍一下自己..."></textarea>
-        </div>
-        <button class="btn btn-primary" style="width:100%; margin-top: 10px;" onclick="saveProfile()">保存修改</button>
-      </div>
-    </div>
-
-    <div class="view" id="aboutView">
-      <div class="settings-card" style="text-align:center;padding:40px 20px;">
-        <img src="https://i.ibb.co/Y4rD6F2Y/b-8ee0f1b16f3c823eeff690735ca17e1f.jpg" style="width:96px;height:96px;border-radius:50%;margin-bottom:20px;box-shadow:var(--shadow-md);">
-        <h2 style="margin-bottom:8px;font-weight:700;">Seven戚</h2>
-        <div style="font-size:.85em;color:var(--text-muted);margin-bottom:24px;font-weight:500;">全栈开发者 · 社区创始人</div>
-        <div style="font-size:.95em;line-height:1.6;color:var(--text);">多多推广本网站，谢谢你们 Thanks♪(･ω･)ﾉ</div>
-      </div>
-    </div>
-  </div>
-
-  <div id="footer-container"></div>
-</div>
-
-<script src="./common.js"></script>
-<script>
-var currentUser = getSessionUser();
-if (!currentUser || !currentUser.id) window.location.href = './index.html';
-
-var viewingUser = null;
-var isSelf = false;
-var iFollowed = false;
-var myPosts = [];
-
-function $(id){ return document.getElementById(id); }
-function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
-function showToast(msg){ alert(msg); }
-
-async function loadUser(){
-  var t = new URLSearchParams(location.search);
-  var id = t.get('id');
-  var isViewingSelf = (!id) || (id === currentUser.id);
-  var q = isViewingSelf ? window.sb.rpc('get_my_profile') : window.sb.from('public_profiles').select('*').eq('id', id).single();
-  var res = await q;
-  if (res.error) return false;
-  var row = Array.isArray(res.data) ? res.data[0] : res.data;
-  if (!row) return false;
-  viewingUser = row;
-  isSelf = (viewingUser.id === currentUser.id);
-  return true;
-}
-
-async function loadFollow(){
-  if (isSelf) return;
-  var r = await window.sb.from('follows').select('id').eq('follower_id', currentUser.id).eq('following_id', viewingUser.id);
-  iFollowed = !!(r.data && r.data.length);
-}
-
-async function loadCounts(){
-  var f1 = await window.sb.from('follows').select('id', { count:'exact', head:true }).eq('following_id', viewingUser.id);
-  var f2 = await window.sb.from('follows').select('id', { count:'exact', head:true }).eq('follower_id', viewingUser.id);
-  return { fans: f1.count || 0, following: f2.count || 0 };
-}
-
-async function loadPosts(){
-  var r = await window.sb.from('posts').select('*').eq('user_id', viewingUser.id).order('created_at', { ascending:false });
-  myPosts = r.data || [];
-}
-
-async function render() {
-  try {
-    var isViewingSelf = !new URLSearchParams(location.search).get('id') || new URLSearchParams(location.search).get('id') === currentUser.id;
-    
-    // ★ 缓存直出：如果是自己主页，先立刻用缓存渲染头部
-    if (isViewingSelf) {
-      var cached = getSessionUser();
-      if (cached && cached.nickname) {
-        var avStyle = (cached.avatar_url && cached.avatar_url.indexOf('http')===0) ? 'background-image:url('+cached.avatar_url+');background-size:cover;background-position:center;' : '';
-        var quickHero = '<div class="profile-hero"><div class="hero-main"><div class="hero-avatar" style="'+avStyle+'">' + (avStyle?'':escapeHtml(cached.nickname.charAt(0).toUpperCase())) + '</div><div class="hero-info"><div class="hero-name">' + escapeHtml(cached.nickname) + '</div><div class="hero-stats"><span style="opacity:0.6;font-size:0.8em;">正在加载动态...</span></div></div></div></div>';
-        $('profileHeroContainer').innerHTML = quickHero;
-      }
-    }
-
-    if (!(await loadUser())) {
-      $('profileHeroContainer').innerHTML = '<div class="empty">用户不存在或加载失败</div>';
-      return;
-    }
-    
-    // ★ 请求并行：同时拉取关注状态、帖子、粉丝数、未读消息
-    var [_, _, counts, unreadCount] = await Promise.all([
-      loadFollow(),
-      loadPosts(),
-      loadCounts(),
-      (async function(){
-        try {
-          var res = await window.sb.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', currentUser.id).eq('is_read', false);
-          return res.count || 0;
-        } catch(e) { return 0; }
-      })()
-    ]);
-
-    var hero = '<div class="profile-hero">';
-    hero += '<div class="hero-main">';
-    var avStyle = (viewingUser.avatar_url && viewingUser.avatar_url.indexOf('http')===0) ? 'background-image:url('+viewingUser.avatar_url+');background-size:cover;background-position:center;' : '';
-    hero += '<div class="hero-avatar" style="'+avStyle+'">' + (avStyle?'':escapeHtml(String(viewingUser.nickname||'U').charAt(0).toUpperCase())) + '</div>';
-    hero += '<div class="hero-info">';
-    
-    var tagHtml = '';
-    if (viewingUser.is_admin) {
-       tagHtml = ' <span class="admin-badge">官方管理员</span>';
-    }
-    
-    hero += '<div class="hero-name">' + escapeHtml(viewingUser.nickname || '用户') + tagHtml + '</div>';
-    hero += '<div class="hero-stats"><div class="hero-stat"><span class="num">' + myPosts.length + '</span><span class="lbl">帖子</span></div><div class="hero-stat"><span class="num">' + counts.fans + '</span><span class="lbl">粉丝</span></div><div class="hero-stat"><span class="num">' + counts.following + '</span><span class="lbl">关注</span></div></div>';
-    var uidDisplay = viewingUser.custom_uid;
-    if (!uidDisplay || uidDisplay.indexOf('@') >= 0) uidDisplay = viewingUser.id.slice(0, 8);
-    hero += '<div class="hero-line2"><span class="hero-no">ID: ' + escapeHtml(uidDisplay) + '</span></div>';
-    hero += '</div></div>';
-    hero += '<div class="hero-bio">' + (viewingUser.bio ? escapeHtml(viewingUser.bio) : '这个人很懒，没有写简介') + '</div>';
-    hero += '<div class="hero-actions">';
-    if (isSelf) hero += '<button class="btn-edit-profile" onclick="switchView(\'edit\')"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>编辑资料</button>';
-    else hero += '<button class="btn-follow' + (iFollowed?' following':'') + '" onclick="toggleFollow()">' + (iFollowed?'已关注':'+ 关注') + '</button>';
-    hero += '</div></div>';
-
-    var navHtml = '';
-    if (isSelf) {
-      navHtml = '<div class="nav-grid">' +
-        '<div class="nav-cell" onclick="switchView(\'messages\')"><div class="ic" style="position:relative;"><svg viewBox="0 0 24 24"><path d="M4 4h16v12H5.17L4 17.17V4z"/></svg>' + (unreadCount > 0 ? '<span style="position:absolute;top:-2px;right:-2px;width:12px;height:12px;background:var(--danger);border-radius:50%;border:2px solid var(--bg-surface);"></span>' : '') + '</div><div class="tx">消息中心</div></div>' +
-        '<div class="nav-cell" onclick="switchView(\'settings\')"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div><div class="tx">设置中心</div></div>' +
-        '<div class="nav-cell" onclick="location.href=\'./shop.html\'"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M3 9h18"/><path d="M9 13a3 3 0 0 0 6 0"/></svg></div><div class="tx">皮肤商店</div></div>' +
-        '<div class="nav-cell" onclick="location.href=\'./assets.html\'"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h5M9.5 14.5h5"/></svg></div><div class="tx">我的资产</div></div>' +
-        '<div class="nav-cell" onclick="location.href=\'./activity.html\'"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 5.9 6.4.5-4.9 4.2 1.5 6.3L12 15.8 6.6 18.9l1.5-6.3L3.2 8.4l6.4-.5z"/></svg></div><div class="tx">活动</div></div>' +
-        '<div class="nav-cell" onclick="switchView(\'about\')"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div><div class="tx">关于我们</div></div>' +
-        '<div class="nav-cell" onclick="switchView(\'feedback\')"><div class="ic"><svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="tx">反馈 Bug</div></div>';
-        
-      // ★ 管理员专属后台入口
-      if (currentUser.is_admin === true || viewingUser.is_admin === true) {
-        navHtml += '<div class="nav-cell admin-cell" onclick="location.href=\'./admin.html\'"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="tx">后台管理</div></div>';
-      }
-
-      navHtml += '</div>';
-    }
-
-    var postsHtml = '<div class="tabs"><button class="tab active">' + (isSelf ? '我的帖子' : '他的帖子') + ' (' + myPosts.length + ')</button></div>';
-    if (myPosts.length) {
-      postsHtml += myPosts.map(function(p){
-        return '<div class="post-card" onclick="location.href=\'./posts.html\'">' +
-          (p.title ? '<div class="post-title">' + escapeHtml(p.title) + '</div>' : '') +
-          '<div class="post-body">' + escapeHtml(String(p.content||'').replace(/<[^>]*>/g,'').substring(0,120)) + '</div>' +
-          '<div class="post-foot"><span>' + new Date(p.created_at).toLocaleDateString('zh-CN') + '</span></div></div>';
-      }).join('');
-    } else {
-      postsHtml += '<div class="empty">还没有发过帖子</div>';
-    }
-
-    $('profileHeroContainer').innerHTML = hero;
-    $('navGridContainer').innerHTML = navHtml;
-    $('postsContainer').innerHTML = postsHtml;
-  } catch (e) {
-    $('profileHeroContainer').innerHTML = '<div class="empty">加载出错：' + e.message + '</div>';
-  }
-}
-
-function renderHeader(isHome, viewName) {
-  var hc = $("header-container");
-  var backBtnHtml = isHome ? '' : '<button onclick="switchView(\'home\')" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text);display:flex;border-radius:8px;margin-right:4px;transition:var(--transition-smooth);"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>';
-  var title = '个人中心';
-  if (!isHome) {
-    if (viewName === 'messages') title = '消息中心';
-    else if (viewName === 'settings') title = '设置中心';
-    else if (viewName === 'feedback') title = '反馈 Bug';
-    else if (viewName === 'about') title = '关于我们';
-    else if (viewName === 'edit') title = '编辑资料';
-  }
-  hc.innerHTML = '<div class="app-header">' + backBtnHtml +
-    '<div class="brand" '+(isHome?'onclick="location.href=\'./posts.html\'"':'')+'>Seven<span>戚</span><small> · ' + title + '</small></div>' +
-    '<div class="header-right"><div class="user-area" onclick="switchView(\'home\')">' +
-        '<div class="avatar" style="' + (currentUser.avatar_url && currentUser.avatar_url.indexOf('http')===0 ? 'background-image:url('+currentUser.avatar_url+')' : '') + '">' + (currentUser.avatar_url ? '' : (currentUser.nickname||'U').charAt(0).toUpperCase()) + '</div>' +
-        '<span class="user-name">' + (currentUser.nickname || '用户') + '</span>' +
-    '</div></div></div>';
-}
-
-function switchView(viewName) {
-  var isHome = (viewName === 'home');
-  if (isHome && !isSelf) return;
-
-  ['homeView', 'messagesView', 'settingsView', 'feedbackView', 'aboutView', 'editView'].forEach(function(id) {
-    $(id).classList.toggle('active', id === viewName + 'View');
-  });
-
-  if (isHome) {
-    renderHeader(true);
-  } else {
-    if (viewName === 'messages') loadNotifications();
-    else if (viewName === 'settings') initSoundToggle();
-    else if (viewName === 'edit') loadEditProfile();
-    renderHeader(false, viewName);
-  }
-
-  var footer = document.getElementById('footer-container');
-  if (footer) footer.style.display = isHome ? 'block' : 'none';
-
-  var activeView = document.getElementById(viewName + 'View');
-  if (activeView) {
-    activeView.style.animation = 'none';
-    activeView.offsetHeight;
-    activeView.style.animation = 'fadeIn 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
-  }
-
-  $('pageContent').scrollTop = 0;
-}
-window.switchView = switchView;
-
-var msgTabCurrent = 'all';
-var rawNotifications = [];
-
-function switchMsgTab(type) {
-  msgTabCurrent = type;
-  document.querySelectorAll('.msg-tab').forEach(function(btn) {
-    btn.classList.toggle('active', btn.dataset.type === type);
-  });
-  renderNotifications();
-}
-window.switchMsgTab = switchMsgTab;
-
-async function loadNotifications() {
-  var listEl = $('notificationList');
-  
-  listEl.innerHTML = '<div class="empty">加载中...</div>';
-
-  try {
-    var r = await window.sb.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(50);
-    if (r.error) throw r.error;
-    rawNotifications = r.data || [];
-    renderNotifications();
-  } catch(e) {
-    listEl.innerHTML = '<div class="ntf-empty"><div class="text">加载失败，请稍后再试</div></div>';
-  }
-}
-
-function renderNotifications() {
-  var listEl = $('notificationList');
-  var filtered = rawNotifications.filter(function(n) {
-    if (msgTabCurrent === 'all') return true;
-    if (msgTabCurrent === 'unread') return !n.is_read;
-    if (msgTabCurrent === 'comment') return n.type === 'comment' || n.notification_type === 'comment';
-    if (msgTabCurrent === 'system') return n.type !== 'comment' && n.notification_type !== 'comment';
-    return true;
-  });
-
-  if (!filtered.length) {
-    listEl.innerHTML = '<div class="ntf-empty"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg><div class="text">暂无消息记录</div></div>';
-    return;
-  }
-
-  var h = '';
-  filtered.forEach(function(n) {
-    var isComment = n.type === 'comment' || n.notification_type === 'comment';
-    var iconType = isComment ? 'comment' : 'system';
-    var iconSvg = isComment 
-      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>'
-      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
-
-    h += '<div class="ntf-card ' + (!n.is_read ? 'unread' : '') + '">';
-    h += '<div class="ntf-type-icon ' + iconType + '">' + iconSvg + '</div>';
-    h += '<div class="ntf-body">';
-    h += '<div class="ntf-title">' + (!n.is_read ? '<span class="dot"></span>' : '') + escapeHtml(n.title || n.extra_text || '新消息') + '</div>';
-    h += '<div class="ntf-snippet">' + escapeHtml(n.body || n.extra_text || '') + '</div>';
-    h += '<div class="ntf-meta">' + (n.created_at ? new Date(n.created_at).toLocaleString('zh-CN') : '') + '</div>';
-    h += '</div></div>';
-  });
-  listEl.innerHTML = h;
-}
-
-async function markAllRead() {
-  try {
-    await window.sb.from('notifications').update({ is_read: true }).eq('user_id', currentUser.id).eq('is_read', false);
-    loadNotifications();
-  } catch(e) {}
-}
-window.markAllRead = markAllRead;
-
-function initSoundToggle() {
-  var soundEnabled = localStorage.getItem('sq_sound_enabled') !== 'false';
-  var t = $('soundToggle');
-  if (t) {
-    t.checked = soundEnabled;
-    t.onchange = function() { localStorage.setItem('sq_sound_enabled', this.checked ? 'true' : 'false'); };
-  }
-}
-
-async function submitFeedback() {
-  var content = $('fbContent').value.trim();
-  var contact = $('fbContact').value.trim();
-  if (!content) return alert('请填写问题描述');
-  try {
-    await window.sb.from('feedback').insert([{ user_id: currentUser.id, content: content, contact: contact, status: 'pending' }]);
-    alert('反馈已提交，感谢您！');
-    switchView('home');
-  } catch (e) { alert('提交失败：' + e.message); }
-}
-window.submitFeedback = submitFeedback;
-
-async function doLogout() {
-  if (confirm('确定要退出登录吗？')) {
-    localStorage.removeItem('sq_user_session');
-    location.href = './index.html';
-  }
-}
-window.doLogout = doLogout;
-
-var selectedAvatarFile = null;
-
-function loadEditProfile() {
-  var u = window.sqTrust ? window.sqTrust.user : currentUser;
-  $('editNickname').value = u.nickname || '';
-  $('editBio').value = u.bio || '';
-  $('editUID').value = u.custom_uid || (u.id ? u.id.slice(0,8) : '未设置');
-  $('editAvatarPreview').src = u.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(u.nickname || 'U');
-  selectedAvatarFile = null;
-}
-
-function handleAvatarChange(input) {
-  if (input.files && input.files[0]) {
-    selectedAvatarFile = input.files[0];
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      $('editAvatarPreview').src = e.target.result;
-    };
-    reader.readAsDataURL(selectedAvatarFile);
-  }
-}
-window.handleAvatarChange = handleAvatarChange;
-
-async function saveProfile() {
-  var nick = $('editNickname').value.trim();
-  var bio = $('editBio').value.trim();
-  if (!nick) return alert('昵称不能为空');
-  
-  var btn = event.target;
-  btn.disabled = true; btn.textContent = '保存中...';
-
-  try {
-    var avatarUrl = currentUser.avatar_url;
-    
-    if (selectedAvatarFile) {
-      var ext = selectedAvatarFile.name.split('.').pop() || 'png';
-      var path = currentUser.id + '/' + Date.now() + '.' + ext;
-      var up = await window.sb.storage.from('avatars').upload(path, selectedAvatarFile);
-      if (up.error) throw new Error('头像上传失败：' + up.error.message);
-      var pub = window.sb.storage.from('avatars').getPublicUrl(path);
-      avatarUrl = pub.data.publicUrl;
-    }
-
-    var r = await window.sb.from('users').update({ 
-      nickname: nick, 
-      bio: bio,
-      avatar_url: avatarUrl
-    }).eq('id', currentUser.id);
-    
-    if (r.error) throw r.error;
-    
-    alert('修改成功');
-    currentUser.nickname = nick;
-    currentUser.bio = bio;
-    currentUser.avatar_url = avatarUrl;
-    setSessionUser(currentUser);
-    
-    await render();
-    switchView('home');
-    
-  } catch (e) {
-    alert('保存失败：' + e.message);
-  } finally {
-    btn.disabled = false; btn.textContent = '保存修改';
-  }
-}
-window.saveProfile = saveProfile;
-
-async function toggleFollow(){
-  if (isSelf) return;
-  try{
-    if (iFollowed) {
-      await window.sb.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', viewingUser.id);
-      iFollowed = false;
-      showToast('已取消关注');
-    } else {
-      await window.sb.from('follows').insert([{ follower_id: currentUser.id, following_id: viewingUser.id }]);
-      iFollowed = true;
-      showToast('已关注');
-    }
-    await render();
-  }catch(e){ showToast('操作失败：' + e.message); }
-}
-window.toggleFollow = toggleFollow;
-
-(async function init(){
-  renderHeader(true);
-  renderFooter('profile');
-  await render();
-  
-})();
-</script>
-</body>
-</html>
+(全文 645 行都在这儿了)
