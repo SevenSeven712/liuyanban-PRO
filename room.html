@@ -7,9 +7,9 @@
     <link rel="apple-touch-icon" href="./icon.svg" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>房间 · Seven戚</title>
-<script src="./vendor/supabase.js"></script>
-<script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/script>');</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
+/* ===== 基础样式 & 房间骨架 ===== */
 *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
 :root{--bg:#f5faf5;--bg-card:#fff;--bg-input:#eaf3ea;--border:#c8e0c8;--text:#1e3a2e;--text-muted:#5a7a6a;--text-light:#8aaa9a;--primary:#2e7d32;--primary-light:#4caf50;--primary-bg:#e8f5e9;--shadow:0 8px 32px rgba(46,125,50,.12);--radius-sm:10px;--font:"Space Grotesk","PingFang SC","Segoe UI",system-ui,sans-serif;--danger:#e57373;--danger-bg:#ffebee;--danger-text:#c62828;--warning:#ffa726;--official-blue:#2b6cff;--safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px)}
 html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);overflow:hidden}
@@ -34,12 +34,7 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .room-card-icon svg{width:44px;height:44px;stroke:currentColor;fill:none;stroke-width:1.5}
 .room-card-name{font-weight:700;font-size:.9em;line-height:1.3;word-break:break-word;max-width:100%}
 .room-card-meta{font-size:.66em;color:var(--text-muted)}
-.room-card-badge{position:absolute;top:8px;left:8px;background:var(--official-blue);color:#fff;font-size:.55em;font-weight:700;padding:1px 7px;border-radius:99px;line-height:15px}
-.room-edit-btn{position:absolute;top:6px;right:6px;background:var(--bg-input);border:none;border-radius:50%;width:26px;height:26px;display:grid;place-items:center;cursor:pointer;color:var(--text-muted);padding:0}
-.room-edit-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
-.room-edit-btn:hover{background:var(--primary);color:#fff}
 .empty-state{grid-column:1/-1;text-align:center;color:var(--text-muted);padding:60px 20px;font-size:.85em}
-.empty-state .big{font-size:2.8em;margin-bottom:8px;opacity:.5}
 .loading-state{grid-column:1/-1;text-align:center;color:var(--text-muted);padding:40px 20px;font-size:.9em}
 .spinner{display:inline-block;width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -48,6 +43,7 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .room-body[data-theme="draw"]{background:linear-gradient(135deg,#e3f2fd,#bbdefb 35%,#90caf9 70%,#fff);background-size:200% 200%;animation:drawBgFlow 10s ease infinite;color:#0d47a1}
 .room-body[data-theme="spy"]{background:linear-gradient(135deg,#1a0f2a,#2a1a3a 50%,#0d0818);color:#e0d5f0}
 .room-body[data-theme="werewolf"]{background:linear-gradient(135deg,#3a0a0a,#1a0505 50%,#0d0202);color:#e0d5d5}
+.room-body[data-theme="doudizhu"]{background:linear-gradient(135deg,#0b3d1e,#14532d 50%,#052e16);color:#e8f5e9}
 @keyframes drawBgFlow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 .stage-wrap{flex-shrink:0;padding:12px 14px 0;position:relative;z-index:1;display:flex;flex-direction:column;min-height:0}
 .chat-panel{flex:1;display:flex;flex-direction:column;min-height:0}
@@ -56,16 +52,13 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .mic-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .mic-title{font-size:.8em;font-weight:700}
 .mic-mode{font-size:.65em;color:var(--primary);background:var(--primary-bg);padding:2px 10px;border-radius:99px;font-weight:700}
-.mic-off{font-size:.75em;color:var(--text-muted);text-align:center;padding:10px 0}
 .mic-seats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .mic-seat{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:10px;background:rgba(255,255,255,.7);border:1.5px dashed var(--border)}
-.room-body[data-theme="spy"] .mic-seat,.room-body[data-theme="werewolf"] .mic-seat{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2)}
 .mic-seat.on{background:var(--primary-bg);border-style:solid;border-color:var(--primary)}
 .mic-avatar{width:34px;height:34px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px;background-size:cover;background-position:center}
 .mic-avatar.empty{background:#dfe9df;color:var(--text-light);font-size:18px}
 .mic-name{font-size:.62em;color:var(--text-muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 .mic-seat.on .mic-name{color:var(--text)}
-.room-body[data-theme="spy"] .mic-seat.on .mic-name,.room-body[data-theme="werewolf"] .mic-seat.on .mic-name{color:inherit}
 .mic-x{position:absolute;top:1px;right:1px;background:none;border:none;color:var(--danger);cursor:pointer;font-size:11px;padding:0 3px;line-height:1}
 .mic-actions{display:flex;gap:8px;margin-top:10px}
 .mic-btn{flex:1;padding:8px;border-radius:99px;border:none;font-family:inherit;font-weight:700;font-size:.78em;cursor:pointer}
@@ -79,68 +72,18 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .mic-queue-item button{border:none;border-radius:99px;padding:3px 10px;font-size:.85em;font-weight:700;cursor:pointer;font-family:inherit}
 .mic-queue-item button:first-of-type{background:var(--primary);color:#fff}
 .mic-queue-item button:last-of-type{background:var(--danger-bg);color:var(--danger-text)}
-.game-stage{display:none;background:rgba(255,255,255,.9);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;backdrop-filter:blur(10px);position:relative;margin-top:10px}
-.room-body[data-theme="spy"] .game-stage,.room-body[data-theme="werewolf"] .game-stage{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.15)}
-.game-stage.active{display:flex;flex-direction:column}
-.game-modal-layer{position:absolute;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5);backdrop-filter:blur(3px);padding:20px}
-.game-modal-layer.show{display:flex}
-.game-modal{background:linear-gradient(160deg,#2a1a3a,#1a0f2a);border:1px solid rgba(200,160,255,.35);border-radius:16px;padding:22px 20px;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center;animation:gmPop .25s cubic-bezier(.34,1.56,.64,1)}
-@keyframes gmPop{0%{transform:scale(.85);opacity:0}100%{transform:scale(1);opacity:1}}
-.game-modal .gm-avatar{width:64px;height:64px;border-radius:50%;margin:0 auto 12px;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-size:1.5em;font-weight:900;color:#fff;background-color:#8b5cf6;box-shadow:0 6px 20px rgba(139,92,246,.4)}
-.game-modal .gm-title{font-size:1.15em;font-weight:900;margin-bottom:6px;color:#e0d5f0}
-.game-modal .gm-sub{font-size:.8em;opacity:.8;color:#c8bce0;margin-bottom:6px;line-height:1.5}
-.game-modal .gm-tag{display:inline-block;padding:3px 12px;border-radius:99px;font-size:.78em;font-weight:800;margin-top:8px}
-.game-modal .gm-tag.spy{background:rgba(255,82,82,.25);color:#ff8a8a}
-.game-modal .gm-tag.civ{background:rgba(139,92,246,.25);color:#c8a5ff}
-.game-modal .gm-btn{margin-top:18px;padding:10px 28px;border:none;border-radius:99px;background:#8b5cf6;color:#fff;font-weight:800;font-size:.85em;font-family:inherit;cursor:pointer}
-.game-modal .gm-wordrow{display:flex;justify-content:center;gap:20px;margin-top:14px;font-size:.85em}
-.game-modal .gm-wordrow .w{background:rgba(255,255,255,.08);border-radius:10px;padding:8px 14px}
-.game-modal .gm-wordrow .w b{display:block;font-size:1.2em;margin-top:2px}
+.game-stage{display:none;background:rgba(255,255,255,.9);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;backdrop-filter:blur(10px);position:relative;margin-top:10px;flex-direction:column}
+.game-stage.active{display:flex}
 .game-topbar{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid rgba(0,0,0,.06);flex-shrink:0}
-.room-body[data-theme="spy"] .game-topbar,.room-body[data-theme="werewolf"] .game-topbar{border-bottom-color:rgba(255,255,255,.12)}
 .gpm-players{display:flex;align-items:center;gap:6px;flex:1;overflow-x:auto;padding:2px 0}
 .gpm-player{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.05);border-radius:99px;padding:3px 10px 3px 3px;flex-shrink:0}
-.room-body[data-theme="spy"] .gpm-player,.room-body[data-theme="werewolf"] .gpm-player{background:rgba(255,255,255,.1)}
 .gpm-avatar{width:22px;height:22px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:10px;background-size:cover;background-position:center;flex-shrink:0}
 .gpm-name{font-size:.68em;font-weight:700;white-space:nowrap;max-width:60px;overflow:hidden;text-overflow:ellipsis}
 .gpm-turn{box-shadow:0 0 0 2px var(--primary);animation:pulseTurn 1.5s infinite}
-.gpm-player.gpm-offline{opacity:.45;filter:grayscale(1)}
-.gpm-player.gpm-offline .gpm-name::after{content:" 离线";font-size:.85em;color:var(--text-muted)}
 @keyframes pulseTurn{0%,100%{box-shadow:0 0 0 2px var(--primary)}50%{box-shadow:0 0 0 4px rgba(46,125,50,.3)}}
 .fs-btn{background:rgba(0,0,0,.06);border:none;border-radius:8px;width:30px;height:30px;display:grid;place-items:center;cursor:pointer;color:inherit;flex-shrink:0}
-.room-body[data-theme="spy"] .fs-btn,.room-body[data-theme="werewolf"] .fs-btn{background:rgba(255,255,255,.12)}
-.fs-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
-.fs-btn:hover{background:rgba(0,0,0,.12)}
-.fs-btn:active{background:var(--primary);color:#fff}
-@media(hover:hover){.fs-btn:hover{background:var(--primary);color:#fff}}
 .game-content{padding:10px;min-height:180px;max-height:60vh;overflow-y:auto;position:relative;flex:1}
-.danmaku-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:100;display:none}
-.game-stage:fullscreen .danmaku-layer{display:block}
-body.pseudo-fs{overflow:hidden}
-body.pseudo-fs #gameStage{position:fixed;inset:0;z-index:4000;margin:0;border-radius:0}
-body.pseudo-fs .danmaku-layer{display:block}
-/* 全屏：铺满 + 不透明主题背景 */
-.game-stage:fullscreen{border:none;border-radius:0;margin:0}
-.game-stage:fullscreen,.game-stage:fullscreen.active{background:#e8f5e9}
-.room-body[data-theme="draw"] .game-stage:fullscreen{background:#bbdefb}
-.room-body[data-theme="spy"] .game-stage:fullscreen{background:#1a0f2a}
-.room-body[data-theme="werewolf"] .game-stage:fullscreen{background:#1a0505}
-.room-body[data-theme="doudizhu"] .game-stage:fullscreen{background:#0b3d1e}
-body.pseudo-fs .room-body .game-stage,body.pseudo-fs #gameStage{background:#e8f5e9}
-body.pseudo-fs .room-body[data-theme="draw"] #gameStage{background:#bbdefb}
-body.pseudo-fs .room-body[data-theme="spy"] #gameStage{background:#1a0f2a}
-body.pseudo-fs .room-body[data-theme="werewolf"] #gameStage{background:#1a0505}
-body.pseudo-fs .room-body[data-theme="doudizhu"] #gameStage{background:#0b3d1e}
-.danmaku-item{position:absolute;left:100%;white-space:nowrap;color:#fff;font-weight:700;font-size:1.05em;padding:6px 14px;background:rgba(0,0,0,.38);border-radius:99px;text-shadow:0 1px 3px rgba(0,0,0,.9);animation:danmakuScroll linear forwards;backdrop-filter:blur(4px)}
-@keyframes danmakuScroll{from{transform:translateX(0)}to{transform:translateX(calc(-100vw - 100%))}}
-.spectator-bar{display:flex;align-items:center;gap:8px;padding:6px 10px;background:linear-gradient(90deg,rgba(255,167,38,.18),rgba(255,167,38,.06));border-bottom:1px solid rgba(255,167,38,.3);font-size:.75em;font-weight:700;flex-shrink:0;color:#bf7000}
-.room-body[data-theme="spy"] .spectator-bar,.room-body[data-theme="werewolf"] .spectator-bar{background:linear-gradient(90deg,rgba(255,167,38,.2),rgba(255,167,38,.08));color:#ffd699}
-.spectator-bar .eye{display:flex;align-items:center;gap:4px}
-.spectator-bar .eye svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
-.spectator-bar .spacer{flex:1}
-.spectator-bar button{background:var(--primary);color:#fff;border:none;border-radius:99px;padding:4px 12px;font-family:inherit;font-weight:700;font-size:.9em;cursor:pointer}
-.spectator-bar button.ghost{background:rgba(0,0,0,.1);color:var(--text-muted)}
-.spectator-bar button:disabled{opacity:.5;pointer-events:none}
+/* 游戏大厅 UI */
 .game-lobby{display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px 10px;text-align:center}
 .lobby-icon{width:72px;height:72px;display:grid;place-items:center;color:var(--primary)}
 .lobby-icon svg{width:56px;height:56px;stroke:currentColor;fill:none;stroke-width:1.5}
@@ -148,266 +91,27 @@ body.pseudo-fs .room-body[data-theme="doudizhu"] #gameStage{background:#0b3d1e}
 .lobby-desc{font-size:.8em;color:var(--text-muted);max-width:320px;line-height:1.6}
 .lobby-players{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:6px 0;max-width:100%}
 .lobby-player{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.05);border-radius:99px;padding:4px 12px 4px 4px;font-size:.78em;font-weight:700}
-.room-body[data-theme="spy"] .lobby-player,.room-body[data-theme="werewolf"] .lobby-player{background:rgba(255,255,255,.1)}
 .lobby-player .gpm-avatar{width:24px;height:24px}
 .lobby-player.host{border:1px solid var(--primary);background:var(--primary-bg)}
-.room-body[data-theme="spy"] .lobby-player.host,.room-body[data-theme="werewolf"] .lobby-player.host{background:rgba(46,125,50,.35);border-color:#66bb6a}
 .lobby-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px}
 .lobby-btn{padding:10px 24px;border-radius:99px;border:none;font-family:inherit;font-weight:700;font-size:.88em;cursor:pointer;transition:.2s}
 .lobby-btn.join{background:var(--primary);color:#fff}
-.lobby-btn.join:hover{background:var(--primary-light)}
 .lobby-btn.spectate{background:rgba(0,0,0,.06);color:var(--text);border:2px solid var(--border)}
-.room-body[data-theme="spy"] .lobby-btn.spectate,.room-body[data-theme="werewolf"] .lobby-btn.spectate{background:rgba(255,255,255,.1);color:#e0d5f0;border-color:rgba(255,255,255,.2)}
-.lobby-btn.spectate:hover{background:var(--primary-bg);border-color:var(--primary);color:var(--primary)}
 .lobby-btn.start{background:var(--official-blue);color:#fff;animation:pulseStart 1.6s infinite}
-@keyframes pulseStart{0%,100%{box-shadow:0 0 0 0 rgba(43,108,255,.5)}50%{box-shadow:0 0 0 8px rgba(43,108,255,0)}}
 .lobby-btn:disabled{opacity:.5;pointer-events:none;animation:none}
 .lobby-count{font-size:.75em;color:var(--text-muted);font-weight:700}
 .lobby-hint{font-size:.78em;color:var(--text-muted);margin-top:2px}
-.gomoku-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
-.gomoku-status{font-size:.85em;font-weight:700;text-align:center;min-height:22px}
-.gomoku-board{display:grid;grid-template-columns:repeat(15,1fr);width:min(78vw,320px);aspect-ratio:1;background:#dcb35c;border-radius:8px;padding:4px;box-shadow:0 4px 16px rgba(0,0,0,.2)}
-.gmk-cell{position:relative;display:flex;align-items:center;justify-content:center;border:.5px solid rgba(90,60,20,.45);cursor:pointer}
-.gmk-cell:active{background:rgba(255,255,255,.25)}
-.gmk-cell.gmk-last .gmk-stone{box-shadow:0 0 0 2.5px #e53935,0 1px 3px rgba(0,0,0,.35)}
-.gmk-cell.gmk-prev .gmk-stone{box-shadow:0 0 0 2.5px rgba(33,150,243,.85),0 1px 3px rgba(0,0,0,.35)}
-.gmk-cell.gmk-sel{background:rgba(255,213,79,.45);box-shadow:inset 0 0 0 2px #f0b429}
-.gmk-sel-mark{position:absolute;width:40%;height:40%;border-radius:50%;background:rgba(240,180,41,.6);animation:gmkPulse .9s infinite}
-@keyframes gmkPulse{0%,100%{opacity:.5;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
-.gomoku-place-btn{margin-top:12px;padding:11px 40px;border:none;border-radius:99px;background:linear-gradient(180deg,#ffd54f,#f0b429);color:#3e2723;font-weight:800;font-family:inherit;font-size:.9em;cursor:pointer;box-shadow:0 4px 12px rgba(240,180,41,.45);letter-spacing:2px;animation:gmkBtnIn .25s}
-@keyframes gmkBtnIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.gomoku-place-btn:active{transform:translateY(2px)}
-.gmk-stone{width:84%;height:84%;border-radius:50%;display:block;box-shadow:0 1px 3px rgba(0,0,0,.35);animation:stoneIn .16s ease}
-@keyframes stoneIn{from{transform:scale(.4);opacity:.4}to{transform:scale(1);opacity:1}}
-.gmk-stone.black{background:radial-gradient(circle at 32% 32%,#6a6a6a,#000)}
-.gmk-stone.white{background:radial-gradient(circle at 32% 32%,#fff,#b9b9b9)}
-.draw-wrap{display:flex;flex-direction:column;gap:10px}
-.draw-info{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.8em;font-weight:700;flex-wrap:wrap}
-.draw-timer{background:rgba(25,118,210,.15);color:#1976d2;padding:4px 12px;border-radius:99px;font-weight:800;font-size:1.05em;min-width:60px;text-align:center}
-.draw-timer.urgent{background:rgba(229,57,53,.18);color:#e53935;animation:pulseUrgent .8s infinite}
-@keyframes pulseUrgent{0%,100%{opacity:1}50%{opacity:.5}}
-.draw-word{background:linear-gradient(135deg,#1976d2,#42a5f5);color:#fff;padding:5px 14px;border-radius:99px;font-size:1.05em;letter-spacing:2px}
-.draw-word.hidden-word{background:rgba(255,255,255,.4);color:#1976d2;letter-spacing:6px}
-.draw-canvas-wrap{position:relative;width:100%;max-width:100%;background:#fff;border-radius:10px;overflow:hidden;border:2px solid #90caf9;box-sizing:border-box}
-.draw-canvas{display:block;width:100%;touch-action:none;cursor:crosshair}
-.draw-tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.draw-color{width:24px;height:24px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.15);cursor:pointer}
-.draw-color.active{box-shadow:0 0 0 3px #1976d2}
-.draw-size{background:#fff;border:2px solid #90caf9;color:#1976d2;font-weight:700;padding:4px 10px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:.75em}
-.draw-size.active{background:#1976d2;color:#fff;border-color:#1976d2}
-.draw-guess-box{display:flex;gap:6px}
-.draw-guess-box input{flex:1;padding:8px 12px;border:2px solid #90caf9;border-radius:10px;font-family:inherit;font-size:.85em;outline:none;background:#fff;color:#0d47a1}
-.draw-guess-box button{padding:8px 16px;border:none;background:#1976d2;color:#fff;border-radius:10px;font-weight:700;cursor:pointer;font-family:inherit;font-size:.8em}
-.draw-messages{max-height:80px;overflow-y:auto;font-size:.75em;background:rgba(255,255,255,.5);border-radius:8px;padding:6px 10px}
-.draw-msg{margin-bottom:3px;color:#0d47a1}
-.draw-msg.correct{color:#2e7d32;font-weight:700}
-.draw-scoreboard{display:flex;flex-wrap:wrap;gap:6px;font-size:.72em;justify-content:center}
-.draw-score{background:rgba(255,255,255,.55);border-radius:8px;padding:4px 10px;font-weight:700;display:flex;align-items:center;gap:4px}
-.draw-score.drawing{background:var(--primary-bg);border:1px solid var(--primary);color:var(--primary);box-shadow:0 0 0 2px rgba(46,125,50,.2)}
-.draw-score .pts{color:#1976d2;font-weight:900}
-.draw-intermission{text-align:center;padding:30px 20px;color:#1976d2;font-weight:800}
-.draw-intermission .big{font-size:1.3em;margin-bottom:10px}
-.spy-wrap{display:flex;flex-direction:column;gap:10px;color:#e0d5f0}
-.spy-role-card{background:linear-gradient(135deg,rgba(180,140,255,.2),rgba(120,80,200,.15));border:2px solid rgba(200,160,255,.4);border-radius:12px;padding:14px;text-align:center;backdrop-filter:blur(8px)}
-.spy-role-label{font-size:.65em;text-transform:uppercase;letter-spacing:.1em;opacity:.7;margin-bottom:4px}
-.spy-role-word{font-size:1.4em;font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,#c8a5ff,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.spy-desc{font-size:.72em;opacity:.75;margin-top:6px}
-.spy-players{display:flex;flex-direction:column;gap:6px}
-.spy-player{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,.06);border-radius:10px;border:1px solid rgba(255,255,255,.1)}
-.spy-player.eliminated{opacity:.4;text-decoration:line-through}
-.spy-player .name{flex:1;font-size:.82em;font-weight:700}
-.spy-player .vote-btn{background:rgba(200,160,255,.25);color:#e0d5f0;border:none;padding:4px 12px;border-radius:99px;font-size:.72em;font-weight:700;cursor:pointer;font-family:inherit}
-.spy-player .vote-btn:hover{background:#8b5cf6;color:#fff}
-.spy-desc-input{display:flex;gap:6px;margin-top:6px}
-.spy-desc-input input{flex:1;padding:8px 12px;border:2px solid rgba(200,160,255,.3);border-radius:10px;font-family:inherit;font-size:.82em;outline:none;background:rgba(255,255,255,.08);color:#e0d5f0}
-.spy-desc-input input::placeholder{color:rgba(224,213,240,.4)}
-.spy-desc-input button{padding:8px 16px;border:none;background:#8b5cf6;color:#fff;border-radius:10px;font-weight:700;cursor:pointer;font-family:inherit;font-size:.8em}
-.spy-timeline{font-size:.72em;opacity:.8;background:rgba(255,255,255,.05);border-radius:8px;padding:8px 10px;max-height:80px;overflow-y:auto}
-.spy-line{padding:2px 0;border-bottom:1px dashed rgba(255,255,255,.08)}
-.spy-result{text-align:center;padding:30px 20px}
-.spy-result .big{font-size:1.5em;font-weight:900;margin-bottom:10px}
-.ww-wrap{display:flex;flex-direction:column;gap:10px;color:#e0d5d5}
-.ww-role-card{background:linear-gradient(135deg,rgba(200,50,50,.25),rgba(80,10,10,.2));border:2px solid rgba(255,140,140,.4);border-radius:12px;padding:14px;text-align:center;backdrop-filter:blur(8px)}
-.ww-role-label{font-size:.65em;text-transform:uppercase;letter-spacing:.1em;opacity:.75;margin-bottom:4px}
-.ww-role-word{font-size:1.4em;font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,#ffb5b5,#ff5252);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.ww-desc{font-size:.72em;opacity:.8;margin-top:6px}
-.ww-phase{font-size:.85em;font-weight:700;text-align:center;padding:6px;border-radius:8px;background:rgba(255,255,255,.06)}
-.ww-players{display:flex;flex-direction:column;gap:6px}
-.ww-player{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,.06);border-radius:10px;border:1px solid rgba(255,255,255,.1)}
-.ww-player.dead{opacity:.4;text-decoration:line-through}
-.ww-player .name{flex:1;font-size:.82em;font-weight:700}
-.ww-player .btn{background:rgba(255,140,140,.25);color:#ffb5b5;border:none;padding:4px 12px;border-radius:99px;font-size:.72em;font-weight:700;cursor:pointer;font-family:inherit}
-.ww-player .btn:hover{background:#ff5252;color:#fff}
-/* ===== 斗地主 · 段位徽章 & 玩家资料浮层 ===== */
-.ddz-lv-badge{
-  display:inline-block;font-size:.68em;font-weight:800;letter-spacing:.4px;
-  padding:2px 8px;border-radius:99px;color:#fff;line-height:1.4;
-  box-shadow:0 1px 4px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.25);
-  white-space:nowrap;
-}
-.ddz-player-tap{cursor:pointer;}
-.ddz-player-tap:hover{filter:brightness(1.12);}
-.ddz-player-card{
-  position:fixed;z-index:5001;width:200px;pointer-events:auto;
-  transform-origin:top left;
-  animation:dpIn .16s cubic-bezier(.34,1.56,.64,1);
-}
-@keyframes dpIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
-.ddz-player-card .dp-card{
-  background:rgba(12,46,26,.82);
-  -webkit-backdrop-filter:blur(14px) saturate(150%);
-  backdrop-filter:blur(14px) saturate(150%);
-  border:1.5px solid var(--lv-color, #ffd54f);
-  border-radius:14px;padding:14px 14px 12px;color:#eaf7ee;
-  box-shadow:0 12px 32px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.06) inset;
-}
-.ddz-player-card .dp-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-.ddz-player-card .dp-avatar{
-  width:38px;height:38px;border-radius:50%;flex-shrink:0;
-  background:linear-gradient(135deg,#3a6b4a,#1e4a2e);
-  color:#ffd54f;display:grid;place-items:center;font-weight:800;font-size:15px;
-  background-size:cover;background-position:center;
-  border:2px solid rgba(255,213,79,.55);
-}
-.ddz-player-card .dp-name{
-  flex:1;min-width:0;font-weight:800;font-size:.95em;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  color:#f5d98a;
-}
-.ddz-player-card .dp-badge{
-  display:inline-block;font-size:.68em;font-weight:800;color:#fff;
-  padding:2px 8px;border-radius:99px;line-height:1.4;margin-top:6px;
-  box-shadow:0 1px 4px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25);
-  white-space:nowrap;
-}
-.ddz-player-card .dp-score{
-  margin-top:10px;padding-top:10px;border-top:1px dashed rgba(255,213,79,.25);
-  display:flex;align-items:baseline;gap:6px;justify-content:center;
-}
-.ddz-player-card .dp-score-num{
-  font-size:1.7em;font-weight:900;color:#ffd54f;line-height:1;
-  text-shadow:0 2px 8px rgba(255,213,79,.35);
-}
-.ddz-player-card .dp-score-lbl{font-size:.7em;color:rgba(232,247,238,.65);font-weight:700;}
-
-/* ===== 斗地主 ===== */
-.room-body[data-theme="doudizhu"]{background:linear-gradient(135deg,#0b3d1e,#14532d 50%,#052e16);color:#e8f5e9}
-.room-body[data-theme="doudizhu"] .game-stage{background:rgba(0,0,0,.22);border-color:rgba(255,255,255,.15)}
-.room-body[data-theme="doudizhu"] .game-topbar{border-bottom-color:rgba(255,255,255,.12)}
-.room-body[data-theme="doudizhu"] .gpm-player{background:rgba(255,255,255,.1)}
-.room-body[data-theme="doudizhu"] .gpm-player .gpm-name{color:#e8f5e9}
-.room-body[data-theme="doudizhu"] .fs-btn{background:rgba(255,255,255,.12);color:#e8f5e9}
-.room-body[data-theme="doudizhu"] .lobby-title{color:#e8f5e9}
-.room-body[data-theme="doudizhu"] .lobby-desc{color:rgba(232,245,233,.75)}
-.room-body[data-theme="doudizhu"] .lobby-count{color:rgba(232,245,233,.85)}
-.room-body[data-theme="doudizhu"] .lobby-player{background:rgba(255,255,255,.1);color:#e8f5e9}
-.room-body[data-theme="doudizhu"] .lobby-player.host{background:rgba(46,125,50,.35);border-color:#66bb6a}
-.room-body[data-theme="doudizhu"] .lobby-btn.spectate{background:rgba(255,255,255,.1);color:#e8f5e9;border-color:rgba(255,255,255,.2)}
-.room-body[data-theme="doudizhu"] .lobby-btn.start:disabled{background:rgba(255,255,255,.15);color:rgba(232,245,233,.5)}
-.room-body[data-theme="doudizhu"] .lobby-hint{color:rgba(232,245,233,.7)}
-.room-body[data-theme="doudizhu"] .rm-bubble{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.15)}
-.room-body[data-theme="doudizhu"] .rm-msg.self .rm-bubble{background:rgba(46,125,50,.5);border-color:rgba(102,187,106,.6)}
-.room-body[data-theme="doudizhu"] .rm-name{color:rgba(232,245,233,.65)}
-.room-body[data-theme="doudizhu"] .rm-text{color:#e8f5e9}
-.ddz-wrap{display:flex;flex-direction:column;gap:8px;color:#e8f5e9;width:100%}
-.ddz-info{display:flex;justify-content:space-between;font-size:.75em;font-weight:700;background:rgba(255,255,255,.08);border-radius:8px;padding:6px 10px}
-.ddz-table{position:relative;min-height:130px;display:flex;flex-direction:column;gap:8px;background:rgba(0,0,0,.18);border-radius:12px;padding:10px}
-.ddz-seat{display:flex;align-items:center;gap:8px;font-size:.75em;font-weight:700}
-.ddz-seat .avatar{width:26px;height:26px;border-radius:50%;background:var(--primary);display:grid;place-items:center;font-size:11px;background-size:cover;background-position:center}
-.ddz-seat.landlord .name{color:#ffd54f}
-.ddz-seat.turn{outline:2px solid #ffd54f;border-radius:8px;padding:2px 6px}
-.ddz-count{background:rgba(255,255,255,.15);border-radius:99px;padding:1px 8px;font-size:.9em}
-.ddz-play-area{display:flex;justify-content:center;align-items:center;gap:4px;min-height:64px;flex-wrap:wrap;background:rgba(0,0,0,.15);border-radius:10px;padding:6px}
-.ddz-play-label{font-size:.7em;opacity:.7}
-.ddz-hand{display:flex;justify-content:center;flex-wrap:wrap;gap:2px;padding:6px 0;min-height:66px}
-.ddz-card{width:38px;height:54px;border-radius:6px;background:#fff;color:#222;border:1px solid #bbb;box-shadow:0 2px 4px rgba(0,0,0,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;cursor:pointer;user-select:none;position:relative;transition:transform .12s;flex-shrink:0}
-.ddz-card .rk{font-size:16px;line-height:1}
-.ddz-card .su{font-size:13px;line-height:1}
-.ddz-card.red{color:#d32f2f}
-.ddz-card.black{color:#212121}
-.ddz-card.sel{transform:translateY(-14px);box-shadow:0 6px 10px rgba(0,0,0,.4);border-color:#ffd54f}
-.ddz-card.mini{width:26px;height:38px}
-.ddz-card.mini .rk{font-size:12px}
-.ddz-card.mini .su{font-size:10px}
-.ddz-card.back{background:linear-gradient(135deg,#1565c0,#0d47a1);color:transparent;border-color:#0b3d91}
-.ddz-card.back .rk,.ddz-card.back .su{display:none}
-.ddz-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-.ddz-btn{padding:9px 18px;border:none;border-radius:10px;font-weight:800;font-family:inherit;font-size:.82em;cursor:pointer;background:#ffd54f;color:#3e2723}
-.ddz-btn.pass{background:rgba(255,255,255,.2);color:#e8f5e9}
-.ddz-btn:disabled{opacity:.4;cursor:default}
-.ddz-status{text-align:center;font-size:.85em;font-weight:800;color:#ffd54f;padding:4px}
-.ddz-result{text-align:center;padding:24px 16px}
-.ddz-result .big{font-size:1.4em;font-weight:900;margin-bottom:10px}
-.ddz-board{display:flex;flex-direction:column;gap:8px;color:#e8f5e9;width:100%}
-.ddz-opps{display:flex;gap:10px}
-.ddz-opp{flex:1;display:flex;flex-direction:column;gap:5px;background:rgba(0,0,0,.2);border-radius:12px;padding:8px;border:2px solid rgba(255,255,255,.12);transition:border-color .2s}
-.ddz-opp.turn{border-color:#ffd54f}
-.ddz-opp.landlord{border-color:rgba(255,213,79,.6)}
-.ddz-opp-head{display:flex;align-items:center;gap:7px;position:relative}
-.ddz-opp-head .avatar{width:28px;height:28px;border-radius:50%;background:var(--primary);display:grid;place-items:center;font-size:12px;background-size:cover;background-position:center;flex-shrink:0;border:2px solid rgba(255,255,255,.2)}
-.ddz-opp-head .nm{flex:1;font-size:.78em;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ddz-opp.landlord .nm{color:#ffd54f}
-.ddz-opp-head .cnt{font-size:.7em;color:rgba(232,245,233,.7)}
-.ddz-opp-head .crown{position:absolute;top:-13px;right:2px;font-size:13px}
-.ddz-bubble{align-self:center;font-size:.68em;font-weight:800;padding:3px 10px;border-radius:99px;animation:ddzIn .3s}
-.ddz-bubble.yes{background:#ffd54f;color:#3e2723}
-.ddz-bubble.no{background:rgba(255,255,255,.15);color:rgba(232,245,233,.7)}
-.ddz-opp-play{display:flex;justify-content:center;flex-wrap:wrap;gap:1px;min-height:36px;align-items:center;animation:ddzIn .25s}
-.ddz-center{display:flex;flex-direction:column;align-items:center;gap:6px;justify-content:center;flex:1;min-height:50px}
-.ddz-my-play{display:flex;justify-content:center;flex-wrap:wrap;gap:2px;min-height:40px;align-items:center;animation:ddzIn .25s}
-.ddz-pass-tag{font-size:.7em;color:rgba(232,245,233,.65);font-weight:800;padding:5px 12px;background:rgba(0,0,0,.22);border-radius:99px}
-.ddz-counter{display:flex;flex-wrap:wrap;align-items:center;gap:4px;justify-content:center;background:rgba(0,0,0,.22);border:1px solid rgba(255,213,79,.25);border-radius:10px;padding:5px 8px;margin:2px 0}
-.ddz-counter-lbl{font-size:.66em;font-weight:800;color:rgba(255,213,79,.85);margin-right:2px;letter-spacing:1px}
-.ddz-counter-item{display:inline-flex;align-items:center;gap:1px;font-size:.64em;font-weight:800;color:#e8f5e9;background:rgba(255,255,255,.1);border-radius:6px;padding:1px 5px;line-height:1.5}
-.ddz-counter-item b{color:#ffd54f;font-size:1.05em;margin-right:1px}
-.ddz-counter-item.zero{opacity:.35;text-decoration:line-through}
-@keyframes ddzIn{from{opacity:0;transform:translateY(10px) scale(.9)}to{opacity:1;transform:none}}
-.ddz-card.deal-in{animation:ddzDeal .3s ease}
-@keyframes ddzDeal{from{opacity:0;transform:translateY(-30px) scale(.5)}to{opacity:1;transform:none}}
-
+/* 聊天区 & 抽屉 */
 .room-messages{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;position:relative;z-index:1;min-height:0}
 .rm-msg{display:flex;gap:9px;flex-shrink:0;max-width:92%}
 .rm-msg.self{align-self:flex-end;flex-direction:row-reverse}
 .rm-avatar{width:30px;height:30px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px;flex-shrink:0;background-size:cover;background-position:center}
 .rm-bubble{background:rgba(255,255,255,.85);border:1px solid rgba(0,0,0,.06);border-radius:12px;padding:7px 11px;min-width:0}
-.room-body[data-theme="spy"] .rm-bubble,.room-body[data-theme="werewolf"] .rm-bubble{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.15)}
-.rm-msg.self .rm-bubble{background:var(--primary-bg);border-color:var(--primary)}
 .rm-name{font-size:.66em;color:var(--text-muted);font-weight:700;margin-bottom:2px}
 .rm-text{font-size:.84em;line-height:1.5;word-break:break-word}
-.rm-ip{font-size:.62em;}
 .room-input-area{flex-shrink:0;display:flex;gap:8px;align-items:center;padding:10px 14px calc(10px + var(--safe-b));background:rgba(255,255,255,.9);border-top:1px solid var(--border);backdrop-filter:blur(8px);z-index:2}
 .room-input-area input{flex:1;padding:10px 14px;border-radius:99px;border:2px solid var(--border);background:var(--bg-input);font-family:inherit;font-size:.85em;outline:none;min-width:0;color:var(--text)}
-.room-input-area input:focus{border-color:var(--primary)}
-.room-input-area .game-btn{background:var(--bg-card);border:2px solid var(--border);color:var(--text);padding:8px 14px;border-radius:99px;font-size:.78em;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;display:flex;align-items:center;gap:4px}
-.room-input-area .game-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
-.room-input-area .game-btn:hover:not(:disabled){border-color:var(--primary);color:var(--primary)}
-.room-input-area .game-btn:disabled{opacity:.5;pointer-events:none}
-.rp-list{padding:0 14px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;}
-.rp-list:not(:empty){padding-top:12px;}
-.rp-card{flex-shrink:0;max-width:78%;align-self:center;background:linear-gradient(135deg,#ff7043,#e64a19);border-radius:14px;padding:14px 18px;color:#fff;cursor:pointer;box-shadow:0 6px 18px rgba(230,74,25,.3);position:relative;overflow:hidden;transition:transform .15s;}
-.rp-card:active{transform:scale(.97)}
-.rp-card.grabbed{background:linear-gradient(135deg,#9e9e9e,#757575);box-shadow:none;cursor:default;}
-.rp-card.done{background:linear-gradient(135deg,#bdbdbd,#9e9e9e);box-shadow:none;cursor:default;}
-.rp-card .rp-top{display:flex;align-items:center;gap:8px;font-weight:800;font-size:.9em;}
-.rp-card .rp-top svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
-.rp-card .rp-sub{font-size:.72em;opacity:.9;margin-top:5px;}
-.rp-card .rp-amt{font-size:1.5em;font-weight:900;margin-top:4px;}
-.rp-rank-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:8px;background:var(--bg-input);margin-bottom:6px;font-size:.85em;}
-.rp-rank-item .rr-left{display:flex;align-items:center;gap:10px;}
-.rp-rank-item .rr-no{width:20px;text-align:center;font-weight:800;color:var(--text-muted);}
-.rp-rank-item .rr-no.top1{color:#e6a700;}
-.rp-rank-item .rr-amt{font-weight:800;color:var(--primary);}
-.room-input-area .send-btn{background:var(--primary);color:#fff;border:none;padding:9px 16px;border-radius:99px;font-weight:700;font-size:.8em;cursor:pointer;font-family:inherit}
-@media (min-width: 900px) {
-  .room-body{flex-direction:row}
-  .stage-wrap{flex:7;padding:14px;min-height:0;overflow:hidden;display:flex;flex-direction:column}
-  .game-stage{flex:1;margin-top:0;min-height:0}
-  .game-stage.active{flex:1}
-  .game-content{flex:1;max-height:none}
-  .gomoku-board{width:min(56vw,520px)}
-  .chat-panel{flex:0 0 360px;max-width:360px;border-left:1px solid var(--border);background:rgba(255,255,255,.55);backdrop-filter:blur(8px)}
-  .room-messages{flex:1}
-}
+.room-input-area button{background:var(--primary);color:#fff;border:none;padding:9px 16px;border-radius:99px;font-weight:700;font-size:.8em;cursor:pointer;font-family:inherit}
 .drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .3s;z-index:399}
 .drawer-backdrop.open{opacity:1;pointer-events:auto}
 .game-drawer{position:fixed;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:8px 16px calc(20px + var(--safe-b));transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);z-index:400;max-height:70vh;overflow-y:auto;box-shadow:0 -8px 32px rgba(0,0,0,.15)}
@@ -422,97 +126,39 @@ body.pseudo-fs .room-body[data-theme="doudizhu"] #gameStage{background:#0b3d1e}
 .game-card-icon svg{width:32px;height:32px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .game-card-name{font-weight:800;font-size:.9em}
 .game-card-desc{font-size:.66em;color:var(--text-muted)}
-.member-drawer{position:fixed;top:0;right:0;bottom:0;width:300px;max-width:85vw;background:#fff;box-shadow:-8px 0 32px rgba(0,0,0,.15);transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);z-index:401;display:flex;flex-direction:column;padding-top:var(--safe-t)}
+/* 其他弹窗基础 */
+.member-drawer{position:fixed;top:0;right:0;bottom:0;width:300px;max-width:85vw;background:#fff;box-shadow:-8px 0 32px rgba(0,0,0,.15);transform:translateX(100%);transition:transform .35s;z-index:401;display:flex;flex-direction:column;padding-top:var(--safe-t)}
 .member-drawer.open{transform:translateX(0)}
 .member-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--border)}
-.member-head h3{font-size:1em;font-weight:800;display:flex;align-items:center;gap:8px}
-.member-head .cnt{background:var(--primary);color:#fff;font-size:.75em;font-weight:800;padding:1px 8px;border-radius:99px}
-.member-head button{background:none;border:none;cursor:pointer;color:var(--text-light);padding:4px;display:flex}
-.member-head button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2}
 .member-body{flex:1;overflow-y:auto;padding:12px 14px}
 .member-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;margin-bottom:6px}
-.member-row:hover{background:var(--bg-input)}
-.member-row .avatar{width:38px;height:38px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:15px;flex-shrink:0;background-size:cover;background-position:center}
-.member-row .info{flex:1;min-width:0}
-.member-row .name{font-weight:700;font-size:.9em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.member-row .role{font-size:.68em;color:var(--text-muted);font-weight:600;margin-top:2px}
-.member-row .role.host{color:var(--primary);font-weight:800}
-.member-row .role.game{color:var(--official-blue);font-weight:700}
-.member-row .online-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.2);flex-shrink:0}
-.member-mute-btn{background:var(--bg-input);border:none;border-radius:8px;padding:4px 10px;font-size:.68em;font-weight:700;font-family:inherit;cursor:pointer;color:var(--text-muted);flex-shrink:0}
-.member-mute-btn.on{background:rgba(229,57,53,.12);color:var(--danger)}
-.re-danger{margin:4px 18px 10px;padding:12px 14px;border:1px solid rgba(229,57,53,.3);border-radius:10px;background:rgba(229,57,53,.05)}
-.re-danger-title{font-size:.72em;font-weight:800;color:var(--danger);cursor:pointer;display:flex;align-items:center;gap:4px;user-select:none}
-/* 房间设置 Tab */
-.re-tabs{display:flex;gap:6px;padding:10px 18px 0;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto}
-.re-tab{padding:9px 16px;border:none;background:none;font-family:inherit;font-size:.85em;font-weight:700;color:var(--text-muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
-.re-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
-.re-tabpane{display:none}
-.re-tabpane.active{display:block}
-.re-danger-body .re-danger-btn{margin-top:6px}
-.re-danger-title.open svg{transform:rotate(180deg)}
-.re-danger-body{margin-top:8px}
-.re-danger-btn{display:block;width:100%;margin-bottom:6px;padding:9px;border:none;border-radius:8px;background:rgba(229,57,53,.12);color:var(--danger);font-weight:700;font-family:inherit;font-size:.82em;cursor:pointer}
-.re-danger-btn:last-child{margin-bottom:0}
-.re-danger-btn:hover{background:var(--danger);color:#fff}
-.re-overlay{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px}
-.re-panel{background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.25)}
-.re-head{display:flex;justify-content:space-between;align-items:center;padding:16px 18px 12px;border-bottom:1px solid var(--border)}
-.re-head h3{font-size:1.02em;margin:0;font-weight:800}
-.re-head button{background:none;border:none;cursor:pointer;color:var(--text-light);padding:4px}
-.re-head button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2}
-.re-body{padding:16px 18px;overflow-y:auto;flex:1}
-.re-field{margin-bottom:16px}
-.re-field>label{display:block;font-size:.72em;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
-.re-field input[type=text]{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:10px;font-family:inherit;font-size:.9em;outline:none;box-sizing:border-box;color:var(--text);background:var(--bg-input)}
-.re-radio-row{display:flex;gap:8px;flex-wrap:wrap}
-.re-radio{flex:1;min-width:120px;display:flex;align-items:center;gap:7px;padding:10px 12px;border:2px solid var(--border);border-radius:10px;font-size:.8em;font-weight:600;cursor:pointer}
-.re-radio input{accent-color:var(--primary)}
-.re-user{border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#fff}
-.re-user-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.re-name{flex:1;font-weight:700;font-size:.85em;min-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.re-host-btn{padding:4px 12px;border-radius:99px;border:1px solid var(--primary);background:var(--primary-bg);color:var(--primary);font-weight:700;font-size:.7em;cursor:pointer;font-family:inherit}
-.re-chk{display:flex;align-items:center;gap:5px;font-size:.75em;font-weight:600;color:var(--text-muted);cursor:pointer}
-.re-chk input{accent-color:var(--primary)}
-.re-perms{display:none;flex-wrap:wrap;gap:10px;margin-top:9px;padding-top:9px;border-top:1px dashed var(--border)}
-.re-perms.on{display:flex}
-.re-foot{display:flex;gap:8px;padding:12px 18px 16px;border-top:1px solid var(--border)}
-.re-foot button{flex:1;padding:11px;border-radius:10px;border:none;font-family:inherit;font-weight:700;font-size:.88em;cursor:pointer}
-.re-foot .cancel{background:var(--bg-input);color:var(--text-muted)}
-.re-foot .ok{background:var(--primary);color:#fff}
-#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:.7em 1.5em;border-radius:2em;font-weight:600;font-size:.85em;opacity:0;transition:all .4s ease;z-index:9999;pointer-events:none;white-space:nowrap;box-shadow:var(--shadow);max-width:90vw}
+.member-row .avatar{width:38px;height:38px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:15px;background-size:cover;background-position:center}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:.7em 1.5em;border-radius:2em;font-weight:600;font-size:.85em;opacity:0;transition:all .4s ease;z-index:9999;pointer-events:none;box-shadow:var(--shadow);max-width:90vw}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .custom-modal{position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px}
 .custom-modal.active{display:flex}
 .custom-modal .modal-box{background:#fff;border-radius:16px;max-width:420px;width:100%;padding:24px;box-shadow:var(--shadow);border:1px solid var(--border)}
 .modal-title{font-size:1.2em;font-weight:700;margin-bottom:8px}
 .modal-body{font-size:.95em;color:var(--text-muted);margin-bottom:12px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
-.modal-pref{display:flex;align-items:center;gap:6px;font-size:.82em;color:var(--text-muted);margin-bottom:14px;cursor:pointer}
-.modal-pref input{accent-color:var(--primary)}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end}
 .modal-actions button{padding:6px 18px;border-radius:10px;border:none;font-weight:600;cursor:pointer;font-family:inherit}
 .modal-actions .btn-danger{background:#e57373;color:#fff}
 .modal-actions .btn-secondary{background:var(--bg-input);color:var(--text-muted)}
-/* 游戏设置弹窗 */
-.gprefs-overlay{position:fixed;inset:0;z-index:6000;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px}
-.gprefs-overlay.open{display:flex}
-.gprefs-box{background:#fff;border-radius:16px;padding:22px 20px;max-width:340px;width:100%;box-shadow:0 16px 48px rgba(0,0,0,.25)}
-.gprefs-box h3{font-size:1.05em;margin:0 0 16px;color:var(--text)}
-.gprefs-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0}
-.gprefs-item span{font-size:.9em;font-weight:700;color:var(--text)}
-.gprefs-hint{font-size:.72em;color:var(--text-muted);line-height:1.6;margin:8px 0 16px}
-.gprefs-close{display:block;width:100%;padding:11px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-weight:800;font-family:inherit;font-size:.9em;cursor:pointer}
-.toggle-switch{display:inline-block;position:relative;width:52px;height:30px;flex-shrink:0}
-.toggle-input{display:none}
-.toggle-label{position:absolute;top:0;left:0;width:52px;height:30px;background-color:#ccc;border-radius:30px;cursor:pointer;transition:background-color .3s ease}
-.toggle-label::before{content:"";position:absolute;top:2px;left:2px;width:26px;height:26px;background-color:#fff;border-radius:50%;transition:transform .3s ease;box-shadow:0 1px 4px rgba(0,0,0,.15)}
-.toggle-input:checked + .toggle-label{background-color:var(--primary)}
-.toggle-input:checked + .toggle-label::before{transform:translateX(22px)}
-::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+@media (min-width: 900px) {
+  .room-body{flex-direction:row}
+  .stage-wrap{flex:7;padding:14px;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+  .game-stage{flex:1;margin-top:0;min-height:0}
+  .game-stage.active{flex:1}
+  .game-content{flex:1;max-height:none}
+  .chat-panel{flex:0 0 360px;max-width:360px;border-left:1px solid var(--border);background:rgba(255,255,255,.55);backdrop-filter:blur(8px)}
+  .room-messages{flex:1}
+}
 </style>
 </head>
 <body>
+
+<!-- 外部引入游戏逻辑 -->
+<script src="room-games.js"></script>
 
 <div class="view-list" id="listView">
   <div class="page-header">
@@ -546,460 +192,362 @@ body.pseudo-fs .room-body[data-theme="doudizhu"] #gameStage{background:#0b3d1e}
   <div class="room-body" id="roomBody">
     <div class="stage-wrap" id="stageWrap">
       <div id="micArea"></div>
-      <div class="game-stage" id="gameStage">      <div class="game-topbar" id="gameTopbar" style="display:none;">
-        <span id="gameTopbarTitle" style="font-weight:700;font-size:.82em;">游戏</span>
-        <span style="flex:1"></span>
-        <button class="fs-btn" id="fsBtn" title="全屏">⛶</button>
-        <button class="fs-btn" id="exitGameBtn" style="font-size:.75em;padding:4px 10px;">退出</button>
-      </div>
-      <div class="game-content" id="gameContent">
-        <!-- 未开始：大厅 -->
-        <div class="game-lobby" id="gameLobby">
-          <div class="lobby-icon">
-            <svg viewBox="0 0 48 48" width="46" height="46" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="6" y="12" width="36" height="24" rx="4"/><path d="M18 24h6M21 21v6"/><circle cx="32" cy="22" r="2"/><circle cx="36" cy="27" r="2"/>
-            </svg>
-          </div>
-          <div class="lobby-title">还没有开始游戏</div>
-          <div class="lobby-desc">和朋友一起开一局，输赢都算热闹</div>
-          <button class="lobby-btn start" id="pickGameBtn">选择游戏</button>
-          <div class="lobby-hint" id="roomHint">房间内的玩家都可以发起对局</div>
+      <div class="game-stage" id="gameStage">
+        <div class="game-topbar">
+          <div class="gpm-players" id="gpmPlayers"></div>
+          <button class="fs-btn" id="gamePrefsBtn" type="button" title="游戏设置">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+          <button class="fs-btn" id="fsBtn" type="button" title="全屏">
+            <svg viewBox="0 0 24 24" id="fsIcon"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+          </button>
         </div>
-
-        <!-- 五子棋 -->
-        <div class="gomoku-wrap" id="gomokuWrap" style="display:none;">
-          <div class="gomoku-status" id="gomokuStatus"></div>
-          <div class="gpm-players" id="gomokuPlayers"></div>
-          <div class="gomoku-board" id="gomokuBoard"></div>
-        </div>
+        <div class="game-content" id="gameContent"></div>
+        <div class="game-modal-layer" id="gameModalLayer"></div>
       </div>
     </div>
-  </div>
-
-  <div class="chat-panel">
-    <div class="room-messages" id="roomMessages"></div>
-    <div class="room-input-area">
-      <input type="text" id="roomInput" placeholder="说点什么…" maxlength="200" />
-      <button class="game-btn" id="gameDrawerBtn">游戏</button>
-      <button class="send-btn" id="roomSendBtn">发送</button>
+    <div class="chat-panel" id="chatPanel">
+      <div class="room-messages" id="roomMessages"></div>
+      <div class="room-input-area">
+        <button class="game-btn" id="gameBtn" type="button" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--primary);">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="3"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><circle cx="15" cy="11" r="1"/><circle cx="17.5" cy="13" r="1"/></svg>
+        </button>
+        <input type="text" id="roomInput" placeholder="说点什么…" maxlength="200" />
+        <button class="send-btn" id="roomSendBtn">发送</button>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- 游戏抽屉 -->
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
 <div class="game-drawer" id="gameDrawer">
   <div class="drawer-handle"></div>
   <div class="drawer-title">选择游戏</div>
-  <div class="game-grid">
-    <div class="game-card" data-game="gomoku">
-      <div class="game-card-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg></div>
-      <div class="game-card-name">五子棋</div>
-      <div class="game-card-desc">实时联机对弈</div>
-    </div>
-    <div class="game-card" data-game="doudizhu">
-      <div class="game-card-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="12" height="16" rx="2"/><path d="M9 2h10a2 2 0 0 1 2 2v14"/><path d="M9 9h6M9 13h4"/></svg></div>
-      <div class="game-card-name">斗地主</div>
-      <div class="game-card-desc">三人成局</div>
-    </div>
-    <div class="game-card" data-game="draw">
-      <div class="game-card-icon"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>
-      <div class="game-card-name">你画我猜</div>
-      <div class="game-card-desc">即将上线</div>
-    </div>
-    <div class="game-card" data-game="spy">
-      <div class="game-card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/></svg></div>
-      <div class="game-card-name">谁是卧底</div>
-      <div class="game-card-desc">即将上线</div>
-    </div>
-  </div>
+  <div class="game-grid" id="gameGrid"></div>
 </div>
 
-<!-- 成员抽屉 -->
 <div class="member-drawer" id="memberDrawer">
   <div class="member-head">
-    <span style="font-weight:700;">房间成员</span>
-    <button id="memberCloseBtn" style="border:none;background:none;font-size:1.1em;cursor:pointer;color:var(--text-muted);">×</button>
+    <h3>房间成员 <span id="memberCount" style="font-size:0.8em;color:var(--text-muted);">0</span></h3>
+    <button id="closeMemberDrawer" style="background:none;border:none;font-size:1.2em;cursor:pointer;">✕</button>
   </div>
-  <div class="member-body" id="memberBody"></div>
+  <div class="member-body" id="memberList"></div>
 </div>
 
-<!-- 房间设置 -->
-<div class="gprefs-overlay" id="roomSettings">
-  <div class="gprefs-box">
-    <h3>房间设置</h3>
-    <div class="gprefs-item">
-      <span>消息提醒音</span>
-      <label class="toggle-switch">
-        <input type="checkbox" class="toggle-input" id="soundToggle" />
-        <span class="toggle-label"></span>
-      </label>
+<div class="custom-modal" id="confirmModal">
+  <div class="modal-box">
+    <div class="modal-title" id="confirmTitle">确认</div>
+    <div class="modal-body" id="confirmBody"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="confirmCancel">取消</button>
+      <button class="btn-danger" id="confirmOk">确定</button>
     </div>
-    <div class="gprefs-item">
-      <span>进入房间自动开麦</span>
-      <label class="toggle-switch">
-        <input type="checkbox" class="toggle-input" id="autoMicToggle" />
-        <span class="toggle-label"></span>
-      </label>
-    </div>
-    <div class="gprefs-hint">麦克风音频暂未接入实时语音服务，当前仅同步「开麦 / 闭麦」状态。</div>
-    <button class="gprefs-close" id="gprefsCloseBtn">完成</button>
   </div>
 </div>
 
 <div id="toast"></div>
 
-<script src="./common.js"></script>
-<script src="./gomoku.js"></script>
 <script>
-(function () {
-  'use strict';
+// 基础 Supabase & Session
+var SUPABASE_URL="https://你的新项目ID.supabase.co";
+var SUPABASE_ANON_KEY="sb_publishable_mQbWq3yUoa8U5fmlk61WnA_W_rsrqCL";
+window.sb=window.sb||window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
-  var user = getSessionUser();
-  if (!user || !user.id) { location.replace('./index.html'); return; }
+var currentUser=getSessionUser();
+if(!currentUser||!currentUser.id)window.location.href='./index.html';
+var isAdmin=!!(currentUser&&currentUser.is_admin===true);
+if(isAdmin)document.getElementById('createRoomBtn').style.display='inline-flex';
 
-  var $ = function (id) { return document.getElementById(id); };
-  var currentRoom = null;
-  var roomChannel = null;
-  var rooms = [];
-  var localOnly = false;   // rooms 表不可用时退回本地模式
-  var isHost = false;
+function showToast(m){var t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(function(){t.classList.remove('show')},2600)}
+function escapeHtml(s){if(!s)return '';return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function showConfirm(title,body,onOk){
+  var m=document.getElementById('confirmModal');
+  document.getElementById('confirmTitle').textContent=title;
+  document.getElementById('confirmBody').textContent=body;
+  m.classList.add('active');
+  var c=document.getElementById('confirmCancel'),o=document.getElementById('confirmOk');
+  var cleanup=function(){m.classList.remove('active');c.onclick=null;o.onclick=null};
+  c.onclick=cleanup;
+  o.onclick=function(){if(onOk)onOk();cleanup()};
+}
 
-  function toast(msg) {
-    var t = $('toast');
-    if (!t) return;
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(window.__rmToast);
-    window.__rmToast = setTimeout(function () { t.classList.remove('show'); }, 2400);
-  }
+// 游戏基础配置（分离后，UI与元数据放这里，具体逻辑去 RoomGames）
+var GAMES=[
+  {id:'gomoku',name:'五子棋',desc:'2人对弈',min:2,max:2,icon:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>'},
+  {id:'draw',name:'你画我猜',desc:'2-8人 · 3分钟一轮',min:2,max:8,icon:'<svg viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>'},
+  {id:'spy',name:'谁是卧底',desc:'4-8人 · 推理社交',min:4,max:8,icon:'<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'},
+  {id:'werewolf',name:'狼人杀',desc:'6/10人 · 角色扮演',min:6,max:10,icon:'<svg viewBox="0 0 24 24"><path d="M20.5 6.5c-1.5 1-2.5 2.5-2.5 4.5v8c0 1.5-1 2.5-2.5 2.5h-7C7 21.5 6 20.5 6 19v-8c0-2-1-3.5-2.5-4.5"/><circle cx="12" cy="9" r="4"/></svg>'},
+  {id:'doudizhu',name:'斗地主',desc:'3人 · 经典扑克',min:3,max:3,icon:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="12" height="16" rx="2"/><path d="M8 7h5M8 11h5"/><path d="M18 6v13a2 2 0 0 1-2 2H8"/></svg>'}
+];
 
-  function esc(s) {
-    if (!s && s !== 0) return '';
-    return String(s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  }
+var rooms=[]; var state={room:null,messages:[],roomChannel:null,msgChannel:null,memberChannel:null,spectating:false};
+var gameTickInterval=null; var offlineCheckTimer=null;
 
-  /* ============================================================
-     房间列表
-     ============================================================ */
-  function localRooms() {
-    try { return JSON.parse(localStorage.getItem('sq_local_rooms') || '[]'); } catch (e) { return []; }
-  }
-  function saveLocalRooms(list) {
-    try { localStorage.setItem('sq_local_rooms', JSON.stringify(list)); } catch (e) {}
-  }
+// === 视图切换 ===
+function showList(){document.getElementById('listView').classList.remove('hidden');document.getElementById('detailView').classList.remove('open')}
+function showDetail(){document.getElementById('listView').classList.add('hidden');document.getElementById('detailView').classList.add('open')}
+document.getElementById('detailBackBtn').onclick=function(){
+  if(state.room&&state.room.current_game){try{leaveGame()}catch(e){}}
+  leaveRoomLocal(); history.replaceState({},'',location.pathname); showList(); loadRooms();
+};
 
-  async function loadRooms() {
-    var list = [];
-    try {
-      var r = await window.sb.from('rooms').select('*').order('created_at', { ascending: false }).limit(50);
-      if (!r.error && r.data) {
-        list = r.data;
-      } else {
-        localOnly = true;
-        list = localRooms();
-      }
-    } catch (e) {
-      localOnly = true;
-      list = localRooms();
+// === 房间列表 ===
+async function loadRooms(){
+  var grid=document.getElementById('roomGrid');
+  grid.innerHTML='<div class="loading-state"><div class="spinner"></div>加载中…</div>';
+  var timeout = setTimeout(function() {
+    if(grid.innerHTML.indexOf('spinner') > -1) {
+      grid.innerHTML = '<div class="empty-state">网络较慢或房间服务未响应<br><button onclick="loadRooms()" style="margin-top:8px;padding:6px 16px;border-radius:99px;border:1px solid var(--primary);background:var(--primary);color:#fff;font-weight:700;cursor:pointer;font-family:inherit;">重试</button></div>';
     }
-    rooms = list;
-    renderRooms();
+  }, 3000);
+  try{
+    var res = await window.sb.from('rooms').select('*').order('created_at',{ascending:true});
+    if(res.error) throw res.error;
+    clearTimeout(timeout);
+    rooms = res.data || [];
+    renderGrid();
+  } catch(e) {
+    clearTimeout(timeout);
+    grid.innerHTML = '<div class="empty-state">房间加载失败，请检查网络或表结构' + (isAdmin ? '<br><small style="font-size:0.85em;color:var(--text-light)">请先在 Supabase 创建 rooms 数据表</small>' : '') + '</div>';
   }
+}
+function renderGrid(){
+  var grid=document.getElementById('roomGrid');
+  if(!rooms.length){grid.innerHTML='<div class="empty-state">还没有房间，点右上角创建</div>';return}
+  grid.innerHTML=rooms.map(function(r){
+    var isCo=(r.co_admin_ids||[]).indexOf(currentUser.id)>=0;
+    var badge=(isAdmin||isCo)?'<span style="position:absolute;top:8px;left:8px;background:var(--official-blue);color:#fff;font-size:.55em;font-weight:700;padding:1px 7px;border-radius:99px;">管理</span>':'';
+    var editBtn=isAdmin?'<button class="header-action" data-edit="'+r.id+'" style="position:absolute;top:6px;right:6px;padding:0;width:26px;height:26px;border-radius:50%;">⚙</button>':'';
+    var gameTag=r.current_game&&r.current_game.type?'<div class="room-card-meta" style="color:var(--primary);font-weight:700;">游戏中</div>':'<div class="room-card-meta">'+(r.mic_mode==='host'?'主持人连麦':'自由连麦')+'</div>';
+    return '<div class="room-card" data-id="'+r.id+'">'+badge+editBtn+'<div class="room-card-icon"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg></div><div class="room-card-name">'+escapeHtml(r.name)+'</div>'+gameTag+'</div>';
+  }).join('');
+  grid.querySelectorAll('.room-card').forEach(function(el){el.addEventListener('click',function(e){if(e.target.closest('[data-edit]'))return;enterRoom(this.dataset.id)})});
+  grid.querySelectorAll('[data-edit]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();enterRoom(this.dataset.edit,true)})});
+}
+document.getElementById('createRoomBtn').onclick=async function(){
+  if(!isAdmin)return;
+  var name=prompt('请输入房间名称：');if(name===null)return;name=name.trim();
+  if(!name){showToast('名称不能为空');return}
+  try{await window.sb.from('rooms').insert([{name:name,creator_id:currentUser.id,co_admin_ids:[],co_admin_permissions:{},muted_user_ids:[],mic_enabled:true,mic_mode:'free',mic_speaking:[],mic_requests:[],game_disabled:false}]).select().single();showToast('房间已创建');await loadRooms()}catch(e){showToast('创建失败：'+e.message)}
+};
 
-  function renderRooms() {
-    var grid = $('roomGrid');
-    if (!grid) return;
-    if (!rooms.length) {
-      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">还没有房间，点右上角「创建」开一个</div>';
-      return;
-    }
-    var h = '';
-    rooms.forEach(function (r) {
-      h += '<div class="room-card" data-id="' + esc(r.id) + '">';
-      if (r.is_official) h += '<span class="room-card-badge">官方</span>';
-      h += '<div class="room-card-icon"><svg viewBox="0 0 48 48"><path d="M8 20v8a4 4 0 0 0 4 4h4l10 8V8L16 16h-4a4 4 0 0 0-4 4z"/><path d="M32 18a8 8 0 0 1 0 12"/></svg></div>';
-      h += '<div class="room-card-name">' + esc(r.name || r.title || '未命名房间') + '</div>';
-      h += '<div class="room-card-meta">' + (r.member_count != null ? (r.member_count + ' 人在线') : '点击进入') + '</div>';
-      h += '</div>';
-    });
-    grid.innerHTML = h;
-    grid.querySelectorAll('.room-card').forEach(function (card) {
-      card.onclick = function () { enterRoom(this.dataset.id); };
-    });
-  }
+// === 房间进出 ===
+async function enterRoom(roomId,openSettings){
+  try{
+    var res=await window.sb.from('rooms').select('*').eq('id',roomId).single();
+    if(res.error)throw res.error;
+    state.room=res.data;state.messages=[];state.spectating=false;
+    document.getElementById('roomTitle').textContent=state.room.name;
+    history.replaceState({},'','?id='+roomId); showDetail(); updateHeaderBtns();
+    renderMic(); renderGame(); await loadMessages(); subscribe(); initRoomMembers(); startGameTick();
+    if(openSettings&&isAdmin)setTimeout(openRoomEditor,300);
+  }catch(e){showToast('进入房间失败：'+e.message)}
+}
+function leaveRoomLocal(){
+  if(state.room&&currentUser){try{
+    var sp=(state.room.mic_speaking||[]).filter(function(m){return m.user_id!==currentUser.id});
+    var rq=(state.room.mic_requests||[]).filter(function(m){return m.user_id!==currentUser.id});
+    window.sb.from('rooms').update({mic_speaking:sp,mic_requests:rq}).eq('id',state.room.id);
+  }catch(e){}}
+  if(state.roomChannel){window.sb.removeChannel(state.roomChannel);state.roomChannel=null}
+  if(state.msgChannel){window.sb.removeChannel(state.msgChannel);state.msgChannel=null}
+  if(state.memberChannel){window.sb.removeChannel(state.memberChannel);state.memberChannel=null}
+  if(gameTickInterval){clearInterval(gameTickInterval);gameTickInterval=null}
+  stopOfflineCheck(); state.room=null;state.messages=[];state.spectating=false;
+}
+function updateHeaderBtns(){var setBtn=document.getElementById('roomSettingsBtn');if(setBtn)setBtn.style.display=isAdmin?'inline-flex':'none'}
+async function freshRoom(){var r=await window.sb.from('rooms').select('*').eq('id',state.room.id).single();if(r.error)throw r.error;return r.data}
+async function patchRoom(patch){var res=await window.sb.from('rooms').update(patch).eq('id',state.room.id).select().single();if(res.error)throw res.error;state.room=res.data;document.getElementById('roomTitle').textContent=state.room.name;renderMic();renderGame();return state.room}
 
-  async function createRoom() {
-    var name = prompt('房间名称', user.nickname ? (user.nickname + ' 的房间') : '新房间');
-    if (!name) return;
-    var room = {
-      id: 'r_' + Date.now().toString(36),
-      name: name.slice(0, 20),
-      owner_id: user.id,
-      created_at: new Date().toISOString(),
-      member_count: 1
-    };
-    try {
-      var r = await window.sb.from('rooms').insert([{ name: room.name, owner_id: user.id }]).select();
-      if (!r.error && r.data && r.data[0]) room = r.data[0];
-      else { localOnly = true; }
-    } catch (e) { localOnly = true; }
-
-    if (localOnly) {
-      var list = localRooms();
-      list.unshift(room);
-      saveLocalRooms(list);
-    }
-    await loadRooms();
-    enterRoom(room.id);
-  }
-
-  /* ============================================================
-     进入 / 退出房间
-     ============================================================ */
-  async function enterRoom(roomId) {
-    var room = rooms.find(function (r) { return String(r.id) === String(roomId); });
-    if (!room) return;
-    currentRoom = room;
-    isHost = (room.owner_id === user.id);
-
-    $('roomTitle').textContent = room.name || '房间';
-    $('listView').classList.add('hidden');
-    $('detailView').classList.add('open');
-    $('createRoomBtn').style.display = 'none';
-    $('roomSettingsBtn').style.display = 'block';
-
-    renderMicSeats();
-    renderMembers();
-    $('roomMessages').innerHTML = '';
-
-    subscribeRoom(roomId);
-    loadRoomMessages(roomId);
-    resetGameStage();
-  }
-
-  function exitRoom() {
-    if (roomChannel) { try { window.sb.removeChannel(roomChannel); } catch (e) {} roomChannel = null; }
-    currentRoom = null;
-    $('detailView').classList.remove('open');
-    $('listView').classList.remove('hidden');
-    $('roomSettingsBtn').style.display = 'none';
-  }
-
-  /* ============================================================
-     麦克风座位（状态同步，不含音频流）
-     ============================================================ */
-  var micState = {};   // userId -> { name, on }
-
-  function renderMicSeats() {
-    var area = $('micArea');
-    if (!area) return;
-    var seats = [];
-    for (var i = 0; i < 8; i++) seats.push(null);
-    seats[0] = { id: user.id, name: user.nickname || '我', on: !!micState[user.id] };
-
-    var h = '<div class="mic-panel"><div class="mic-head"><span class="mic-title">麦位</span>';
-    h += '<span class="mic-mode">' + (localOnly ? '本地房间' : '实时房间') + '</span></div>';
-    h += '<div class="mic-seats">';
-    seats.forEach(function (s, idx) {
-      if (s) {
-        h += '<div class="mic-seat on"><div class="mic-avatar">' + esc((s.name || 'U').charAt(0).toUpperCase()) + '</div>';
-        h += '<div class="mic-name">' + esc(s.name) + '</div>';
-        h += '</div>';
-      } else {
-        h += '<div class="mic-seat"><div class="mic-avatar mic-off">+</div><div class="mic-name">空位</div></div>';
-      }
-    });
-    h += '</div>';
-    h += '<div class="mic-actions">';
-    h += '<button class="mic-btn" id="micToggleBtn">' + (micState[user.id] ? '闭麦' : '开麦') + '</button>';
-    h += '<button class="mic-btn" id="leaveRoomBtn">离开房间</button>';
-    h += '</div></div>';
-    area.innerHTML = h;
-
-    $('micToggleBtn').onclick = function () {
-      micState[user.id] = !micState[user.id];
-      renderMicSeats();
-      toast(micState[user.id] ? '已开麦（仅状态）' : '已闭麦');
-    };
-    $('leaveRoomBtn').onclick = exitRoom;
-  }
-
-  function renderMembers() {
-    var box = $('memberBody');
-    if (!box) return;
-    var list = [{ id: user.id, name: user.nickname || '我', host: isHost }];
-    var h = '';
-    list.forEach(function (m) {
-      h += '<div class="member-row"><div class="rm-avatar">' + esc((m.name || 'U').charAt(0).toUpperCase()) + '</div>';
-      h += '<span style="flex:1;font-size:.86em;">' + esc(m.name) + (m.host ? '（房主）' : '') + '</span></div>';
-    });
-    box.innerHTML = h;
-    $('memberBtnCount').textContent = String(list.length);
-  }
-
-  /* ============================================================
-     房间聊天
-     ============================================================ */
-  function appendMessage(m) {
-    var box = $('roomMessages');
-    if (!box) return;
-    var self = m.user_id === user.id;
-    var div = document.createElement('div');
-    div.className = 'rm-msg' + (self ? ' self' : '');
-    div.innerHTML =
-      '<div class="rm-avatar">' + esc((m.name || 'U').charAt(0).toUpperCase()) + '</div>' +
-      '<div><div class="rm-name">' + esc(m.name || '') + '</div>' +
-      '<div class="rm-bubble"><div class="rm-text">' + esc(m.content || '') + '</div></div></div>';
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-  }
-
-  async function loadRoomMessages(roomId) {
-    var rows = [];
-    try {
-      var r = await window.sb.from('room_messages').select('*')
-        .eq('room_id', roomId).order('created_at').limit(200);
-      if (!r.error) rows = r.data || [];
-    } catch (e) {}
-    rows.forEach(function (m) {
-      appendMessage({ user_id: m.user_id, name: m.nickname || m.name, content: m.content });
-    });
-  }
-
-  function subscribeRoom(roomId) {
-    if (localOnly) return;
-    try {
-      roomChannel = window.sb.channel('room-' + roomId)
-        .on('postgres_changes', {
-          event: 'INSERT', schema: 'public', table: 'room_messages', filter: 'room_id=eq.' + roomId
-        }, function (payload) {
-          var m = payload.new || {};
-          if (m.user_id === user.id) return;
-          appendMessage({ user_id: m.user_id, name: m.nickname || m.name, content: m.content });
-          if (getSoundEnabled()) playReminderSound();
-        })
-        .subscribe();
-    } catch (e) {}
-  }
-
-  async function sendMessage() {
-    var input = $('roomInput');
-    var text = (input.value || '').trim();
-    if (!text) return;
-    if (!currentRoom) { toast('请先进入房间'); return; }
-    input.value = '';
-    appendMessage({ user_id: user.id, name: user.nickname || '我', content: text });
-
-    try {
-      await window.sb.from('room_messages').insert([{
-        room_id: currentRoom.id,
-        user_id: user.id,
-        nickname: user.nickname || '用户',
-        content: text
-      }]);
-    } catch (e) {}
-  }
-
-  /* ============================================================
-     游戏舞台
-     ============================================================ */
-  function resetGameStage() {
-    $('gameStage').classList.remove('active');
-    $('gameTopbar').style.display = 'none';
-    $('gameLobby').style.display = 'flex';
-    $('gomokuWrap').style.display = 'none';
-    $('roomBody').removeAttribute('data-theme');
-  }
-
-  function closeGameDrawer() { $('gameDrawer').classList.remove('open'); }
-
-  async function startGame(game) {
-    closeGameDrawer();
-    if (!currentRoom) { toast('请先进入房间'); return; }
-
-    if (game === 'gomoku') {
-      $('gameStage').classList.add('active');
-      $('gameTopbar').style.display = 'flex';
-      $('gameTopbarTitle').textContent = '五子棋';
-      $('gameLobby').style.display = 'none';
-      $('gomokuWrap').style.display = 'block';
-      $('roomBody').setAttribute('data-theme', 'gomoku');
-      try {
-        await window.Gomoku.open({
-          roomId: String(currentRoom.id),
-          sb: window.sb,
-          user: user,
-          onClose: function () { resetGameStage(); }
-        });
-      } catch (e) {
-        toast('五子棋加载失败：' + (e.message || ''));
-      }
-      return;
-    }
-
-    if (game === 'doudizhu') {
-      // 斗地主是独立页面（自带完整逻辑），直接新窗口打开更稳
-      window.open('./doudizhu.html?room=' + encodeURIComponent(currentRoom.id), '_blank');
-      return;
-    }
-
-    toast('该游戏即将上线');
-  }
-
-  /* ============================================================
-     事件绑定
-     ============================================================ */
-  $('createRoomBtn').onclick = createRoom;
-  $('detailBackBtn').onclick = exitRoom;
-  $('roomSendBtn').onclick = sendMessage;
-  $('roomInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') sendMessage(); });
-  $('gameDrawerBtn').onclick = function () { $('gameDrawer').classList.toggle('open'); };
-  $('pickGameBtn').onclick = function () { $('gameDrawer').classList.add('open'); };
-  document.querySelectorAll('.game-card').forEach(function (c) {
-    c.onclick = function () { startGame(this.dataset.game); };
+// === 房间成员 Presence ===
+function initRoomMembers(){
+  if(state.memberChannel){window.sb.removeChannel(state.memberChannel);state.memberChannel=null}
+  if(!state.room)return;
+  state.memberChannel=window.sb.channel('sq-room-members-'+state.room.id,{config:{presence:{key:currentUser.id}}});
+  state.memberChannel.on('presence',{event:'sync'},function(){
+    var raw=state.memberChannel.presenceState();
+    var arr=[];
+    Object.keys(raw).forEach(function(k){var list=raw[k];if(!list||!list.length)return;var p=list[0];arr.push({id:k,nickname:p.nickname||'用户',avatar_url:p.avatar_url||''})});
+    renderMemberList(arr);
+    var cnt=document.getElementById('memberBtnCount');if(cnt)cnt.textContent=arr.length;
+    var cnt2=document.getElementById('memberCount');if(cnt2)cnt2.textContent=arr.length;
+    var onlineIds=arr.map(function(u){return u.id});
+    cleanupOfflineGamePlayers(onlineIds);
   });
-  $('exitGameBtn').onclick = function () {
-    try { window.Gomoku.close(); } catch (e) {}
-    resetGameStage();
-  };
-  $('fsBtn').onclick = function () {
-    var el = $('gameStage');
-    if (!document.fullscreenElement) { if (el.requestFullscreen) el.requestFullscreen(); }
-    else { document.exitFullscreen(); }
-  };
-  $('memberBtn').onclick = function () { $('memberDrawer').classList.add('open'); };
-  $('memberCloseBtn').onclick = function () { $('memberDrawer').classList.remove('open'); };
-  $('roomSettingsBtn').onclick = function () { $('roomSettings').classList.add('open'); };
-  $('gprefsCloseBtn').onclick = function () { $('roomSettings').classList.remove('open'); };
-  $('soundToggle').checked = getSoundEnabled();
-  $('soundToggle').onchange = function () {
-    localStorage.setItem('sq_sound_enabled', this.checked ? 'true' : 'false');
-  };
-  $('autoMicToggle').checked = localStorage.getItem('sq_auto_mic') === 'true';
-  $('autoMicToggle').onchange = function () {
-    localStorage.setItem('sq_auto_mic', this.checked ? 'true' : 'false');
-  };
+  state.memberChannel.subscribe(function(status){if(status==='SUBSCRIBED'){state.memberChannel.track({user_id:currentUser.id,nickname:currentUser.nickname,avatar_url:currentUser.avatar_url||''})}});
+}
 
-  /* ============================================================
-     初始化
-     ============================================================ */
-  (async function init() {
-    if (window.hidePageLoading) window.hidePageLoading();
-    await loadRooms();
+function renderMemberList(arr){
+  var el=document.getElementById('memberList');if(!el)return;
+  if(!arr.length){el.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:30px 20px;font-size:.85em;">暂无成员</div>';return}
+  el.innerHTML=arr.map(function(u){
+    var has=u.avatar_url&&String(u.avatar_url).indexOf('http')===0;
+    return '<div class="member-row"><div class="avatar" style="'+(has?'background-image:url('+escapeHtml(u.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(u.nickname).charAt(0).toUpperCase()))+'</div><div class="info"><div class="name">'+escapeHtml(u.nickname)+'</div></div></div>';
+  }).join('');
+}
+document.getElementById('memberBtn').onclick=function(){document.getElementById('memberDrawer').classList.add('open')};
+document.getElementById('closeMemberDrawer').onclick=function(){document.getElementById('memberDrawer').classList.remove('open')};
 
-    // 只有登录用户能建房（服务端 RLS 还会再校验一次）
-    $('createRoomBtn').style.display = 'block';
+// === 麦位渲染 ===
+function renderMic(){
+  var el=document.getElementById('micArea');var r=state.room;if(!r){el.innerHTML='';return}
+  if(r.current_game){el.innerHTML='';return}
+  var speaking=r.mic_speaking||[];
+  var iAmOn=speaking.some(function(m){return m.user_id===currentUser.id});
+  var h='<div class="mic-panel"><div class="mic-head"><span class="mic-title">麦位 '+speaking.length+'/4</span></div><div class="mic-seats">';
+  for(var i=0;i<4;i++){var m=speaking[i];h+='<div class="mic-seat'+(m?' on':'')+'">';
+    if(m){var has=m.avatar_url&&String(m.avatar_url).indexOf('http')===0;h+='<div class="mic-avatar" style="'+(has?'background-image:url('+escapeHtml(m.avatar_url)+');background-size:cover;':'')+'">'+(has?'':escapeHtml(String(m.nickname||'U').charAt(0).toUpperCase()))+'</div><div class="mic-name">'+escapeHtml(m.nickname||'')+'</div>'}
+    else{h+='<div class="mic-avatar empty">+</div><div class="mic-name">空位</div>'}
+    h+='</div>'}
+  h+='</div><div class="mic-actions">';
+  if(iAmOn)h+='<button class="mic-btn leave" onclick="removeFromMic(\''+currentUser.id+'\')">下麦</button>';
+  else h+='<button class="mic-btn join" onclick="requestMic()">上麦</button>';
+  h+='</div></div>';el.innerHTML=h;
+}
+async function requestMic(){try{var r=await freshRoom();var speaking=r.mic_speaking||[];if(speaking.length>=4){showToast('麦位已满');return}speaking.push({user_id:currentUser.id,nickname:currentUser.nickname,avatar_url:currentUser.avatar_url||''});await patchRoom({mic_speaking:speaking})}catch(e){}}
+async function removeFromMic(userId){try{var r=await freshRoom();var speaking=(r.mic_speaking||[]).filter(function(m){return m.user_id!==userId});await patchRoom({mic_speaking:speaking})}catch(e){}}
+window.requestMic=requestMic;window.removeFromMic=removeFromMic;
 
-    // 支持 ?room=xxx 直接进入
-    var params = new URLSearchParams(location.search);
-    var rid = params.get('room');
-    if (rid) {
-      await loadRooms();
-      enterRoom(rid);
+// === 游戏大厅 & 核心控制 ===
+function openGameDrawer(){
+  if(state.room&&state.room.game_disabled){showToast('管理员已禁止本房间游戏');return}
+  var game=state.room&&state.room.current_game;
+  if(game&&game.host_id&&game.host_id!==currentUser.id){
+    var hostStillIn=(game.players||[]).some(function(p){return p.user_id===game.host_id});
+    if(hostStillIn){showToast('只有房主能切换游戏');return}
+  }
+  document.getElementById('drawerBackdrop').classList.add('open');document.getElementById('gameDrawer').classList.add('open');
+  var cur=game?game.type:null;
+  document.getElementById('gameGrid').innerHTML=GAMES.map(function(g){
+    return '<div class="game-card'+(cur===g.id?' active':'')+'" onclick="selectGame(\''+g.id+'\')"><div class="game-card-icon">'+g.icon+'</div><div class="game-card-name">'+g.name+'</div><div class="game-card-desc">'+g.desc+'</div></div>';
+  }).join('');
+}
+function closeGameDrawer(){document.getElementById('drawerBackdrop').classList.remove('open');document.getElementById('gameDrawer').classList.remove('open')}
+document.getElementById('gameBtn').onclick=openGameDrawer;
+document.getElementById('drawerBackdrop').onclick=closeGameDrawer;
+
+function gameDeepEqual(a,b){if(a===b)return true;if(typeof a!=='object'||a===null||typeof b!=='object'||b===null)return false;var ka=Object.keys(a).sort(),kb=Object.keys(b).sort();if(ka.length!==kb.length)return false;for(var i=0;i<ka.length;i++){if(ka[i]!==kb[i]||!gameDeepEqual(a[ka[i]],b[kb[i]]))return false;}return true}
+async function updateGame(patch){
+  var res=await window.sb.from('rooms').update({current_game:patch}).eq('id',state.room.id).select().single();
+  if(res.error)throw res.error;
+  if(!gameDeepEqual(patch,res.data?res.data.current_game:null)) throw new Error('状态未写入');
+  state.room=res.data;renderMic();renderGame();
+}
+window.updateGame = updateGame;
+
+async function selectGame(gameId){
+  closeGameDrawer();
+  if(state.room.current_game){showConfirm('切换游戏','当前有游戏进行中，确定切换？',async function(){await startGame(gameId)})}
+  else await startGame(gameId);
+}
+async function startGame(gameId){
+  var g=GAMES.find(function(x){return x.id===gameId});if(!g)return;
+  var newGame={type:gameId,status:'lobby',host_id:currentUser.id,players:[{user_id:currentUser.id,nickname:currentUser.nickname,avatar_url:currentUser.avatar_url||'',seat:0}],state:null};
+  try{await updateGame(newGame);showToast('已创建「'+g.name+'」')}catch(e){}
+}
+window.selectGame = selectGame;
+
+async function joinGame(){
+  var game=state.room.current_game;var g=GAMES.find(function(x){return x.id===game.type});
+  var players=game.players||[];
+  if(players.length>=g.max){showToast('人数已满');return}
+  players=players.concat([{user_id:currentUser.id,nickname:currentUser.nickname,avatar_url:currentUser.avatar_url||'',seat:players.length}]);
+  await updateGame(Object.assign({},game,{players:players})); state.spectating=false;
+}
+window.joinGame = joinGame;
+
+async function beginGame(){
+  var game=state.room.current_game;
+  if(game.host_id!==currentUser.id)return;
+  var g=GAMES.find(function(x){return x.id===game.type});
+  if(game.players.length<g.min){showToast('人数不足');return}
+  // 调用分离的游戏初始化引擎
+  var st = window.RoomGames ? window.RoomGames.initState(game.type, game.players) : {};
+  await updateGame(Object.assign({},game,{status:'playing',state:st}));
+}
+window.beginGame = beginGame;
+
+// === 渲染分发 ===
+function renderGame(){
+  var r=state.room;var stage=document.getElementById('gameStage');var body=document.getElementById('roomBody');
+  if(!r||!r.current_game){stage.classList.remove('active');body.removeAttribute('data-theme');closeGameModal();return}
+  var game=r.current_game;body.setAttribute('data-theme',game.type);
+  var g=GAMES.find(function(x){return x.id===game.type});
+  var players=game.players||[]; var inGame=players.some(function(p){return p.user_id===currentUser.id});
+  
+  stage.classList.add('active');
+  document.getElementById('gpmPlayers').innerHTML=players.map(function(p){
+    var has=p.avatar_url&&String(p.avatar_url).indexOf('http')===0;
+    return '<div class="gpm-player"><div class="gpm-avatar" style="'+(has?'background-image:url('+escapeHtml(p.avatar_url)+');background-size:cover;':'')+'">'+(has?'':escapeHtml(String(p.nickname||'U').charAt(0).toUpperCase()))+'</div><div class="gpm-name">'+escapeHtml(p.nickname||'')+(p.user_id===game.host_id?' 👑':'')+'</div></div>';
+  }).join('');
+
+  var el=document.getElementById('gameContent');
+  if(game.status==='lobby'){
+    // 渲染等待大厅...
+    el.innerHTML='<div class="game-lobby"><div class="lobby-icon">'+g.icon+'</div><div class="lobby-title">'+g.name+'</div><div class="lobby-desc">'+g.desc+' · 当前 '+players.length+' 人</div>'+
+      '<div class="lobby-players">'+players.map(function(p){return '<div class="lobby-player'+(p.user_id===game.host_id?' host':'')+'">'+escapeHtml(p.nickname)+'</div>'}).join('')+'</div>'+
+      (game.host_id===currentUser.id?'<button class="lobby-btn start" onclick="beginGame()">开始游戏</button>':'<div class="lobby-hint">等待房主开始…</div>')+
+      (!inGame?'<button class="lobby-btn join" onclick="joinGame()" style="margin-top:10px;">加入游戏</button>':'')+'</div>';
+  } else {
+    // 动态路由给外部分离的 room-games.js 中的渲染器
+    if(window.RoomGames && window.RoomGames[game.type] && window.RoomGames[game.type].render){
+      window.RoomGames[game.type].render(game, el);
+    } else {
+      el.innerHTML='<div style="text-align:center;padding:20px;">模块加载中…</div>';
     }
-  })();
+  }
+}
+window.renderGame = renderGame;
+
+// 关闭游戏内弹窗 & 清理离线
+function closeGameModal(){var layer=document.getElementById('gameModalLayer');if(layer){layer.classList.remove('show');layer.innerHTML=''}}
+window.closeGameModal=closeGameModal;
+
+async function cleanupOfflineGamePlayers(onlineIds){
+  // 简化版，交由游戏内处理
+}
+
+function startGameTick(){ if(gameTickInterval)clearInterval(gameTickInterval); gameTickInterval=setInterval(()=>{ if(window.RoomGames && state.room && state.room.current_game) window.RoomGames.tick(state.room.current_game); },1000); }
+function stopOfflineCheck(){}
+window.startGameTick = startGameTick;
+window.stopOfflineCheck = stopOfflineCheck;
+
+// 聊天
+async function loadMessages(){
+  var res=await window.sb.from('room_messages').select('*').eq('room_id',state.room.id).order('created_at',{ascending:false}).limit(200);
+  if(!res.error) state.messages=(res.data||[]).slice().reverse(); renderMessages();
+}
+function renderMessages(){
+  var c=document.getElementById('roomMessages');
+  if(!state.messages.length){c.innerHTML='<div class="empty-state" style="font-size:.8em;color:var(--text-muted)">还没有人说话</div>';return}
+  c.innerHTML=state.messages.map(function(m){
+    var self=m.user_id===currentUser.id;
+    return '<div class="rm-msg'+(self?' self':'')+'"><div class="rm-avatar">'+escapeHtml(String(m.author||'U').charAt(0).toUpperCase())+'</div><div class="rm-bubble"><div class="rm-name">'+escapeHtml(m.author||'')+'</div><div class="rm-text">'+escapeHtml(m.content||'')+'</div></div></div>';
+  }).join(''); c.scrollTop=c.scrollHeight;
+}
+async function sendMsg(){
+  var input=document.getElementById('roomInput'),text=input.value.trim();if(!text)return;input.value='';
+  await window.sb.from('room_messages').insert([{room_id:state.room.id,user_id:currentUser.id,author:currentUser.nickname,content:text}]);
+}
+document.getElementById('roomSendBtn').onclick=sendMsg;
+document.getElementById('roomInput').addEventListener('keydown',function(e){if(e.key==='Enter')sendMsg()});
+
+function subscribe(){
+  if(state.msgChannel)window.sb.removeChannel(state.msgChannel);
+  state.roomChannel=window.sb.channel('sq-room-'+state.room.id)
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'rooms',filter:'id=eq.'+state.room.id},function(p){
+      state.room=p.new; renderMic(); renderGame();
+    }).subscribe();
+  state.msgChannel=window.sb.channel('sq-room-msg-'+state.room.id)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'room_messages',filter:'room_id=eq.'+state.room.id},function(p){
+      state.messages.push(p.new); renderMessages();
+    }).subscribe();
+}
+
+// 初始化
+(function init(){
+  var rid=new URLSearchParams(location.search).get('id');
+  if(rid)enterRoom(rid);else{showList();loadRooms()}
 })();
 </script>
 </body>

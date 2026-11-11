@@ -3,97 +3,109 @@
 <head>
 <meta charset="UTF-8" />
 <link rel="manifest" href="./manifest.json" />
-<meta name="theme-color" content="#2e7d32" />
+<meta name="theme-color" content="#65A30D" />
 <link rel="apple-touch-icon" href="./icon.svg" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Seven戚 · 帖子广场</title>
+<link rel="stylesheet" href="./theme.css" />
 <script src="./vendor/supabase.js"></script>
 <script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/script>');</script>
 <script src="./vendor/purify.min.js"></script>
 <script>window.DOMPurify||document.write('<script src="https://unpkg.com/dompurify@3/dist/purify.min.js"><\/script>');</script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;user-select:none}
-:root{--bg:#f5faf5;--bg-card:#fff;--bg-input:#eaf3ea;--border:#c8e0c8;--text:#1e3a2e;--text-muted:#5a7a6a;--text-light:#8aaa9a;--primary:#2e7d32;--primary-light:#4caf50;--primary-bg:#e8f5e9;--shadow:0 8px 32px rgba(46,125,50,0.12);--radius:16px;--radius-sm:10px;--font:"Space Grotesk","PingFang SC","Segoe UI",system-ui,sans-serif;--danger:#e57373;--danger-bg:#ffebee;--danger-text:#c62828;--official-blue:#2b6cff;--success:#66bb6a;--success-bg:#e8f5e9;--warning:#ffa726;--warning-bg:#fff3e0}
-html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);overflow:hidden}
-#mainApp{display:flex;flex-direction:column;height:100vh;height:100dvh;background:var(--bg)}
-.app-header{flex-shrink:0;padding:12px 20px;background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;z-index:50;min-height:56px}
-.app-header .brand{font-weight:900;font-size:1.1em;color:var(--text);display:flex;align-items:center;gap:.4em;cursor:pointer}
-.app-header .brand span{color:var(--primary)}
-.app-header .brand small{font-weight:400;font-size:.55em;color:var(--text-muted);margin-left:.3em}
-.app-header .user-area{display:flex;align-items:center;gap:10px;cursor:pointer;padding:4px 10px 4px 6px;border-radius:99px}
-.app-header .avatar{width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px;background-size:cover;background-position:center}
-.app-header .user-name{font-weight:600;font-size:.85em;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.app-tabs{flex-shrink:0;display:flex;background:rgba(255,255,255,.96);border-top:1px solid var(--border);padding:6px 0 calc(6px + env(safe-area-inset-bottom,0px));z-index:50}
-.tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;font-family:var(--font);font-size:.6em;font-weight:600;color:var(--text-muted);padding:4px 0;cursor:pointer;text-decoration:none;position:relative}
-.tab-btn .tab-icon{font-size:1.6em;line-height:1.2;display:flex;align-items:center;justify-content:center;width:1.7em;height:1.7em}
-.tab-btn .tab-icon svg{width:100%;height:100%;display:block;stroke:currentColor;fill:none}
-.tab-btn.active{color:var(--primary)}
-.tab-btn.active::after{content:'';position:absolute;top:-1px;left:30%;right:30%;height:3px;background:var(--primary);border-radius:0 0 4px 4px}
-.banned-banner{flex-shrink:0;background:#ffebee;color:#c62828;padding:6px 16px;font-size:.8em;font-weight:600;text-align:center;border-bottom:1px solid #ffcdd2;display:none}
+/* 仅保留 posts.html 独有样式 */
+.banned-banner{flex-shrink:0;background:var(--danger-bg);color:var(--danger);padding:8px 16px;font-size:0.8em;font-weight:600;text-align:center;border-bottom:1px solid #FECACA;display:none;transition:var(--transition-smooth);}
 .banned-banner.active{display:block}
-.app-content{flex:1;min-height:0;overflow-y:auto;padding:16px 20px}
-.posts-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px}
-.posts-header .left{display:flex;gap:6px;align-items:center;overflow-x:auto;max-width:100%}
-.category-btn{padding:4px 14px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--text-muted);font-size:.7em;font-weight:600;cursor:pointer;white-space:nowrap}
-.category-btn.active{background:var(--primary);border-color:var(--primary);color:#fff}
-.new-post-btn{padding:6px 18px;border-radius:99px;border:none;background:var(--primary);color:#fff;font-weight:700;font-size:.75em;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:4px}
-.floating-post-btn{position:fixed;bottom:85px;right:20px;z-index:1000;width:56px;height:56px;border-radius:50%;background:var(--primary);color:#fff;border:none;box-shadow:0 4px 16px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none}
-.floating-post-btn svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.post-card{background:var(--bg-card);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:12px;border:1px solid var(--border);cursor:pointer;transition:box-shadow .2s}
-.post-card:hover{box-shadow:var(--shadow)}
-.post-card .post-author{display:flex;align-items:center;gap:10px;margin-bottom:2px;flex-wrap:wrap}
-.post-card .post-author .avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;color:#fff;background:var(--primary);background-size:cover;background-position:center}
-.post-card .post-author .name{font-weight:600;font-size:.9em}
-.post-card .post-author .official-tag{background:var(--official-blue);color:#fff;font-size:.55em;padding:0 6px;border-radius:99px}
-.post-card .post-author .category-tag{background:var(--primary-bg);color:var(--primary);font-size:.55em;font-weight:700;padding:0 8px;border-radius:99px;border:1px solid var(--border)}
-.post-card .post-author .time{font-size:.7em;color:var(--text-muted);margin-left:auto}
-.post-card .post-title{font-weight:700;font-size:1em;margin:4px 0 2px 0}
-.post-card .post-content{font-size:.85em;color:var(--text);line-height:1.6;margin-bottom:6px;word-break:break-word}
-.post-card .post-content img{max-width:100%;border-radius:8px;margin:6px 0}
+.app-content{flex:1;min-height:0;overflow-y:auto;padding:20px 16px;}
+
+.posts-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.posts-header .left{display:flex;gap:8px;align-items:center;overflow-x:auto;max-width:100%;scrollbar-width:none;}
+.posts-header .left::-webkit-scrollbar{display:none}
+.category-btn{padding:6px 16px;border-radius:var(--radius-pill);border:1px solid var(--border-subtle);background:var(--bg-surface);color:var(--text-muted);font-size:0.8em;font-weight:600;cursor:pointer;white-space:nowrap;transition:var(--transition-smooth);}
+.category-btn.active{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 2px 8px rgba(132,204,22,0.3);}
+.new-post-btn{padding:8px 20px;border-radius:var(--radius-pill);border:none;background:var(--brand);color:#fff;font-weight:600;font-size:0.85em;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;transition:var(--transition-smooth);}
+.new-post-btn:hover{background:var(--brand-light);transform:translateY(-1px)}
+.new-post-btn:active{transform:scale(.96)}
+.floating-post-btn{position:fixed;bottom:90px;right:20px;z-index:1000;width:56px;height:56px;border-radius:50%;background:var(--brand);color:#fff;border:none;box-shadow:0 8px 24px rgba(132,204,22,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;transition:var(--transition-smooth);}
+.floating-post-btn:hover{transform:translateY(-4px) scale(1.05);background:var(--brand-light);}
+.floating-post-btn:active{transform:scale(0.92)}
+.floating-post-btn svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+
+/* 帖子卡片 */
+.post-card{background:var(--bg-surface);border-radius:var(--radius-md);padding:16px;margin-bottom:12px;border:1px solid var(--border);cursor:pointer;box-shadow:var(--shadow-sm);transition:var(--transition-smooth);}
+.post-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.post-card:active{transform:scale(.98)}
+.post-card .post-author{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.post-card .post-author .avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:15px;color:var(--brand-dark);background:var(--brand-bg);background-size:cover;background-position:center;}
+.post-card .post-author .name{font-weight:600;font-size:.95em;color:var(--text);}
+.post-card .post-author .official-tag{ background:#EFF6FF; color:#2563EB; font-size:.6em; padding:2px 8px; border-radius:var(--radius-pill); font-weight:600; border:1px solid #BFDBFE; }
+.post-card .post-author .category-tag{background:var(--bg);color:var(--text-muted);font-size:.6em;font-weight:600;padding:2px 8px;border-radius:var(--radius-pill);border:1px solid var(--border);}
+.post-card .post-author .time{font-size:.75em;color:var(--text-light);margin-left:auto;}
+.post-card .post-title{font-weight:700;font-size:1.05em;margin:4px 0 6px 0;color:var(--text);}
+.post-card .post-content{font-size:.88em;color:var(--text-muted);line-height:1.6;margin-bottom:10px;word-break:break-word;}
+.post-card .post-content img{max-width:100%;border-radius:var(--radius-sm);margin:8px 0}
 .post-card .post-content.clamped{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
-.post-card .post-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:.65em;color:var(--text-light);border-top:1px solid var(--border);padding-top:8px}
-.post-card .post-footer .actions{display:flex;align-items:center;gap:8px}
-.post-card .post-footer .actions button{background:none;border:none;cursor:pointer;color:inherit;font-size:inherit;display:inline-flex;align-items:center;gap:3px;padding:2px 4px;border-radius:4px}
+.post-card .post-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:.75em;color:var(--text-light);border-top:1px solid var(--border);padding-top:12px;}
+.post-card .post-footer .actions{display:flex;align-items:center;gap:12px}
+.post-card .post-footer .actions button{background:none;border:none;cursor:pointer;color:inherit;font-size:1em;display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:8px;transition:var(--transition-smooth);}
+.post-card .post-footer .actions button:hover{background:var(--bg)}
 .post-card .post-footer .actions .del-btn{color:var(--danger)}
-.post-card .post-footer .actions .report-btn{color:var(--warning)}
-.empty-state{text-align:center;color:var(--text-muted);padding:40px 20px}
+.post-card .post-footer .actions .report-btn{color:#F59E0B}
+
+/* 加载与空状态 */
+.empty-state{text-align:center;color:var(--text-muted);padding:40px 20px;font-size:.9em}
 .loading-state{text-align:center;padding:40px 20px}
-.spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
 @keyframes spin{to{transform:rotate(360deg)}}
-#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:10px 24px;border-radius:99px;opacity:0;transition:.4s;z-index:9999;pointer-events:none}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(-10px)}
+
+/* 详情弹层 */
 .detail-overlay{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;z-index:999}
-.detail-overlay.active{display:flex}
-.detail-header{display:flex;align-items:center;padding:12px 16px;background:var(--bg-card);border-bottom:1px solid var(--border);flex-shrink:0;gap:8px}
-.detail-header .back-btn{background:none;border:none;cursor:pointer;padding:4px;color:var(--text);display:flex}
+.detail-overlay.active{display:flex;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.detail-header{display:flex;align-items:center;padding:12px 16px;background:var(--bg-glass);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);flex-shrink:0;gap:8px;position:sticky;top:0;z-index:10;}
+.detail-header .back-btn{background:none;border:none;cursor:pointer;padding:6px;color:var(--text);display:flex;border-radius:8px;transition:var(--transition-smooth);}
+.detail-header .back-btn:hover{background:var(--border)}
 .detail-header .back-btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.detail-content{flex:1;overflow-y:auto;padding:16px 20px}
-.detail-post{margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px}
-.detail-post .post-author{display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap}
-.detail-post .post-author .avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;color:#fff;background:var(--primary);background-size:cover;background-position:center}
-.detail-post .post-author .name{font-weight:600;font-size:.9em}
-.detail-post .post-author .official-tag{background:var(--official-blue);color:#fff;font-size:.55em;padding:0 6px;border-radius:99px}
-.detail-post .post-author .time{font-size:.7em;color:var(--text-muted);margin-left:auto}
-.detail-post .post-author .report-btn-detail{background:none;border:none;color:var(--warning);cursor:pointer;font-size:.7em;display:inline-flex;align-items:center;gap:3px;padding:4px 8px;border-radius:99px;font-family:inherit}
-.detail-post .post-title{font-weight:700;font-size:1.1em;margin:4px 0 8px 0}
-.detail-post .post-content{font-size:.95em;color:var(--text);line-height:1.6;word-break:break-word}
-.detail-post .post-content img{max-width:100%;border-radius:8px;margin:6px 0}
-.detail-comments{flex:1;margin-top:8px}
-.detail-comments .comment-item{display:flex;gap:10px;padding:10px 4px;border-bottom:1px solid var(--border)}
-.detail-comments .comment-item .avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:12px;color:#fff;background:var(--primary);background-size:cover;background-position:center}
+.detail-content{flex:1;overflow-y:auto;padding:20px 16px}
+.detail-post{background:var(--bg-surface);border-radius:var(--radius-md);padding:20px;margin-bottom:20px;border:1px solid var(--border);box-shadow:var(--shadow-sm);}
+.detail-post .post-author{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.detail-post .post-author .avatar{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:16px;color:var(--brand-dark);background:var(--brand-bg);background-size:cover;background-position:center;}
+.detail-post .post-author .name{font-weight:600;font-size:1em;color:var(--text);}
+.detail-post .post-author .official-tag{ background:#EFF6FF; color:#2563EB; font-size:.6em; padding:2px 8px; border-radius:var(--radius-pill); font-weight:600; border:1px solid #BFDBFE; }
+.detail-post .post-author .time{font-size:.8em;color:var(--text-light);margin-left:auto;}
+.detail-post .post-title{font-weight:700;font-size:1.2em;margin:8px 0 12px 0;color:var(--text);}
+.detail-post .post-content{font-size:1em;color:var(--text);line-height:1.7;word-break:break-word;}
+
+/* 评论 */
+.detail-comments{flex:1;margin-top:12px;display:flex;flex-direction:column;background:var(--bg-surface);border-radius:var(--radius-md);border:1px solid var(--border);padding:0 16px;box-shadow:var(--shadow-sm);}
+.detail-comments .comment-item{display:flex;gap:12px;padding:16px 0;border-bottom:1px solid var(--border-subtle);background:transparent;transition:none;}
+.detail-comments .comment-item:last-child{border-bottom:none;}
+.detail-comments .comment-item .avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:13px;color:var(--brand-dark);background:var(--brand-bg);background-size:cover;background-position:center;}
 .detail-comments .comment-item .body{flex:1}
-.detail-comments .comment-item .meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.detail-comments .comment-item .meta .name{font-weight:600;font-size:.85em}
-.detail-comments .comment-item .meta .official-tag{background:var(--official-blue);color:#fff;font-size:.5em;padding:0 4px;border-radius:99px}
-.detail-comments .comment-item .meta .time{font-size:.65em;color:var(--text-muted)}
-.detail-comments .comment-item .meta .reply-btn{background:none;border:none;color:var(--text-muted);font-size:.65em;cursor:pointer;margin-left:auto;font-family:inherit;}
-.detail-comments .comment-item .txt{font-size:.85em;line-height:1.5;margin-top:2px}
-.detail-comments .comment-item .reply-to{background:var(--bg-input);padding:4px 8px;border-radius:4px;font-size:.8em;color:var(--text-muted);margin-top:4px;border-left:2px solid var(--primary);}
-.detail-input-area{display:flex;gap:8px;padding:12px 16px;background:var(--bg-card);border-top:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;}
-.detail-input-area input{flex:1;padding:10px;border-radius:99px;border:2px solid var(--border);font-family:inherit;font-size:.85em;outline:none}
-.detail-input-area button{padding:10px 20px;border-radius:99px;border:none;background:var(--primary);color:#fff;font-weight:700;cursor:pointer;font-family:inherit}
-.cancel-reply{display:none;width:100%;font-size:.7em;color:var(--text-muted);margin-bottom:4px;cursor:pointer;text-align:right;}
-.cancel-reply.active{display:block;}
+.detail-comments .comment-item .meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.detail-comments .comment-item .meta .name{font-weight:600;font-size:.9em;color:var(--text-muted);}
+.detail-comments .comment-item .meta .time{font-size:.7em;color:var(--text-light)}
+.detail-comments .comment-item .txt{font-size:.9em;line-height:1.6;color:var(--text);margin-top:4px;}
+
+.detail-input-area{display:flex;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--bg-surface);border-top:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;box-shadow:0 -4px 12px rgba(0,0,0,.02);z-index:10;}
+.detail-input-area input{flex:1;padding:12px 16px;border-radius:var(--radius-pill);border:1px solid var(--border-subtle);background:var(--bg);font-family:inherit;font-size:.9em;outline:none;transition:var(--transition-smooth);}
+.detail-input-area input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-bg)}
+.detail-input-area button{padding:12px 24px;border-radius:var(--radius-pill);border:none;background:var(--brand);color:#fff;font-weight:600;cursor:pointer;font-family:inherit;transition:var(--transition-smooth);}
+.detail-input-area button:active{transform:scale(.96)}
+</style>
+
+<style>
+.comment-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle); }
+.comment-item .body { flex: 1; }
+.comment-item .meta { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 0.85em; color: var(--text-muted); }
+.comment-item .meta .name { font-weight: 600; color: var(--text); }
+.comment-item .txt { font-size: 0.9em; line-height: 1.5; color: var(--text); }
+.comment-item .actions { display: flex; gap: 12px; margin-top: 8px; font-size: 0.8em; }
+.comment-item .actions button { background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 0; font-family: inherit; }
+.comment-item .actions button:hover { color: var(--brand); }
+.comment-children { margin-left: 30px; background: var(--bg); padding: 10px 14px; border-radius: 8px; margin-top: 8px; }
+.reply-tag { font-size: 0.85em; color: var(--brand); margin-bottom: 4px; }
+#cancelReplyBtn { display: none; background: var(--bg); border: 1px solid var(--border); padding: 6px 12px; border-radius: 99px; font-size: 0.8em; color: var(--text-muted); cursor: pointer; margin-right: 8px; }
 </style>
 </head>
 <body>
@@ -101,264 +113,295 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 <div id="header-container"></div>
 <div class="banned-banner" id="bannedBanner">账号已被封禁，无法发布新帖或评论。解封时间：<span id="bannedUntilDisplay"></span></div>
 <div class="app-content" id="postContent">
-<div class="posts-header">
-<div class="left" id="categoryFilter"><button class="category-btn active" data-cat="全部" onclick="setCategory('全部', this)">全部</button></div>
-<div style="display:flex;gap:6px;">
-<button class="new-post-btn" id="adminPanelBtn" style="display:none;background:var(--danger);" onclick="openAdminPanel()">管理</button>
-<a href="./new-post.html" class="new-post-btn" id="newPostBtn">发帖</a>
+  <div class="posts-header">
+    <div class="left" id="categoryFilter"><button class="category-btn active" data-cat="全部" onclick="setCategory('全部', this)">全部</button></div>
+    <div style="display:flex;gap:8px;">
+      <button class="new-post-btn" id="adminPanelBtn" style="display:none;background:#64748B;color:#fff;box-shadow:0 2px 8px rgba(100,116,139,0.25);" onclick="openAdminPanel()">管理</button>
+      <a href="./new-post.html" class="new-post-btn" id="newPostBtn">发帖</a>
+    </div>
+  </div>
+  <div id="postList">
+  <div class="skeleton-card" style="margin-bottom:12px;">
+    <div class="skeleton-header"><div class="skeleton skeleton-avatar"></div><div class="skeleton skeleton-title"></div></div>
+    <div class="skeleton skeleton-line" style="width:80%;margin-top:8px;"></div>
+    <div class="skeleton skeleton-line short"></div>
+  </div>
+  <div class="skeleton-card" style="margin-bottom:12px;">
+    <div class="skeleton-header"><div class="skeleton skeleton-avatar"></div><div class="skeleton skeleton-title"></div></div>
+    <div class="skeleton skeleton-line short" style="margin-top:8px;"></div>
+  </div>
+  <div class="skeleton-card">
+    <div class="skeleton-header"><div class="skeleton skeleton-avatar"></div><div class="skeleton skeleton-title"></div></div>
+    <div class="skeleton skeleton-line" style="width:60%;margin-top:8px;"></div>
+  </div>
 </div>
-</div>
-<div id="postList"><div class="loading-state"><div class="spinner"></div>加载中...</div></div>
 </div>
 <div id="footer-container"></div>
 </div>
+
 <a href="./new-post.html" class="floating-post-btn" id="floatingPostBtn">
-<svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  <svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></svg>
 </a>
 
 <div class="detail-overlay" id="detailOverlay">
-<div style="display:flex;flex-direction:column;height:100%;">
-<div class="detail-header">
-<button class="back-btn" id="closeDetail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
-<span style="font-weight:700;font-size:1em;">帖子详情</span>
-</div>
-<div class="detail-content" id="detailContent"></div>
-<div class="detail-input-area">
-<div class="cancel-reply" id="cancelReplyBtn">取消回复</div>
-<input type="text" id="detailCommentInput" placeholder="写评论…" maxlength="200" />
-<button id="detailSendCommentBtn">发送</button>
-</div>
-</div>
+  <div style="display:flex;flex-direction:column;height:100%;">
+    <div class="detail-header">
+      <button class="back-btn" id="closeDetail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <span style="font-weight:700;font-size:1.05em;">帖子详情</span>
+    </div>
+    <div class="detail-content" id="detailContent"></div>
+    <div class="detail-input-area">
+      <button id="cancelReplyBtn">取消回复</button><button id="cancelReplyBtn">取消回复</button><input type="text" id="detailCommentInput" placeholder="写评论…" maxlength="200" />
+      <button id="detailSendCommentBtn">发送</button>
+    </div>
+  </div>
 </div>
 
-<div id="toast"></div>
 <script src="./common.js"></script>
+
+
 <script>
 var currentUser = getSessionUser();
 if (!currentUser || !currentUser.id) window.location.href = './index.html';
-var isAdmin = (currentUser.is_admin === true);
-if (isAdmin) document.getElementById('adminPanelBtn').style.display = 'inline-flex';
+
+if (currentUser.is_admin) {
+  document.getElementById('adminPanelBtn').style.display = 'inline-flex';
+}
 renderHeader('帖子广场', 'posts');
 renderFooter('posts');
 
-function showToast(msg) {
-    var t = document.getElementById('toast');
-    if(!t) return; t.textContent = msg; t.classList.add('show');
-    clearTimeout(window.toastTimer); window.toastTimer = setTimeout(function() { t.classList.remove('show'); }, 3000);
-}
-function escapeHtml(s) { if (!s) return ''; return String(s).replace(/[&<>"']/g, function(c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-function getUserAvatar(user) {
-    if (user && user.avatar_url) return user.avatar_url;
-    var name = user ? user.nickname : 'U';
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="#2e7d32" rx="50"/><text x="50" y="58" font-size="40" text-anchor="middle" fill="white" font-family="sans-serif">' + name.charAt(0).toUpperCase() + '</text></svg>';
-    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-}
+var categories = [], posts = [], currentCategory = '全部', profilesMapCache = null;
 
-var categories = [], posts = [], currentCategory = '全部', commentCountMap = {}, profilesMapCache = null;
-
-async function fetchProfilesMap(force) {
-    if (!force && profilesMapCache) return profilesMapCache;
+async function fetchProfilesMap() {
+    if (profilesMapCache) return profilesMapCache;
     var r = await window.sb.from('public_profiles').select('id, nickname, avatar_url');
     if (r.error) return {};
     var map = {}; (r.data || []).forEach(function(u) { map[u.id] = u; });
     profilesMapCache = map; return map;
 }
-async function fetchCategories() { var res = await window.sb.from('categories').select('*').order('sort_order'); return res.data || []; }
-async function fetchPosts() {
-    var res = await window.sb.from('posts').select('*').order('created_at', { ascending: false });
-    if (res.error) throw res.error;
-    var data = res.data || [];
+
+async function loadAll() {
+    var list = document.getElementById('postList');
+    list.innerHTML = `
+  <div class="skeleton-card" style="margin-bottom:12px;">
+    <div class="skeleton-header"><div class="skeleton skeleton-avatar"></div><div class="skeleton skeleton-title"></div></div>
+    <div class="skeleton skeleton-line" style="width:80%;margin-top:8px;"></div>
+    <div class="skeleton skeleton-line short"></div>
+  </div>
+  <div class="skeleton-card" style="margin-bottom:12px;">
+    <div class="skeleton-header"><div class="skeleton skeleton-avatar"></div><div class="skeleton skeleton-title"></div></div>
+    <div class="skeleton skeleton-line short" style="margin-top:8px;"></div>
+  </div>
+  <div class="skeleton-card">
+    <div class="skeleton-header"><div class="skeleton skeleton-avatar"></div><div class="skeleton skeleton-title"></div></div>
+    <div class="skeleton skeleton-line" style="width:60%;margin-top:8px;"></div>
+  </div>
+`;
     try {
-        var map = await fetchProfilesMap(true);
-        data.forEach(function(r) { r.users = (r.user_id && map[r.user_id]) ? map[r.user_id] : null; });
-    } catch (e) {}
-    return data;
-}
-async function fetchAllCommentCounts() {
-    var res = await window.sb.from('post_comments').select('post_id');
-    if (!res.error) {
-        commentCountMap = {};
-        (res.data || []).forEach(function(c) { commentCountMap[c.post_id] = (commentCountMap[c.post_id] || 0) + 1; });
+        // 1. 获取分类
+        var r1 = await window.sb.from('categories').select('*').order('sort_order');
+        if (r1.error) throw new Error("分类加载失败: " + r1.error.message);
+        categories = r1.data || [];
+        
+        // 2. 获取帖子
+        var r2 = await window.sb.from('posts').select('*').order('created_at', { ascending: false });
+        if (r2.error) throw new Error("帖子加载失败: " + r2.error.message);
+        posts = r2.data || [];
+        
+        // 3. 获取用户头像
+        var r3 = await window.sb.from('public_profiles').select('id, nickname, avatar_url');
+        var map = {};
+        if (!r3.error) {
+            (r3.data || []).forEach(function(u) { map[u.id] = u; });
+        }
+        posts.forEach(function(p) { p.users = map[p.user_id] || null; });
+        
+        // 4. 渲染
+        renderCategoryFilter();
+        renderPosts();
+        if(window.hideLoading) window.hideLoading();
+    } catch (e) {
+        list.innerHTML = '<div class="empty-state" style="color:red; padding:20px;">' + e.message + '</div>';
+        if(window.hideLoading) window.hideLoading();
     }
 }
 
 function renderCategoryFilter() {
     var container = document.getElementById('categoryFilter');
+    if (!container) return;
     var html = '<button class="category-btn active" data-cat="全部" onclick="setCategory(\'全部\', this)">全部</button>';
     categories.filter(function(x) { return x.name !== '未分类'; }).forEach(function(x) {
         html += '<button class="category-btn" data-cat="' + x.id + '" onclick="setCategory(' + x.id + ', this)">' + escapeHtml(x.name) + '</button>';
     });
     container.innerHTML = html;
 }
+
 function setCategory(cat, btn) {
     document.querySelectorAll('#categoryFilter .category-btn').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active'); currentCategory = cat; renderPosts();
 }
 window.setCategory = setCategory;
 
-function renderPostContent(post) {
-    var html = '';
-    if (post.content && post.content.includes('<')) {
-        if (window.DOMPurify) html = DOMPurify.sanitize(post.content);
-        else html = '<div style="white-space:pre-wrap;">' + escapeHtml(post.content) + '</div>';
-    } else {
-        html = '<div style="white-space:pre-wrap;">' + escapeHtml(post.content || '') + '</div>';
-    }
-    if (post.image_url && !html.includes('<img')) html += '<img src="' + escapeHtml(post.image_url) + '" style="max-width:100%;border-radius:8px;margin-top:6px;" />';
-    return html;
-}
-
-async function renderPosts() {
+function renderPosts() {
     var list = document.getElementById('postList');
     var filtered = posts.filter(function(p) { return currentCategory === '全部' || p.category_id === currentCategory; });
-    if (!filtered.length) { list.innerHTML = '<div class="empty-state">暂无帖子</div>'; return; }
+    
+    if (!filtered.length) { 
+        list.innerHTML = '<div class="empty-state">暂无帖子，快来抢沙发~</div>'; 
+        return; 
+    }
+    
     var html = '';
-    for (var i = 0; i < filtered.length; i++) {
-        var p = filtered[i], user = p.users || null;
+    filtered.forEach(function(p) {
+        var user = p.users;
         var name = user ? user.nickname : (p.author || '匿名');
-        var avatar = user ? (user.avatar_url || getUserAvatar(user)) : getUserAvatar({ nickname: p.author });
+        var avatar = user ? (user.avatar_url || getUserAvatar(user)) : getUserAvatar({ nickname: name });
         var time = new Date(p.created_at).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-        var catName = '';
-        if (p.category_id) { var _cat = categories.find(function(c) { return c.id === p.category_id; }); if (_cat && _cat.name && _cat.name !== '未分类') catName = _cat.name; }
-        var raw = p.content ? p.content.replace(/<[^>]*>/g, '') : '';
-        var clamped = raw.length > 150 || (p.content && p.content.split('\n').length > 5);
-        var commentCount = commentCountMap[p.id] || 0;
-        var canDelete = isAdmin || (currentUser && currentUser.id === p.user_id);
-        var delBtn = canDelete ? '<button class="del-btn" data-action="delete" data-id="' + p.id + '">删除</button>' : '';
-        var reportBtn = '';
-        if (currentUser && currentUser.id !== p.user_id && p.user_id) {
-            var snapshot = ((p.title || '') + ' ' + (p.content || '').replace(/<[^>]*>/g, '')).substring(0, 200);
-            reportBtn = '<button class="report-btn" data-action="report" data-id="' + p.id + '" data-uid="' + p.user_id + '" data-snapshot="' + escapeHtml(snapshot) + '">举报</button>';
-        }
-        html += '<div class="post-card" data-postid="' + p.id + '">';
+        
+        html += '<div class="post-card" data-id="' + p.id + '">';
         html += '<div class="post-author">';
-        html += '<div class="avatar" style="' + (avatar && avatar.startsWith('http') ? 'background-image:url(' + avatar + ');background-size:cover;background-position:center;' : '') + '">' + (avatar && !avatar.startsWith('http') ? name.charAt(0).toUpperCase() : '') + '</div>';
+        html += '<div class="avatar" style="' + (avatar.startsWith('http') ? 'background-image:url(' + avatar + ');background-size:cover;background-position:center;' : '') + '">' + (avatar.startsWith('http') ? '' : name.charAt(0).toUpperCase()) + '</div>';
         html += '<span class="name">' + escapeHtml(name) + '</span>';
-        if (p.is_official) html += '<span class="official-tag">官方</span>';
-        if (catName) html += '<span class="category-tag">' + escapeHtml(catName) + '</span>';
         html += '<span class="time">' + time + '</span>';
         html += '</div>';
         if (p.title) html += '<div class="post-title">' + escapeHtml(p.title) + '</div>';
-        html += '<div class="post-content ' + (clamped ? 'clamped' : '') + '">' + renderPostContent(p) + '</div>';
-        html += '<div class="post-footer"><span class="comment-count">评论 ' + commentCount + '</span><div class="actions">' + reportBtn + delBtn + '</div></div></div>';
-    }
+        html += '<div class="post-content">' + (window.DOMPurify ? DOMPurify.sanitize(p.content) : escapeHtml(p.content)) + '</div>';
+        html += '</div>';
+    });
     list.innerHTML = html;
+    
+    // 渲染完成后再绑定事件，绝对安全
     list.querySelectorAll('.post-card').forEach(function(card) {
-        card.addEventListener('click', function(e) {
-            if (e.target.closest('button')) return;
-            openPostDetail(this.dataset.postid);
-        });
+        card.onclick = function() {
+            openPostDetail(this.dataset.id);
+        };
     });
-    list.querySelectorAll('.report-btn').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            window.openReportDialog(this.dataset.uid, 'post', this.dataset.id, this.dataset.snapshot);
-        });
-    });
-    list.querySelectorAll('.del-btn').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            if(confirm('确定删除这篇帖子吗？')) {
-                window.sb.from('posts').delete().eq('id', this.dataset.id).then(function(r){
-                    if(r.error) showToast('删除失败'); else { showToast('已删除'); loadAll(); }
-                });
-            }
-        });
-    });
-}
-
-async function loadAll() {
-    document.getElementById('postList').innerHTML = '<div class="loading-state"><div class="spinner"></div>加载中...</div>';
-    try {
-        categories = await fetchCategories(); renderCategoryFilter();
-        posts = await fetchPosts();
-        await fetchAllCommentCounts();
-        await renderPosts();
-    } catch (e) { document.getElementById('postList').innerHTML = '<div class="empty-state">加载失败：' + escapeHtml(e.message) + '</div>'; }
 }
 
 var currentDetailPost = null;
-var replyToUserId = null;
-var replyToName = null;
-
-async function openPostDetail(postId) {
-    var overlay = document.getElementById('detailOverlay');
-    var box = document.getElementById('detailContent');
-    overlay.classList.add('active');
-    box.innerHTML = '<div class="loading-state"><div class="spinner"></div>加载中...</div>';
-    var p = posts.find(function(x) { return x.id === postId; });
-    if (!p) { box.innerHTML = '<div class="empty-state">帖子不存在</div>'; return; }
+function openPostDetail(id) {
+    var p = posts.find(function(x) { return x.id === id; });
+    if (!p) return;
     currentDetailPost = p;
-    var user = p.users || null;
+    
+    document.getElementById('detailOverlay').classList.add('active');
+    
+    var user = p.users;
     var name = user ? user.nickname : (p.author || '匿名');
     var avatar = user ? (user.avatar_url || getUserAvatar(user)) : getUserAvatar({ nickname: name });
     var time = new Date(p.created_at).toLocaleString('zh-CN');
-    var reportBtn = '';
-    if (currentUser.id !== p.user_id && p.user_id) {
-        var snapshot = ((p.title || '') + ' ' + (p.content || '').replace(/<[^>]*>/g, '')).substring(0, 200);
-        reportBtn = '<button class="report-btn-detail" onclick="window.openReportDialog(\'' + p.user_id + '\', \'post\', \'' + p.id + '\', \'' + escapeHtml(snapshot) + '\')">举报</button>';
-    }
-    var h = '<div class="detail-post"><div class="post-author">';
-    h += '<div class="avatar" style="' + (avatar.startsWith('http') ? 'background-image:url(' + avatar + ');background-size:cover;background-position:center;' : '') + '">' + (avatar.startsWith('http') ? '' : name.charAt(0).toUpperCase()) + '</div>';
-    h += '<span class="name">' + escapeHtml(name) + '</span>';
-    if (p.is_official) h += '<span class="official-tag">官方</span>';
-    h += '<span class="time">' + time + '</span>';
-    h += reportBtn;
-    h += '</div>';
-    if (p.title) h += '<div class="post-title">' + escapeHtml(p.title) + '</div>';
-    h += '<div class="post-content">' + renderPostContent(p) + '</div></div>';
-    h += '<div class="detail-comments" id="detailCommentList"><div class="loading-state"><div class="spinner"></div>加载评论...</div></div>';
-    box.innerHTML = h;
-    cancelReplyMode();
-    loadComments(postId);
+    
+    var html = '<div class="detail-post"><div class="post-author">';
+    html += '<div class="avatar" style="' + (avatar.startsWith('http') ? 'background-image:url(' + avatar + ');background-size:cover;background-position:center;' : '') + '">' + (avatar.startsWith('http') ? '' : name.charAt(0).toUpperCase()) + '</div>';
+    html += '<span class="name">' + escapeHtml(name) + '</span>';
+    if (p.is_official) html += '<span class="official-tag">官方</span>';
+    html += '<span class="time">' + time + '</span>';
+    html += '</div>';
+    if (p.title) html += '<div class="post-title">' + escapeHtml(p.title) + '</div>';
+    html += '<div class="post-content">' + (window.DOMPurify ? DOMPurify.sanitize(p.content) : escapeHtml(p.content)) + '</div></div>';
+    html += '<div class="detail-comments" id="commentList"><div class="skeleton-card" style="margin:10px 0;padding:16px;"><div class="skeleton-header"><div class="skeleton skeleton-avatar" style="width:32px;height:32px;"></div><div class="skeleton skeleton-title" style="width:30%;"></div></div><div class="skeleton skeleton-line" style="width:80%;margin-top:8px;"></div></div></div>';
+    
+    document.getElementById('detailContent').innerHTML = html;
+    loadComments(p.id);
 }
+window.openPostDetail = openPostDetail;
+
+var currentReplyParentId = null;
+var currentReplyUserId = null;
+var currentReplyName = null;
 
 async function loadComments(postId) {
-    var cl = document.getElementById('detailCommentList');
+    var cl = document.getElementById('commentList');
     try {
-        var res = await window.sb.from('post_comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
-        var comments = res.data || [];
+        var r = await window.sb.from('post_comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
+        var comments = r.data || [];
         if (!comments.length) { cl.innerHTML = '<div class="empty-state">还没有评论，来说两句</div>'; return; }
-        var map = await fetchProfilesMap(false);
-        var h = '';
-        comments.forEach(function(c) {
+        
+        var map = await fetchProfilesMap();
+        
+        var idMap = {};
+        comments.forEach(c => idMap[c.id] = c);
+
+        var parents = comments.filter(c => !c.parent_id);
+        var childrenMap = {};
+
+        comments.filter(c => c.parent_id).forEach(c => {
+            var current = c;
+            while (current.parent_id && idMap[current.parent_id]) {
+                current = idMap[current.parent_id];
+            }
+            var topParentId = current.id;
+            if (!childrenMap[topParentId]) childrenMap[topParentId] = [];
+            childrenMap[topParentId].push(c);
+        });
+
+        function renderNode(c, isChild, topParentId) {
             var cu = map[c.user_id] || null;
             var cn = cu ? cu.nickname : (c.author || '匿名');
             var cav = cu ? (cu.avatar_url || getUserAvatar(cu)) : getUserAvatar({nickname: cn});
-            var replyName = c.reply_to_user_id ? (map[c.reply_to_user_id] ? map[c.reply_to_user_id].nickname : '某用户') : null;
-            h += '<div class="comment-item">';
+            
+            var h = '<div class="comment-item">';
             h += '<div class="avatar" style="' + (cav.startsWith('http') ? 'background-image:url(' + cav + ');background-size:cover;background-position:center;' : '') + '">' + (cav.startsWith('http') ? '' : cn.charAt(0).toUpperCase()) + '</div>';
-            h += '<div class="body">';
-            h += '<div class="meta"><span class="name">' + escapeHtml(cn) + '</span>';
-            h += '<span class="time">' + new Date(c.created_at).toLocaleString('zh-CN', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) + '</span>';
-            h += '<button class="reply-btn" onclick="startReply(\'' + c.user_id + '\', \'' + escapeHtml(cn) + '\')">回复</button></div>';
-            if (replyName) h += '<div class="reply-to">回复 @' + escapeHtml(replyName) + '</div>';
+            h += '<div class="body"><div class="meta"><span class="name">' + escapeHtml(cn) + '</span>';
+            h += '<span class="time">' + new Date(c.created_at).toLocaleString('zh-CN') + '</span></div>';
+            
+            if (c.reply_to_user_id && isChild) {
+                var replyName = map[c.reply_to_user_id] ? map[c.reply_to_user_id].nickname : '某用户';
+                h += '<div class="reply-tag">回复 @' + escapeHtml(replyName) + '</div>';
+            }
+            
             h += '<div class="txt">' + escapeHtml(c.content) + '</div>';
+            
+            h += '<div class="actions">';
+            h += '<button onclick="startReply(\'' + topParentId + '\', \'' + c.user_id + '\', \'' + escapeHtml(cn) + '\')">回复</button>';
+            h += '<button style="color:#F59E0B;" onclick="reportItem(\'comment\', \'' + c.id + '\', \'' + escapeHtml(c.content) + '\')">举报</button>';
+            if (currentUser && (currentUser.is_admin || currentUser.id === c.user_id)) {
+                h += '<button style="color:var(--danger);" onclick="deleteComment(\'' + c.id + '\')">删除</button>';
+            }
+            h += '</div>';
             h += '</div></div>';
+            return h;
+        }
+
+        var h = '';
+        parents.forEach(p => {
+            h += renderNode(p, false, p.id);
+            if (childrenMap[p.id] && childrenMap[p.id].length > 0) {
+                h += '<div class="comment-children">';
+                childrenMap[p.id].forEach(child => {
+                    h += renderNode(child, true, p.id);
+                });
+                h += '</div>';
+            }
         });
+        
         cl.innerHTML = h;
     } catch (e) {
         cl.innerHTML = '<div class="empty-state">评论加载失败</div>';
     }
 }
 
-window.startReply = function(uid, name) {
-    replyToUserId = uid;
-    replyToName = name;
+window.startReply = function(parentId, userId, name) {
+    currentReplyParentId = parentId;
+    currentReplyUserId = userId;
+    currentReplyName = name;
     var input = document.getElementById('detailCommentInput');
     input.placeholder = '回复 @' + name + '…';
     input.focus();
-    document.getElementById('cancelReplyBtn').classList.add('active');
+    document.getElementById('cancelReplyBtn').style.display = 'block';
 };
-function cancelReplyMode() {
-    replyToUserId = null;
-    replyToName = null;
+
+window.cancelReply = function() {
+    currentReplyParentId = null;
+    currentReplyUserId = null;
+    currentReplyName = null;
     var input = document.getElementById('detailCommentInput');
     input.placeholder = '写评论…';
     input.value = '';
-    document.getElementById('cancelReplyBtn').classList.remove('active');
-}
-document.getElementById('cancelReplyBtn').onclick = cancelReplyMode;
+    document.getElementById('cancelReplyBtn').style.display = 'none';
+};
+
+document.getElementById('cancelReplyBtn').onclick = cancelReply;
 
 document.getElementById('detailSendCommentBtn').onclick = async function() {
     var input = document.getElementById('detailCommentInput');
@@ -372,29 +415,18 @@ document.getElementById('detailSendCommentBtn').onclick = async function() {
             author: currentUser.nickname,
             content: text
         };
-        if (replyToUserId) row.reply_to_user_id = replyToUserId;
+        if (currentReplyParentId) {
+            row.parent_id = currentReplyParentId;
+            row.reply_to_user_id = currentReplyUserId;
+        }
         var res = await window.sb.from('post_comments').insert([row]);
         if (res.error) throw res.error;
-        showToast('评论成功');
-        cancelReplyMode();
-        await loadComments(currentDetailPost.id);
-        await fetchAllCommentCounts();
-        await renderPosts();
-        try {
-            if (currentDetailPost.user_id && currentDetailPost.user_id !== currentUser.id) {
-                await window.sb.from('notifications').insert([{
-                    user_id: currentDetailPost.user_id,
-                    type: 'comment',
-                    notification_type: 'comment',
-                    post_id: currentDetailPost.id,
-                    comment_author_id: currentUser.id,
-                    extra_text: replyToName ? ('回复了 @' + replyToName + '：' + text) : text,
-                    is_read: false
-                }]);
-            }
-        } catch (_ignore) {}
-    } catch(e) {
-        showToast('评论失败：' + (e.message || '网络错误'));
+        showToast('回复成功');
+        input.value = '';
+        cancelReply();
+        loadComments(currentDetailPost.id);
+    } catch (e) {
+        showToast('发送失败：' + (e.message || '网络错误'));
     } finally {
         this.disabled = false;
     }
@@ -404,12 +436,77 @@ document.getElementById('closeDetail').onclick = function() {
     document.getElementById('detailOverlay').classList.remove('active');
 };
 
-function openAdminPanel() {
-    window.location.href = './profile.html?view=settings';
-}
+function openAdminPanel() { window.location.href = './admin.html'; }
 window.openAdminPanel = openAdminPanel;
 
-loadAll();
+
+window.reportItem = async function(type, id, snapshot) {
+    var reason = prompt('请输入举报原因（如：色情低俗、广告骚扰、人身攻击）：');
+    if (!reason) return;
+    if (window.showCustomToast) window.showCustomToast('正在提交...');
+    
+    try {
+        // 写入 reports 表（如果没有 reports 表，直接报错并提示）
+        var res = await window.sb.from('reports').insert([{
+            reporter_id: currentUser.id,
+            reporter_name: currentUser.nickname,
+            type: type, 
+            content_snapshot: snapshot,
+            remark: reason,
+            status: 'pending'
+        }]);
+        if (res.error) throw res.error;
+        alert('举报已提交给管理员，感谢反馈！');
+    } catch(e) {
+        alert('举报失败：' + e.message);
+    }
+};
+
+window.deletePost = async function(id) {
+    if (!confirm('确定要删除这篇帖子吗？')) return;
+    try {
+        var res = await window.sb.from('posts').delete().eq('id', id);
+        if (res.error) throw res.error;
+        alert('已删除');
+        loadAll();
+    } catch(e) {
+        alert('删除失败：' + e.message);
+    }
+};
+
+window.deleteComment = async function(id) {
+    if (!confirm('确定要删除这条评论吗？')) return;
+    try {
+        var res = await window.sb.from('post_comments').delete().eq('id', id);
+        if (res.error) throw res.error;
+        alert('已删除');
+        loadComments(currentDetailPost.id);
+    } catch(e) {
+        alert('删除失败：' + e.message);
+    }
+};
+
+// 安全启动
+
+// ★ 安全启动逻辑
+(function init() {
+    // 4 秒兜底，如果还在转圈就强制关掉
+    setTimeout(function() {
+        if(window.hideLoading) window.hideLoading();
+        var list = document.getElementById('postList');
+        if (list && list.innerHTML.includes('skeleton-card')) {
+            list.innerHTML = '<div class="empty-state">加载超时，请检查网络后刷新重试。<br><button onclick="loadAll()" style="margin-top:12px;padding:8px 24px;border-radius:99px;border:none;background:var(--brand);color:#fff;font-weight:700;cursor:pointer;font-family:inherit;">点击重试</button></div>';
+        }
+    }, 4000);
+
+    // 轮询等待 window.sb 就绪后调用 loadAll
+    var check = setInterval(function() {
+        if (window.sb) {
+            clearInterval(check);
+            loadAll();
+        }
+    }, 100);
+})();
 </script>
 </body>
 </html>

@@ -3,148 +3,76 @@
 <head>
 <meta charset="UTF-8" />
 <link rel="manifest" href="./manifest.json" />
-<meta name="theme-color" content="#2e7d32" />
+<meta name="theme-color" content="#65A30D" />
+<link rel="stylesheet" href="./theme.css" />
 <link rel="stylesheet" href="bubbles.css" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Seven戚 · 聊天群</title>
 <script src="./vendor/supabase.js"></script>
-<script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/script>');</script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
-:root{--bg:#f5faf5;--bg-card:#fff;--bg-input:#eaf3ea;--border:#c8e0c8;--text:#1e3a2e;--text-muted:#5a7a6a;--primary:#2e7d32;--primary-light:#4caf50;--primary-bg:#e8f5e9;--shadow:0 8px 32px rgba(46,125,50,.12);--radius:16px;--radius-sm:10px;--font:"Space Grotesk","PingFang SC","Segoe UI",system-ui,sans-serif;--danger:#e57373;--success:#22c55e;--safe-b:env(safe-area-inset-bottom,0px);--safe-t:env(safe-area-inset-top,0px)}
-html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);overflow:hidden}
-#mainApp{display:flex;flex-direction:column;height:100vh;height:100dvh;background:var(--bg)}
-.app-header{flex-shrink:0;padding:12px 16px;background:rgba(255,255,255,.94);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;min-height:56px;z-index:50;gap:8px}
-.app-header .brand{font-weight:900;font-size:1.05em;display:flex;align-items:center;gap:.35em;cursor:pointer;white-space:nowrap}
-.app-header .brand span{color:var(--primary)}
-.app-header .brand small{font-weight:400;font-size:.55em;color:var(--text-muted);margin-left:.3em}
-.header-right{display:flex;align-items:center;gap:4px;flex-shrink:0}
-.user-area{display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 8px 4px 4px;border-radius:99px}
-.user-area:hover{background:var(--primary-bg)}
-.user-area .avatar{width:30px;height:30px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex-shrink:0;background-size:cover;background-position:center}
-.user-area .user-name{font-weight:600;font-size:.8em;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dots-btn{background:none;border:none;cursor:pointer;padding:6px;border-radius:50%;display:grid;place-items:center;color:var(--text-muted);flex-shrink:0;position:relative}
-.dots-btn svg{width:22px;height:22px;fill:currentColor}
-.app-tabs{flex-shrink:0;display:flex;background:rgba(255,255,255,.96);border-top:1px solid var(--border);padding:6px 0 calc(6px + var(--safe-b));z-index:50}
-.tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;font-family:var(--font);font-size:.6em;font-weight:600;color:var(--text-muted);padding:4px 0;cursor:pointer;text-decoration:none;position:relative}
-.tab-btn .tab-icon{font-size:1.6em;line-height:1.2;display:flex;align-items:center;justify-content:center;width:1.7em;height:1.7em}
-.tab-btn .tab-icon svg{width:100%;height:100%;display:block;stroke:currentColor;fill:none}
-.tab-btn.active{color:var(--primary)}
-.tab-btn.active::after{content:'';position:absolute;top:-1px;left:30%;right:30%;height:3px;background:var(--primary);border-radius:0 0 4px 4px}
+html,body{overflow:hidden;background:var(--bg)}
+#mainApp{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:1400px;margin:0 auto;background:var(--bg);position:relative;}
 .app-content{flex:1;min-height:0;display:flex;flex-direction:column}
-.chat-messages{flex:1;overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch;position:relative}
 
-/* 咖啡杯 loader */
-.loader-wrap{display:flex;align-items:center;justify-content:center;flex:1;min-height:220px;width:100%}
-.loader {
-  width: 100px;height: 80px;position: relative;
-  display: flex;align-items: center;justify-content: center;
-}
-.loader .cup {
-  position: absolute;width: 25px;height: 18px;background-color: #fff;
-  border: 1px solid #2e2e2e;z-index: 1;
-  border-radius: 2px 2px 10px 10px;
-  animation: expansion 6s infinite ease-in-out;transform-origin: center;
-}
-.cup::after {
-  content: "";position: absolute;top: -2px;width: calc(100% - 2px);height: 2px;
-  background: #fed59fca;border: 1px solid #2e2e2ebe;border-radius: 50%;
-}
-.cup::before {
-  content: "";position: absolute;top: 15px;width: calc(100% - 2px);height: 4px;
-  background: #ffffff00;border: 1px solid #2e2e2e;border-top: none;border-radius: 50%;z-index: -1;
-}
-.loader .cup .cup-handle {
-  position: absolute;width: 5px;height: 10px;background-color: #fff;
-  border: 1px solid #2e2e2e;right: -5px;top: 2px;border-radius: 2px 10px 20px 2px;
-}
-.loader .cup .smoke {
-  position: absolute;bottom: 100%;left: 50%;width: 15px;height: 25px;
-  background: rgba(107, 102, 102, 0.433);border-radius: 50%;
-  transform: translateX(-50%);animation: rise 6s infinite ease-in-out;filter: blur(8px);
-}
-.loader .cup .smoke.one{animation-delay: 0s;}
-.loader .cup .smoke.two{animation-delay: 1s;}
-.loader .cup .smoke.three{animation-delay: 2s;}
-.loader .load {
-  position: absolute;font-size: 10px;opacity: 0.7;top: 45%;left: 50%;
-  transform: translateX(-50%);z-index: -1;letter-spacing:-1px;
-}
-@keyframes expansion {
-  0% {width: 25px;transform: translateX(0);}
-  40% {width: 100%;transform: translateX(0);}
-  80% {width: 25px;transform: translateX(64px);}
-  90% {width: 100%;transform: translateX(0);}
-  100% {width: 25px;transform: translateX(0);}
-}
-@keyframes rise {
-  0% {transform: translate(-50%, 0) scale(0.4);opacity: 0;}
-  30% {opacity: 0.7;}
-  60% {opacity: 0.4;}
-  100% {transform: translate(-50%, -120px) scale(1);opacity: 0;}
-}
-
+.chat-messages{flex:1;overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:14px;position:relative}
 .row{display:flex;align-items:flex-start;gap:8px;max-width:85%;}
 .row.other{align-self:flex-start;}
 .row.self{align-self:flex-end;flex-direction:row-reverse;}
-.row .avatar{width:38px;height:38px;border-radius:50%;flex-shrink:0;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:15px;cursor:pointer;background-size:cover;background-position:center;overflow:hidden;}
-.row .bubble-wrap{display:flex;flex-direction:column;cursor:pointer;min-width:0;align-items:flex-start;}
+.row .avatar{width:38px;height:38px;border-radius:50%;flex-shrink:0;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:15px;background-size:cover;background-position:center;}
+.row .bubble-wrap{display:flex;flex-direction:column;min-width:0;align-items:flex-start;}
 .row.self .bubble-wrap{align-items:flex-end;}
-.row .bubble{padding:10px 14px;font-size:.88em;line-height:1.5;word-break:break-word;position:relative;background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.1);}
+.row .bubble{padding:10px 14px;font-size:.88em;line-height:1.5;word-break:break-word;position:relative;background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.1);cursor:pointer;}
 .row.self .bubble{background:#95ec69;color:#1a1a1a;}
 .row .uname{font-size:.68em;color:var(--text-muted);margin-bottom:3px;display:flex;align-items:center;gap:6px;}
 .row.self .uname{flex-direction:row-reverse;text-align:right;}
-
-.rp-card{display:block;max-width:230px;background:linear-gradient(135deg,#ff7043,#e64a19);border-radius:14px;padding:12px 16px;color:#fff;cursor:pointer;box-shadow:0 6px 18px rgba(230,74,25,.3);transition:transform .15s;}
-.rp-card:active{transform:scale(.97)}
-.rp-card.grabbed{background:linear-gradient(135deg,#9e9e9e,#757575);box-shadow:none;cursor:default;}
-.rp-card.done{background:linear-gradient(135deg,#bdbdbd,#9e9e9e);box-shadow:none;cursor:default;}
-.rp-card .rp-top{display:flex;align-items:center;gap:8px;font-weight:800;font-size:.88em;}
-.rp-card .rp-amt{font-size:1.4em;font-weight:900;margin-top:4px;}
-.rp-card .rp-sub{font-size:.7em;opacity:.9;margin-top:4px;}
-
 .empty-tip{text-align:center;padding:20px;color:var(--text-muted);font-size:.9em;margin:auto}
 
-.pill-bar{flex-shrink:0;display:flex;gap:8px;align-items:center;padding:8px 16px 0;overflow-x:auto;background:var(--bg)}
-.pill-btn{position:relative;display:inline-flex;align-items:center;gap:6px;padding:8px 22px;border-radius:999px;border:2px solid var(--border);background:var(--bg-card);color:var(--text);font-family:inherit;font-weight:700;font-size:.8em;cursor:pointer;white-space:nowrap;transition:.2s}
-.fixed-input-area{flex-shrink:0;padding:10px 16px calc(10px + var(--safe-b));background:var(--bg);border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.fixed-input-area .input-wrapper{flex:1;display:flex;gap:8px;min-width:0}
-.fixed-input-area input{flex:1;padding:10px 14px;border-radius:99px;border:2px solid var(--border);background:var(--bg-input);font-family:inherit;font-size:.85em;outline:none;min-width:0;color:var(--text)}
-.fixed-input-area button{padding:8px 18px;border-radius:99px;border:none;background:var(--primary);color:#fff;font-weight:700;font-size:.85em;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;font-family:inherit}
-.fixed-input-area .red-packet-btn{background:linear-gradient(135deg,#ff7043,#e64a19);}
+.red-packet-bubble { background: linear-gradient(135deg, #F87171, #DC2626) !important; color: #fff !important; width: 200px; border-radius: 12px !important; padding: 12px !important; }
+.rp-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-weight: 700; font-size: 0.95em; }
+.rp-icon { width: 24px; height: 24px; background: #ffe082; border-radius: 4px; display: grid; place-items: center; color: #e53935; }
+.rp-text { font-size: 0.8em; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rp-footer { border-top: 1px solid rgba(255,255,255,0.2); margin-top: 8px; padding-top: 6px; font-size: 0.65em; opacity: 0.8; }
 
-.rp-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:998;opacity:0;pointer-events:none;transition:opacity .3s;}
-.rp-backdrop.open{opacity:1;pointer-events:auto;}
-.rp-sheet{position:fixed;left:0;right:0;bottom:0;background:var(--bg-card);border-radius:20px 20px 0 0;z-index:999;padding:8px 20px calc(20px + var(--safe-b));transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:82vh;overflow-y:auto;}
-.rp-sheet.open{transform:translateY(0);}
-.rp-handle{width:40px;height:4px;background:var(--border);border-radius:99px;margin:6px auto 14px;}
-.rp-title{font-weight:800;font-size:1.05em;margin-bottom:16px;}
-.rp-field{margin-bottom:14px;}
-.rp-field label{display:block;font-size:.72em;font-weight:600;color:var(--text-muted);margin-bottom:6px;}
-.rp-field input,.rp-field select{width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:10px;font-family:inherit;font-size:1em;outline:none;box-sizing:border-box;background:var(--bg-input);color:var(--text);}
-.rp-type-row{display:flex;gap:8px;}
-.rp-type{flex:1;padding:9px;border-radius:10px;border:2px solid var(--border);background:#fff;color:var(--text-muted);font-weight:700;font-size:.82em;cursor:pointer;font-family:inherit;}
-.rp-type.active{border-color:var(--primary);background:var(--primary-bg);color:var(--primary);}
-.rp-send{width:100%;padding:13px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-weight:700;font-size:1em;cursor:pointer;font-family:inherit;margin-top:6px;}
-.rp-rank-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:8px;background:var(--bg-input);margin-bottom:6px;font-size:.85em;}
-.rp-rank-item .rr-left{display:flex;align-items:center;gap:10px;}
-.rp-rank-item .rr-no{width:20px;text-align:center;font-weight:800;color:var(--text-muted);}
-.rp-rank-item .rr-no.top1{color:#e6a700;}
-.rp-rank-item .rr-amt{font-weight:800;color:var(--primary);}
+.side-panel{flex-shrink:0;display:flex;flex-direction:column;background:var(--bg);}
+.tool-bar{flex-shrink:0;padding:8px 16px 0;display:flex;gap:8px;overflow-x:auto;background:var(--bg);}
+.room-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius-pill);border:1px solid var(--border-subtle);background:var(--bg-surface);color:var(--text-muted);font-weight:600;font-size:.85em;cursor:pointer;transition:var(--transition-smooth);font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.02);}
+.fixed-input-area{flex-shrink:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--bg-glass);backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;z-index:10}
+.fixed-input-area .input-wrapper{flex:1;display:flex;gap:10px;min-width:0}
+.fixed-input-area input{flex:1;padding:12px 16px;border-radius:var(--radius-pill);border:1px solid var(--border-subtle);background:var(--bg-surface);font-family:inherit;font-size:.9em;outline:none;min-width:0;color:var(--text);}
+.fixed-input-area button{padding:12px 20px;border-radius:var(--radius-pill);border:none;background:var(--brand);color:#fff;font-weight:600;font-size:.9em;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;font-family:inherit;}
 
-#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:.7em 1.5em;border-radius:2em;font-weight:600;font-size:.85em;opacity:0;transition:all .4s ease;z-index:9999;pointer-events:none;white-space:nowrap;box-shadow:var(--shadow);max-width:90vw}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.context-menu { position: fixed; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); box-shadow: var(--shadow-md); padding: 6px; z-index: 9999; display: none; flex-direction: column; min-width: 130px; gap: 4px; }
+.context-menu.show { display: flex; }
+.context-menu button { display: flex; align-items: center; justify-content: flex-start; gap: 8px; width: 100%; background: none; border: none; padding: 10px 12px; text-align: left; font-size: 0.85em; font-family: inherit; color: var(--text); cursor: pointer; border-radius: 6px; white-space: nowrap; transition: var(--transition-smooth); box-sizing: border-box; }
+.context-menu button svg { width: 16px !important; height: 16px !important; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.context-menu button.danger { background: rgba(239, 68, 68, 0.08); color: var(--danger); }
+.context-menu button.danger:hover { background: rgba(239, 68, 68, 0.15); }
+.context-menu button.warning { background: rgba(245, 158, 11, 0.08); color: #D97706; }
+.context-menu button.warning:hover { background: rgba(245, 158, 11, 0.15); }
 
-.online-overlay{position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s}
-.online-overlay.open{transform:translateX(0)}
-.online-header{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:calc(10px + var(--safe-t)) 14px 10px;background:rgba(255,255,255,.96);border-bottom:1px solid var(--border);min-height:56px}
-.online-header .back{background:none;border:none;cursor:pointer;padding:4px;color:var(--text);display:flex}
-.online-header .back svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.online-header .title{font-weight:700;font-size:1em;flex:1}
-.online-body{flex:1;overflow-y:auto;padding:16px;}
-.online-user{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:10px;}
-.online-user .ou-avatar{width:42px;height:42px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:16px;flex-shrink:0;background-size:cover;background-position:center}
-.online-user .ou-name{font-weight:700;font-size:.92em;}
+.modal-overlay{position:fixed;inset:0;z-index:1000;background:rgba(17,24,39,.4);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-overlay.active{display:flex;}
+.modal-box{background:var(--bg-surface);border-radius:var(--radius-lg);max-width:360px;width:100%;padding:24px;box-shadow:0 20px 40px rgba(0,0,0,.1);text-align:center;animation:popIn .3s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes popIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-box h3{font-size:1.2em;margin-bottom:16px;color:var(--text);font-weight:700;}
+.modal-box p{font-size:.9em;color:var(--text-muted);line-height:1.6;margin-bottom:24px;}
+.modal-box .mb-actions{display:flex;gap:12px;}
+.modal-box .mb-actions button{flex:1;padding:14px;border-radius:var(--radius-pill);border:none;font-family:inherit;font-weight:600;font-size:.95em;cursor:pointer;transition:var(--transition-smooth);}
+.modal-box .mb-actions button:active{transform:scale(.96);}
+.modal-box .mb-cancel{background:var(--bg);color:var(--text-muted);}
+.modal-box .mb-ok{background:var(--brand);color:#fff;box-shadow:0 4px 12px rgba(132,204,22,0.3);}
+.modal-box .mb-ok:disabled{opacity:.5;pointer-events:none;box-shadow:none;}
+
+.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; text-align: left; }
+.form-group label { font-size: 0.8em; font-weight: 600; color: var(--text-muted); }
+.form-group input, .form-group select, .form-group textarea { padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); font-size: 1em; outline: none; background: var(--bg); color: var(--text); font-family: inherit; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--brand); }
+.form-group textarea { resize: vertical; min-height: 80px; }
+
+#customToast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text); color: #fff; padding: 12px 24px; border-radius: var(--radius-pill); font-size: 0.85em; font-weight: 500; opacity: 0; transition: var(--transition-smooth); z-index: 10000; pointer-events: none; box-shadow: var(--shadow-md); }
+#customToast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
@@ -152,565 +80,406 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   <div id="header-container"></div>
   <div class="app-content">
     <div class="chat-messages" id="chatMessages">
-      <div class="loader-wrap" id="chatLoader">
-        <div class="loader">
-          <div class="cup">
-            <div class="cup-handle"></div>
-            <div class="smoke one"></div>
-            <div class="smoke two"></div>
-            <div class="smoke three"></div>
-          </div>
-          <div class="load">..........................</div>
-        </div>
-      </div>
+      <div style="text-align:center;padding:20px;color:var(--text-muted);">加载中...</div>
     </div>
-    <div class="pill-bar">
-      <button class="pill-btn" onclick="location.href='./room.html'">房间</button>
-    </div>
-    <div class="fixed-input-area">
-      <button id="chatRedPacketBtn" class="red-packet-btn">
-        <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#fff;"><rect x="3" y="2" width="18" height="20" rx="2"/><path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2c-2.5 1.5-5.5 2.5-9 2.5S5.5 8.5 3 7V5Z" style="fill:#ffe082"/><circle cx="12" cy="15" r="2.5" style="fill:#e53935"/><rect x="11.2" y="14.2" width="1.6" height="1.6" style="fill:#fff"/></svg>
-        红包
-      </button>
-      <div class="input-wrapper">
-        <input type="text" id="chatInput" placeholder="说点什么…" maxlength="200" />
-        <button id="sendChatBtn">
-          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          发送
+    <div class="side-panel">
+      <div class="tool-bar">
+        <button class="room-btn" onclick="location.href='./room.html'">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          房间
         </button>
+      </div>
+      <div class="fixed-input-area">
+        <button id="chatRedPacketBtn" style="background:linear-gradient(135deg,#F87171,#DC2626);">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#fff;"><rect x="3" y="2" width="18" height="20" rx="2"/><path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2c-2.5 1.5-5.5 2.5-9 2.5S5.5 8.5 3 7V5Z" style="fill:#ffe082"/><circle cx="12" cy="15" r="2.5" style="fill:#e53935"/></svg>
+          红包
+        </button>
+        <div class="input-wrapper">
+          <input type="text" id="chatInput" placeholder="说点什么…" maxlength="200" />
+          <button id="sendChatBtn">发送</button>
+        </div>
       </div>
     </div>
   </div>
   <div id="footer-container"></div>
 </div>
 
-<div class="rp-backdrop" id="rpBackdrop"></div>
-<div class="rp-sheet" id="rpSheet">
-  <div class="rp-handle"></div>
-  <div class="rp-title">发红包</div>
-  <div class="rp-field">
-    <label>红包总积分</label>
-    <input type="number" id="crpTotal" placeholder="如 100" min="1" />
-  </div>
-  <div class="rp-field">
-    <label>类型</label>
-    <div class="rp-type-row">
-      <button type="button" class="rp-type active" data-t="group">拼手气（群红包）</button>
-      <button type="button" class="rp-type" data-t="exclusive">专属红包</button>
+<div id="contextMenu" class="context-menu"></div>
+
+<div class="modal-overlay" id="sendRpModal">
+  <div class="modal-box">
+    <h3>发红包</h3>
+    <div class="form-group">
+      <label>金额 (小七币)</label>
+      <input type="number" id="rpAmount" placeholder="0.00" min="1" step="1" />
+    </div>
+    <div class="form-group">
+      <label>祝福语</label>
+      <input type="text" id="rpMessage" placeholder="恭喜发财，大吉大利" maxlength="20" />
+    </div>
+    <div class="mb-actions">
+      <button class="mb-cancel" onclick="document.getElementById('sendRpModal').classList.remove('active')">取消</button>
+      <button class="mb-ok" id="sendRpBtn">塞钱进红包</button>
     </div>
   </div>
-  <div class="rp-field" id="crpCountField">
-    <label>可领份数（至少 2 份）</label>
-    <input type="number" id="crpCount" placeholder="如 5" min="2" />
-  </div>
-  <div class="rp-field" id="crpTargetField" style="display:none;">
-    <label>指定领取人（在线用户）</label>
-    <select id="crpTarget"></select>
-  </div>
-  <button class="rp-send" id="crpSendBtn">塞钱进红包</button>
 </div>
 
-<div class="rp-backdrop" id="rpDetailBackdrop"></div>
-<div class="rp-sheet" id="rpDetailSheet">
-  <div class="rp-handle"></div>
-  <div class="rp-title" style="display:flex;justify-content:space-between;align-items:center;">红包详情
-    <button id="rpDetailClose" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px;">✕</button>
+<div class="modal-overlay" id="openRpModal">
+  <div class="modal-box" style="background:linear-gradient(135deg,#F87171,#DC2626);color:#fff;">
+    <h3 style="color:#fff;margin-top:20px;">红包详情</h3>
+    <div id="rpOpenResult" style="font-size:3em;font-weight:700;margin:20px 0;color:#ffe082;">0</div>
+    <p style="color:rgba(255,255,255,0.8);" id="rpOpenMsg"></p>
+    <div class="mb-actions">
+      <button class="mb-ok" style="background:#ffe082;color:#DC2626;" onclick="document.getElementById('openRpModal').classList.remove('active')">开心收下</button>
+    </div>
   </div>
-  <div id="rpDetailBody" style="padding:0 4px 20px;"></div>
 </div>
 
-<div class="online-overlay" id="onlineOverlay">
-  <div class="online-header">
-    <button class="back" id="onlineBackBtn"><svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
-    <span class="title">在线用户</span>
+<div class="modal-overlay" id="reportModal">
+  <div class="modal-box" style="text-align: left;">
+    <h3>举报违规内容</h3>
+    <div class="form-group">
+      <label>违规类型</label>
+      <select id="reportType">
+        <option value="色情低俗">色情低俗</option>
+        <option value="广告骚扰">广告骚扰</option>
+        <option value="人身攻击">人身攻击</option>
+        <option value="违法违规">违法违规</option>
+        <option value="其他">其他</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>补充说明（选填）</label>
+      <textarea id="reportRemark" placeholder="请描述具体的违规情况..."></textarea>
+    </div>
+    <div class="mb-actions">
+      <button class="mb-cancel" onclick="document.getElementById('reportModal').classList.remove('active')">取消</button>
+      <button class="mb-ok" style="background:#F59E0B;" onclick="submitReport()">提交举报</button>
+    </div>
   </div>
-  <div class="online-body"><div class="online-list" id="onlineUserList"></div></div>
 </div>
 
-<div id="toast"></div>
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box">
+    <h3 id="confirmTitle">提示</h3>
+    <p id="confirmDesc"></p>
+    <div class="mb-actions">
+      <button class="mb-cancel" onclick="resolveConfirm(false)">取消</button>
+      <button class="mb-ok" id="confirmOkBtn" onclick="resolveConfirm(true)">确定</button>
+    </div>
+  </div>
+</div>
+
+<div id="customToast"></div>
+
 <script src="./common.js"></script>
 <script>
 var currentUser = getSessionUser();
-if(!currentUser || !currentUser.id) window.location.href='./index.html';
+if (!currentUser || !currentUser.id) window.location.href = './index.html';
 
-function showToast(m){var t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(function(){t.classList.remove('show')},2600)}
-function safeUrl(u){if(!u)return '';var s=String(u).trim();if(!/^https?:\/\//.test(s))return '';return escapeHtml(s);}
-
-function renderHeaderUI(){
-  var u=currentUser||{},name=u.nickname||'用户';
-  var has=u.avatar_url&&String(u.avatar_url).indexOf('http')===0;
-  document.getElementById('header-container').innerHTML=
-    '<div class="app-header">'+
-      '<div class="brand" onclick="window.location.href=\'./posts.html\'">Seven<span>戚</span><small>· 聊天群</small></div>'+
-      '<div class="header-right">'+
-        '<div class="user-area" onclick="window.location.href=\'./user.html\'">'+
-          '<div class="avatar" style="'+(has?'background-image:url(\''+safeUrl(u.avatar_url)+'\');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(name.charAt(0).toUpperCase()))+'</div>'+
-          '<span class="user-name">'+escapeHtml(name)+'</span>'+
-        '</div>'+
-        '<button class="dots-btn" id="dotsBtn" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg><span class="online-badge" id="onlineBadge" style="display:none;">0</span></button>'+
-      '</div>'+
-    '</div>';
-  document.getElementById('dotsBtn').onclick=function(){
-    document.getElementById('onlineOverlay').classList.add('open');
-    renderOnlineUsers();
-  };
-}
-renderHeaderUI();
+renderHeader('聊天群', 'chats');
 renderFooter('chats');
 
-/* ============== 在线状态 ============== */
-var onlineUsers={}, onlineChannel=null;
-function renderOnlineUsers(){
-  var c=document.getElementById('onlineUserList'); if(!c)return;
-  var others=[]; Object.keys(onlineUsers).forEach(function(k){ if(onlineUsers[k].id!==currentUser.id) others.push(onlineUsers[k]); });
-  var badge=document.getElementById('onlineBadge');
-  if(badge){ if(others.length>0){badge.textContent=others.length>99?'99+':others.length;badge.style.display='inline-block';}else{badge.style.display='none';} }
-  if(!others.length){ c.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:20px;">暂无在线用户</div>'; return; }
-  c.innerHTML = others.map(function(u){
-    var has=u.avatar_url&&String(u.avatar_url).indexOf('http')===0;
-    return '<div class="online-user"><div class="ou-avatar" style="'+(has?'background-image:url(\''+safeUrl(u.avatar_url)+'\');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(u.nickname||'U').charAt(0).toUpperCase()))+'</div><div class="ou-name">'+escapeHtml(u.nickname||'用户')+'</div></div>';
-  }).join('');
-}
-function initPresence(){
-  if(onlineChannel){try{window.sb.removeChannel(onlineChannel)}catch(e){}onlineChannel=null}
-  onlineChannel=window.sb.channel('sq-chat-online',{config:{presence:{key:currentUser.id}}});
-  onlineChannel.on('presence',{event:'sync'},function(){
-    var raw=onlineChannel.presenceState(),map={};
-    Object.keys(raw).forEach(function(key){
-      var arr=raw[key]; if(!arr||!arr.length)return;
-      var p=arr[0], uid=p.user_id||key;
-      map[uid]={id:uid,nickname:p.nickname||'用户',avatar_url:p.avatar_url||''};
-    });
-    onlineUsers=map; renderOnlineUsers();
+var chats = [], usersCache = {};
+var isAdmin = currentUser.is_admin === true;
+
+var toastTimer;
+window.showCustomToast = function(msg) {
+  var t = document.getElementById('customToast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { t.classList.remove('show'); }, 2500);
+};
+
+var confirmResolve = null;
+window.showCustomConfirm = function(title, desc) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmDesc').innerHTML = desc;
+  document.getElementById('confirmModal').classList.add('active');
+  return new Promise(function(resolve) {
+    confirmResolve = resolve;
   });
-  onlineChannel.subscribe(function(status){
-    if(status==='SUBSCRIBED'){
-      onlineChannel.track({user_id:currentUser.id,nickname:currentUser.nickname,avatar_url:currentUser.avatar_url||'',online_at:new Date().toISOString()});
-    }else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){ setTimeout(initPresence,3000); }
-  });
-}
-document.getElementById('onlineBackBtn').onclick=function(){document.getElementById('onlineOverlay').classList.remove('open');};
+};
+window.resolveConfirm = function(val) {
+  document.getElementById('confirmModal').classList.remove('active');
+  if (confirmResolve) confirmResolve(val);
+};
 
-/* ============== 数据 & 增量渲染 ============== */
-var chats=[], rpList=[], myGrabs={}, usersCache={}, currentBubbleSkin=0;
-var renderedSet = {};       // 'c_<id>' / 'r_<id>'
-var realtimeChannel = null;
-
-async function loadBubbleSkin(){
-  try {
-    var u = await window.sb.rpc('get_my_profile');
-    var d = (u && u.data) ? (Array.isArray(u.data) ? u.data[0] : u.data) : null;
-    if (d && typeof d.bubble_skin === 'number') currentBubbleSkin = d.bubble_skin;
-  } catch(e) {}
-}
-
-async function fetchChats(){
-  var res = await window.sb.from('chats').select('*').order('created_at',{ascending:true});
-  if(res.error) throw res.error;
-  var data = res.data || [];
-  try {
-    var pr = await window.sb.from('public_profiles').select('id, nickname, avatar_url');
-    if(!pr.error){ (pr.data||[]).forEach(function(u){ usersCache[u.id]=u; }); }
-  } catch(e){}
-  return data;
-}
-async function loadChatRedPackets(){
-  try{
-    var res = await window.sb.from('red_packets').select('*').eq('scope','chat').order('created_at',{ascending:false}).limit(20);
-    if(res.error) throw res.error;
-    rpList = (res.data || []).slice().reverse();
-    await loadChatMyGrabs();
-  }catch(e){ rpList = []; }
-}
-async function loadChatMyGrabs(){
-  myGrabs = {};
-  if(!rpList.length) return;
-  try{
-    var ids = rpList.map(function(p){ return p.id; });
-    var res = await window.sb.from('red_packet_grabs').select('packet_id, amount').eq('user_id', currentUser.id).in('packet_id', ids);
-    (res.data || []).forEach(function(g){ myGrabs[g.packet_id] = g.amount; });
-  }catch(e){}
-}
-
-function buildChatItemHtml(c){
-  var isSelf = currentUser && c.user_id === currentUser.id;
-  var ui = usersCache[c.user_id] || null;
-  var name = ui ? ui.nickname : (c.author || '匿名');
-  var avatarUrl = ui ? ui.avatar_url : null;
-  var av = (avatarUrl && String(avatarUrl).indexOf('http')===0)
-    ? '<div class="avatar" style="background-image:url(\''+safeUrl(avatarUrl)+'\');background-size:cover;background-position:center;"></div>'
-    : '<div class="avatar">'+escapeHtml(String(name).charAt(0).toUpperCase())+'</div>';
-  var skinCls = 'b' + currentBubbleSkin;
-  var rowCls = 'row ' + (isSelf ? 'self' : 'other') + (isSelf ? ' ' + skinCls : '');
-  return '<div class="'+rowCls+'" data-cid="'+escapeHtml(String(c.id||''))+'">'+av+
-    '<div class="bubble-wrap"><div class="uname">'+escapeHtml(name)+'</div>'+
-    '<div class="bubble">'+escapeHtml(c.content)+'</div></div></div>';
-}
-
-function buildRedPacketHtml(p){
-  var isSelf = currentUser && p.sender_id === currentUser.id;
-  var rpUi = usersCache[p.sender_id] || null;
-  var name = rpUi ? rpUi.nickname : (p.sender_name || '匿名');
-  var avatarUrl = rpUi ? rpUi.avatar_url : null;
-  var mine = myGrabs[p.id];
-  var finished = p.remaining_count <= 0;
-  var isEx = !!p.target_user_id;
-  var rpCls = (isEx?'exclusive ':'') + (mine!==undefined?'grabbed':(finished?'done':''));
-  var sub = '';
-  if (mine !== undefined) sub = isEx ? '专属红包 · 你已领取' : '你已领取 · 看看手气';
-  else if (finished) sub = '手慢了，红包已领完';
-  else if (isEx) sub = (p.target_user_id === currentUser.id) ? '专属红包 · 点击领取' : '专属红包（非指定人无法领取）';
-  else sub = '剩余 ' + p.remaining_count + '/' + p.count + ' 份';
-  var av = (avatarUrl && String(avatarUrl).indexOf('http')===0)
-    ? '<div class="avatar" style="background-image:url(\''+safeUrl(avatarUrl)+'\');background-size:cover;background-position:center;"></div>'
-    : '<div class="avatar">'+escapeHtml(String(name).charAt(0).toUpperCase())+'</div>';
-  return '<div class="row '+(isSelf?'self':'other')+'" data-rid="'+escapeHtml(String(p.id))+'">'+av+
-    '<div class="bubble-wrap"><div class="uname">'+escapeHtml(name)+'</div>'+
-    '<div class="rp-card '+rpCls+'" data-rp="'+p.id+'" onclick="openChatRedPacket(\''+p.id+'\')">'+
-    '<div class="rp-top"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:#fff;"><rect x="3" y="2" width="18" height="20" rx="2"/><path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2c-2.5 1.5-5.5 2.5-9 2.5S5.5 8.5 3 7V5Z" style="fill:#ffe082"/><circle cx="12" cy="15" r="2.5" style="fill:#e53935"/><rect x="11.2" y="14.2" width="1.6" height="1.6" style="fill:#fff"/></svg>'+
-    (isEx?'专属红包':'拼手气红包') + '</div>'+
-    (mine !== undefined ? '<div class="rp-amt">'+mine+' 币</div>' : '')+
-    '<div class="rp-sub">'+sub+'</div></div></div></div>';
-}
-
-function renderAll(){
+async function loadChats() {
   var container = document.getElementById('chatMessages');
-  var merged = [];
-  chats.forEach(function(c){ merged.push({ kind:'chat', t:new Date(c.created_at).getTime(), data:c }); });
-  rpList.forEach(function(p){ merged.push({ kind:'rp', t:new Date(p.created_at).getTime(), data:p }); });
-  merged.sort(function(a,b){ return a.t - b.t; });
-  renderedSet = {};
-  if (!merged.length) {
-    container.innerHTML = '<div class="empty-tip">还没有聊天消息，说点什么吧～</div>';
+  container.innerHTML = `
+  <div style="display:flex;gap:12px;margin-bottom:16px;padding:10px;">
+    <div class="skeleton" style="width:38px;height:38px;border-radius:50%;"></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+      <div class="skeleton" style="width:30%;height:14px;"></div>
+      <div class="skeleton" style="width:70%;height:36px;border-radius:12px;"></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:12px;margin-bottom:16px;padding:10px;justify-content:flex-end;">
+    <div style="flex:1;display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+      <div class="skeleton" style="width:30%;height:14px;"></div>
+      <div class="skeleton" style="width:70%;height:36px;border-radius:12px;"></div>
+    </div>
+    <div class="skeleton" style="width:38px;height:38px;border-radius:50%;"></div>
+  </div>
+`;
+  try {
+    var res = await window.sb.from('chats').select('*').order('created_at', { ascending: true });
+    if (res.error) throw res.error;
+    chats = res.data || [];
+    
+    var pr = await window.sb.from('public_profiles').select('id, nickname, avatar_url');
+    if (!pr.error) {
+      (pr.data||[]).forEach(function(u) { usersCache[u.id] = u; });
+    }
+    
+    renderChat();
+  } catch (e) { container.innerHTML = '<div style="text-align:center;color:red;padding:20px;">加载失败: ' + escapeHtml(e.message) + '</div>'; }  finally {
+    if (window.hidePageLoading) window.hidePageLoading();
+  }
+}
+
+function parseRpContent(content) {
+  if (content && content.indexOf('[红包]') === 0) {
+    try { return JSON.parse(content.substring(4)); } catch(e) { return null; }
+  }
+  return null;
+}
+
+function renderChat() {
+  var container = document.getElementById('chatMessages');
+  if (!chats.length) {
+    container.innerHTML = '<div class="empty-tip">还没有聊天消息，说点什么吧~</div>';
     return;
   }
-  var html = merged.map(function(it){
-    renderedSet[(it.kind==='chat'?'c_':'r_') + it.data.id] = true;
-    return it.kind==='chat' ? buildChatItemHtml(it.data) : buildRedPacketHtml(it.data);
-  }).join('');
+  var html = '';
+  chats.forEach(function(c) {
+    if (c.content && c.content.indexOf('[系统消息]') === 0) {
+      var parts = c.content.replace('[系统消息]', '').split('|');
+      var sysName = parts[0];
+      var actionText = parts[1] || '';
+      html += '<div style="text-align:center;margin:12px 0;font-size:0.75em;color:var(--text-light);display:flex;align-items:center;justify-content:center;gap:4px;">';
+      html += '<span style="color:#3B82F6;font-weight:600;">' + escapeHtml(sysName) + '</span> ';
+      html += escapeHtml(actionText);
+      html += '</div>';
+      return;
+    }
+    
+    var isSelf = c.user_id === currentUser.id;
+    var ui = usersCache[c.user_id] || null;
+    var name = ui ? ui.nickname : (c.author || '匿名');
+    var finalAvatar = getUserAvatar(ui || { nickname: name });
+    var av = '<div class="avatar" style="background-image:url(' + finalAvatar + ');background-size:cover;background-position:center;"></div>';
+    var ctxAttr = 'oncontextmenu="showContextMenu(event, \'' + c.id + '\', ' + isSelf + ')"';
+    
+    var rpData = parseRpContent(c.content);
+    var bubbleContent = '';
+    if (rpData) {
+      bubbleContent = '<div class="bubble red-packet-bubble" onclick="openRedPacket(\'' + c.id + '\', ' + isSelf + ', ' + (rpData.opened ? 'true' : 'false') + ', ' + (rpData.amount || 0) + ')" ' + ctxAttr + '>' +
+        '<div class="rp-header"><div class="rp-icon">￥</div><div>' + (isSelf ? '发出的红包' : '收到红包') + '</div></div>' +
+        '<div class="rp-text">' + escapeHtml(rpData.msg || '恭喜发财，大吉大利') + '</div>' +
+        '<div class="rp-footer">' + (rpData.opened ? '已拆开' : (isSelf ? '等待对方领取' : '点击拆开')) + '</div>' +
+        '</div>';
+    } else {
+      bubbleContent = '<div class="bubble" ' + ctxAttr + '>' + escapeHtml(c.content) + '</div>';
+    }
+      
+    html += '<div class="row ' + (isSelf ? 'self' : 'other') + '">' + av + 
+            '<div class="bubble-wrap"><div class="uname">' + escapeHtml(name) + '</div>' +
+            bubbleContent + '</div></div>';
+  });
   container.innerHTML = html;
   container.scrollTop = container.scrollHeight;
 }
 
-function appendChat(c){
-  if (!c || !c.id) return;
-  if (renderedSet['c_' + c.id]) return;
-  renderedSet['c_' + c.id] = true;
-  var container = document.getElementById('chatMessages');
-  var tip = container.querySelector('.empty-tip');
-  if (tip) tip.remove();
-  var tmp = document.createElement('div');
-  tmp.innerHTML = buildChatItemHtml(c);
-  var node = tmp.firstElementChild;
-  if (!node) return;
-  container.appendChild(node);
-  container.scrollTop = container.scrollHeight;
-}
-
-function appendRedPacket(p){
-  if (!p || !p.id) return;
-  if (renderedSet['r_' + p.id]) return;
-  renderedSet['r_' + p.id] = true;
-  var container = document.getElementById('chatMessages');
-  var tip = container.querySelector('.empty-tip');
-  if (tip) tip.remove();
-  var tmp = document.createElement('div');
-  tmp.innerHTML = buildRedPacketHtml(p);
-  var node = tmp.firstElementChild;
-  if (!node) return;
-  container.appendChild(node);
-  container.scrollTop = container.scrollHeight;
-}
-
-function refreshRedPacket(p){
-  if (!p || !p.id) return;
-  var row = document.querySelector('.row[data-rid="' + p.id + '"]');
-  if (!row) return;
-  var tmp = document.createElement('div');
-  tmp.innerHTML = buildRedPacketHtml(p);
-  var newNode = tmp.firstElementChild;
-  if (!newNode) return;
-  row.parentNode.replaceChild(newNode, row);
-}
-
-function ensureUserCached(uid, cb){
-  if (!uid) return cb();
-  if (usersCache[uid]) return cb();
-  window.sb.from('public_profiles').select('id, nickname, avatar_url').eq('id', uid).maybeSingle().then(function(r){
-    if (r.data) usersCache[uid] = r.data;
-    cb();
-  }).catch(function(){ cb(); });
-}
-
-/* ============== Realtime 增量订阅 ============== */
-function initRealtime(){
-  try {
-    if (realtimeChannel) { try { window.sb.removeChannel(realtimeChannel); } catch(e){} realtimeChannel = null; }
-    realtimeChannel = window.sb.channel('chats-page-live-' + currentUser.id);
-
-    realtimeChannel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats' }, function(payload){
-      var c = payload.new;
-      if (!c || !c.id) return;
-      if (renderedSet['c_' + c.id]) return;         // 自己发的已经乐观渲染过
-      if (!chats.find(function(x){ return x.id === c.id; })) chats.push(c);
-      ensureUserCached(c.user_id, function(){
-        // 用真实 id 但内容可能缺 author，构建时兜底
-        appendChat(c);
-      });
-    });
-
-    realtimeChannel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'red_packets' }, function(payload){
-      var p = payload.new;
-      if (!p || p.scope !== 'chat') return;
-      if (renderedSet['r_' + p.id]) return;
-      if (!rpList.find(function(x){ return x.id === p.id; })) rpList.push(p);
-      ensureUserCached(p.sender_id, function(){ appendRedPacket(p); });
-    });
-
-    realtimeChannel.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'red_packets' }, function(payload){
-      var p = payload.new;
-      if (!p || !p.id) return;
-      var i = rpList.findIndex(function(x){ return x.id === p.id; });
-      if (i >= 0) rpList[i] = p; else return;
-      refreshRedPacket(p);
-    });
-
-    realtimeChannel.subscribe();
-    window.__chatsPageChannel = realtimeChannel;
-  } catch(e) { /* 忽略 */ }
-}
-
-/* ============== 发送消息：乐观追加 ============== */
-var sendLock = false;
-async function sendChat(){
-  if (sendLock) return;
+async function sendChat() {
   var input = document.getElementById('chatInput');
   var content = input.value.trim();
-  if (!content) { showToast('请输入内容'); return; }
-
-  var tempId = 'temp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
-  var tempC = {
-    id: tempId,
-    user_id: currentUser.id,
-    author: currentUser.nickname,
-    content: content,
-    created_at: new Date().toISOString()
-  };
-
-  input.value = '';
-  chats.push(tempC);
-  appendChat(tempC);
-
-  sendLock = true;
-  var btn = document.getElementById('sendChatBtn'); btn.disabled = true;
+  if (!content) return;
+  var btn = document.getElementById('sendChatBtn');
+  btn.disabled = true;
   try {
-    var r = await window.sb.from('chats')
-      .insert([{ user_id: currentUser.id, author: currentUser.nickname, content: content }])
-      .select();
-    if (r.error) throw r.error;
-
-    // 用真实 id 把乐观条目接管过来
-    if (r.data && r.data[0] && r.data[0].id) {
-      var real = r.data[0];
-      var idx = chats.findIndex(function(x){ return x.id === tempId; });
-      if (idx >= 0) chats[idx] = real; else chats.push(real);
-      var node = document.querySelector('.row[data-cid="' + tempId + '"]');
-      if (node) node.dataset.cid = real.id;
-      delete renderedSet['c_' + tempId];
-      renderedSet['c_' + real.id] = true;
-    }
-  } catch(e) {
-    // 发送失败，移除乐观条目
-    var badNode = document.querySelector('.row[data-cid="' + tempId + '"]');
-    if (badNode) badNode.remove();
-    var j = chats.findIndex(function(x){ return x.id === tempId; });
-    if (j >= 0) chats.splice(j, 1);
-    delete renderedSet['c_' + tempId];
-    showToast('发送失败：' + (e.message || '网络错误'));
-    input.value = content; // 归还内容，方便重发
+    await window.sb.from('chats').insert([{ user_id: currentUser.id, author: currentUser.nickname, content: content }]);
+    input.value = '';
+    loadChats();
+  } catch (e) {
+    showCustomToast('发送失败：' + e.message);
   } finally {
     btn.disabled = false;
-    sendLock = false;
   }
 }
 
-/* ============== 发红包 ============== */
-var crpType = 'group';
-document.getElementById('chatRedPacketBtn').onclick = function(){
-  document.getElementById('crpTotal').value = '';
-  document.getElementById('crpCount').value = '';
-  syncCrpTypeUI();
-  buildCrpTargetOptions();
-  document.getElementById('rpBackdrop').classList.add('open');
-  document.getElementById('rpSheet').classList.add('open');
+document.getElementById('chatRedPacketBtn').onclick = function() {
+  document.getElementById('sendRpModal').classList.add('active');
 };
-document.getElementById('rpBackdrop').onclick = function(){ this.classList.remove('open'); document.getElementById('rpSheet').classList.remove('open'); };
-function syncCrpTypeUI(){
-  document.querySelectorAll('.rp-type').forEach(function(b){ b.classList.toggle('active', b.dataset.t === crpType); });
-  document.getElementById('crpCountField').style.display = crpType === 'group' ? 'block' : 'none';
-  document.getElementById('crpTargetField').style.display = crpType === 'exclusive' ? 'block' : 'none';
-}
-document.querySelectorAll('.rp-type').forEach(function(b){
-  b.onclick = function(){ crpType = this.dataset.t; syncCrpTypeUI(); };
-});
-function buildCrpTargetOptions(){
-  var sel = document.getElementById('crpTarget');
-  var opts = ['<option value="">请选择在线用户</option>'];
-  Object.keys(onlineUsers).forEach(function(k){
-    var u = onlineUsers[k];
-    if(u.id === currentUser.id) return;
-    opts.push('<option value="' + u.id + '">' + escapeHtml(u.nickname || '用户') + '</option>');
-  });
-  sel.innerHTML = opts.join('');
-}
-document.getElementById('crpSendBtn').onclick = async function(){
-  var total = parseInt(document.getElementById('crpTotal').value, 10);
-  if(!total || total < 1){ showToast('请输入红包总积分'); return; }
-  var count, target = null;
-  if(crpType === 'exclusive'){
-    target = document.getElementById('crpTarget').value;
-    if(!target){ showToast('请选择指定领取人'); return; }
-    count = 1;
-  } else {
-    count = parseInt(document.getElementById('crpCount').value, 10);
-    if(!count || count < 2){ showToast('份数至少 2 份'); return; }
-    if(count > total){ showToast('份数不能超过总积分'); return; }
-  }
+document.getElementById('sendRpBtn').onclick = async function() {
+  var amt = parseFloat(document.getElementById('rpAmount').value);
+  var msg = document.getElementById('rpMessage').value.trim() || '恭喜发财，大吉大利';
+  if (!amt || amt <= 0) return showCustomToast('请输入正确的金额');
+  
   this.disabled = true;
-  try{
-    var res = await window.sb.rpc('send_red_packet', { p_room_id: null, p_total: total, p_count: count, p_scope: 'chat', p_target_user_id: target });
-    if(res.error) throw res.error;
-    var d = res.data;
-    if(!d || !d.ok){ showToast((d && d.message) || '发送失败'); return; }
-    showToast('红包已发出');
-    document.getElementById('rpBackdrop').classList.remove('open');
-    document.getElementById('rpSheet').classList.remove('open');
-
-    // 主动获取刚发的红包并本地追加（不依赖 realtime 是否开启）
-    try {
-      var sentAt = new Date(Date.now() - 5000).toISOString();
-      var q = await window.sb.from('red_packets')
-        .select('*')
-        .eq('scope','chat')
-        .eq('sender_id', currentUser.id)
-        .gt('created_at', sentAt)
-        .order('created_at', { ascending: false })
-        .limit(1);
-      if (q.data && q.data[0]) {
-        var np = q.data[0];
-        if (!rpList.find(function(x){ return x.id === np.id; })) rpList.push(np);
-        ensureUserCached(np.sender_id, function(){ appendRedPacket(np); });
-      }
-    } catch(_ignored) {}
-  }catch(e){ showToast('发送失败：' + e.message); } finally { this.disabled = false; }
+  this.textContent = '处理中...';
+  try {
+    var rpData = { amount: amt, msg: msg, opened: false, sender: currentUser.id };
+    var content = '[红包]' + JSON.stringify(rpData);
+    await window.sb.from('chats').insert([{ user_id: currentUser.id, author: currentUser.nickname, content: content }]);
+    document.getElementById('sendRpModal').classList.remove('active');
+    document.getElementById('rpAmount').value = '';
+    document.getElementById('rpMessage').value = '';
+    loadChats();
+  } catch (e) {
+    showCustomToast('发红包失败：' + e.message);
+  } finally {
+    this.disabled = false;
+    this.textContent = '塞钱进红包';
+  }
 };
 
-/* ============== 抢红包：仅更新对应卡片 ============== */
-async function openChatRedPacket(packetId){
-  var p = rpList.find(function(x){ return String(x.id) === String(packetId); });
-  if(!p) return;
-  var mine = myGrabs[p.id];
-  if(mine === undefined && p.remaining_count > 0 && p.sender_id !== currentUser.id) {
-    if(p.target_user_id && p.target_user_id !== currentUser.id) { showToast('这是专属红包，你无法领取'); return; }
-    try{
-      var res = await window.sb.rpc('grab_red_packet', { p_packet_id: p.id });
-      if(res.error) throw res.error;
-      var d = res.data;
-      if(d && d.ok){
-        showToast('手气不错，抢到 ' + d.amount + ' 币！');
-        myGrabs[p.id] = d.amount;
-        // 拉一次该红包最新状态（remaining_count 会变）
-        try {
-          var q = await window.sb.from('red_packets').select('*').eq('id', p.id).maybeSingle();
-          if (q.data) {
-            p = q.data;
-            var i = rpList.findIndex(function(x){ return x.id === p.id; });
-            if (i >= 0) rpList[i] = p;
-          }
-        } catch(_ignored) {}
-        refreshRedPacket(p);
-        try{ var u = await window.sb.rpc('get_my_profile'); if(u.data){ currentUser.coins = u.data.coins; setSessionUser(currentUser); } }catch(e){}
-      } else {
-        showToast((d && d.message) || '领取失败');
-        try {
-          var q2 = await window.sb.from('red_packets').select('*').eq('id', p.id).maybeSingle();
-          if (q2.data) { p = q2.data; var j = rpList.findIndex(function(x){ return x.id === p.id; }); if (j>=0) rpList[j]=p; refreshRedPacket(p); }
-        } catch(_ignored) {}
-        return;
-      }
-    }catch(e){ showToast('领取失败：' + e.message); return; }
-  }
-  showChatRedPacketDetail(p, myGrabs[p.id]);
-}
+window.openRedPacket = function(msgId, isSelf, isOpened, amount) {
+  if (isSelf) return showCustomToast('不能拆自己发的红包哦');
+  if (isOpened) return showCustomToast('该红包已被拆开');
+  
+  var resultEl = document.getElementById('rpOpenResult');
+  var msgEl = document.getElementById('rpOpenMsg');
+  resultEl.textContent = amount;
+  msgEl.textContent = '已存入余额';
+  document.getElementById('openRpModal').classList.add('active');
+  
+  var updateContent = '[红包]' + JSON.stringify({ amount: amount, msg: '恭喜发财', opened: true, sender: 'other' });
+  window.sb.from('chats').update({ content: updateContent }).eq('id', msgId).then(function(){
+    loadChats();
+  });
+};
 
-async function showChatRedPacketDetail(p, myAmount){
-  var body = document.getElementById('rpDetailBody');
-  body.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:.85em;padding:20px;">加载中…</div>';
-  document.getElementById('rpDetailBackdrop').classList.add('open');
-  document.getElementById('rpDetailSheet').classList.add('open');
-  try{
-    var res = await window.sb.from('red_packet_grabs').select('*').eq('packet_id', p.id).order('amount', { ascending: false });
-    var rows = res.data || [];
-    var html = '<div style="text-align:center;margin-bottom:18px;">' +
-      '<div style="font-size:.8em;color:var(--text-muted);">' + escapeHtml(p.sender_name || '匿名') + (p.target_user_id ? ' 的专属红包' : ' 的红包') + '</div>' +
-      '<div style="font-size:1.6em;font-weight:900;color:var(--primary);margin-top:4px;">' + p.total + ' 币</div>' +
-      '<div style="font-size:.75em;color:var(--text-light);margin-top:4px;">共 ' + p.count + ' 份 · 已领 ' + rows.length + ' 份</div>';
-    if(myAmount !== undefined) html += '<div style="margin-top:10px;font-size:.85em;font-weight:700;color:var(--primary);">你领到 ' + myAmount + ' 币</div>';
-    html += '</div>';
-    if(rows.length){
-      html += '<div style="font-size:.72em;font-weight:700;color:var(--text-muted);margin-bottom:8px;">领取排行榜</div>';
-      html += rows.map(function(g, i){
-        var noCls = i === 0 ? 'top1' : '';
-        return '<div class="rp-rank-item"><div class="rr-left"><span class="rr-no ' + noCls + '">' + (i+1) + '</span><span>' + escapeHtml(g.user_name || '用户') + '</span></div><span class="rr-amt">' + g.amount + ' 币</span></div>';
-      }).join('');
-      if(rows[0]) html += '<div style="font-size:.72em;color:var(--text-light);margin-top:8px;text-align:center;">🏆 手气最佳：' + escapeHtml(rows[0].user_name || '用户') + '（' + rows[0].amount + ' 币）</div>';
-    } else {
-      html += '<div style="text-align:center;color:var(--text-muted);font-size:.85em;padding:20px;">还没有人领取</div>';
+var ctxCurrentMsgId = null;
+var ctxTargetMsg = null;
+
+window.showContextMenu = function(e, msgId, isSelf) {
+  e.preventDefault();
+  e.stopPropagation();
+  ctxCurrentMsgId = msgId;
+  ctxTargetMsg = chats.find(function(x) { return x.id === msgId; });
+  var menu = document.getElementById('contextMenu');
+  var html = '';
+  
+  var revokeSvg = '<svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>';
+  var reportSvg = '<svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>';
+
+  if (isSelf) {
+    html = '<button class="danger" onclick="handleCtxAction(\'revoke\')">' + revokeSvg + '撤回消息</button>';
+  } else {
+    if (isAdmin) {
+      html = '<button class="danger" onclick="handleCtxAction(\'admin_revoke\')">' + revokeSvg + '撤回消息</button>';
     }
-    body.innerHTML = html;
-  }catch(e){
-    body.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:.85em;padding:20px;">加载失败：' + escapeHtml(e.message) + '</div>';
+    html += '<button class="warning" onclick="handleCtxAction(\'report\')">' + reportSvg + '举报</button>';
   }
-}
-document.getElementById('rpDetailClose').onclick = function() {
-  document.getElementById('rpDetailBackdrop').classList.remove('open');
-  document.getElementById('rpDetailSheet').classList.remove('open');
+  
+  menu.innerHTML = html;
+  
+  var x = e.clientX;
+  var y = e.clientY;
+  var mw = 130; var mh = menu.children.length > 1 ? 88 : 44;
+  if (x + mw > window.innerWidth) x -= mw;
+  if (y + mh > window.innerHeight) y -= mh;
+  
+  menu.style.left = x + 'px';
+  menu.style.top = y + 'px';
+  menu.classList.add('show');
 };
-document.getElementById('rpDetailBackdrop').onclick = function() {
-  document.getElementById('rpDetailBackdrop').classList.remove('open');
-  document.getElementById('rpDetailSheet').classList.remove('open');
+
+window.handleCtxAction = async function(action) {
+  document.getElementById('contextMenu').classList.remove('show');
+  if (!ctxCurrentMsgId || !ctxTargetMsg) return;
+  
+  var ui = usersCache[ctxTargetMsg.user_id];
+  var name = ui ? ui.nickname : (ctxTargetMsg.author || '匿名');
+
+  if (action === 'revoke' || action === 'admin_revoke') {
+    var confirmed = await showCustomConfirm('撤回消息', '确定要撤回该条消息吗？');
+    if (!confirmed) return;
+    
+    try {
+      await window.sb.from('chats').delete().eq('id', ctxCurrentMsgId);
+      var sysContent = '[系统消息]' + name + '|' + (action === 'revoke' ? '撤回了一条消息' : '的消息被管理员撤回了');
+      // 使用当前操作者的 ID 插入，绕过外键限制
+      var insRes = await window.sb.from('chats').insert([{ user_id: currentUser.id, author: 'system', content: sysContent }]);
+      if (insRes.error) console.warn('撤回提示插入失败:', insRes.error);
+      loadChats();
+      showCustomToast('已撤回');
+    } catch(err) {
+      showCustomToast('撤回失败：' + err.message);
+    }
+  } else if (action === 'report') {
+    document.getElementById('reportModal').classList.add('active');
+  }
 };
+
+window.submitReport = async function() {
+  if (!ctxTargetMsg) return;
+  var type = document.getElementById('reportType').value;
+  var remark = document.getElementById('reportRemark').value.trim();
+  var ui = usersCache[ctxTargetMsg.user_id];
+  var targetName = ui ? ui.nickname : (ctxTargetMsg.author || '匿名');
+  var contentSnapshot = (ctxTargetMsg.content || '').substring(0, 50);
+  
+  if (remark) {
+    contentSnapshot += ' [备注: ' + remark + ']';
+  }
+
+  this.disabled = true;
+  this.textContent = '提交中...';
+  try {
+    var res = await window.sb.from('reports').insert([{ 
+      reporter_id: currentUser.id,
+      reporter_name: currentUser.nickname,
+      target_user_id: ctxTargetMsg.user_id,
+      target_name: targetName,
+      type: type,
+      content_snapshot: contentSnapshot,
+      status: 'pending'
+    }]);
+    if (res.error) throw res.error;
+
+    try {
+      var rpcRes = await window.sb.rpc('notify_admins', {
+        p_title: '收到新的举报',
+        p_body: currentUser.nickname + ' 举报了 ' + targetName + '，类型：' + type
+      });
+      if (rpcRes.error) throw rpcRes.error;
+    } catch(err) {
+      showCustomToast('通知发送失败：' + err.message);
+      console.error(err);
+    }
+    
+    document.getElementById('reportModal').classList.remove('active');
+    document.getElementById('reportRemark').value = '';
+    showCustomToast('举报已提交给管理员，感谢反馈！');
+  } catch (e) {
+    showCustomToast('举报失败：' + e.message);
+  } finally {
+    this.disabled = false;
+    this.textContent = '提交举报';
+  }
+};
+
+document.addEventListener('click', function(e) {
+  var menu = document.getElementById('contextMenu');
+  if (menu && menu.classList.contains('show') && !menu.contains(e.target)) {
+    menu.classList.remove('show');
+  }
+});
 
 document.getElementById('sendChatBtn').onclick = sendChat;
-document.getElementById('chatInput').onkeydown = function(e){ if(e.key==='Enter') sendChat(); };
+document.getElementById('chatInput').onkeydown = function(e) { if (e.key === 'Enter') sendChat(); };
 
-/* ============== 启动流程 ============== */
-(async function initChatPage(){
-  await loadBubbleSkin();
-
-  try {
-    chats = await fetchChats();
-  } catch(e) {
-    chats = [];
-  }
-
-  try {
-    await loadChatRedPackets();
-  } catch(e) {
-    rpList = [];
-  }
-
-  // 渲染（renderAll 会覆盖掉 loader，加载完后消息正常显示）
-  renderAll();
-
-  // 增量订阅
-  initRealtime();
-
-  // 在线状态
-  initPresence();
-
-  // 隐藏 common.js 的整页 loading 遮罩
-  if (window.hidePageLoading) window.hidePageLoading();
+(function init() {
+  var check = setInterval(function() {
+    if (window.sb) {
+      clearInterval(check);
+      loadChats();
+    }
+  }, 100);
 })();
 </script>
 </body>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8" />
+<link rel="manifest" href="./manifest.json" />
+<meta name="theme-color" content="#10B981" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>后台管理 · Seven戚</title>
+<link rel="stylesheet" href="./theme.css" />
+<script src="./vendor/supabase.js"></script>
+<script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/script>');</script>
+<script src="common.js"></script>
+<style>
+.app-header .back{background:none;border:none;cursor:pointer;color:var(--text);display:flex;padding:4px;border-radius:8px;transition:var(--transition-smooth);}
+.app-header .back:hover{background:var(--border);}
+.app-header .back svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.app-header .title{font-weight:700;font-size:1.05em;flex:1;}
+
+.admin-body{flex:1;overflow-y:auto;padding:20px 16px calc(24px + env(safe-area-inset-bottom));}
+
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;}
+.stat-card{background:var(--bg-surface);border-radius:var(--radius-md);padding:16px;border:1px solid var(--border);box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px;}
+.stat-card .label{font-size:0.85em;color:var(--text-muted);font-weight:600;}
+.stat-card .value{font-size:2em;font-weight:700;color:var(--brand);}
+
+.admin-tabs{display:flex;gap:8px;margin-bottom:20px;background:var(--bg);padding:4px;border-radius:var(--radius-pill);border:1px solid var(--border);}
+.admin-tab{flex:1;padding:10px;border:none;background:transparent;border-radius:var(--radius-pill);font-family:inherit;font-size:.9em;font-weight:600;color:var(--text-muted);cursor:pointer;transition:var(--transition-smooth);}
+.admin-tab.active{background:var(--bg-surface);color:var(--brand);box-shadow:var(--shadow-sm);}
+
+.list-container{background:var(--bg-surface);border-radius:var(--radius-md);border:1px solid var(--border);box-shadow:var(--shadow-sm);overflow:hidden;}
+.list-item{display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid var(--border-subtle);}
+.list-item:last-child{border-bottom:none;}
+.list-item .avatar{width:40px;height:40px;border-radius:50%;background:var(--brand-bg);color:var(--brand-dark);display:grid;place-items:center;font-weight:600;font-size:16px;background-size:cover;background-position:center;}
+.list-item .info{flex:1;min-width:0;}
+.list-item .name{font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;}
+.list-item .meta{font-size:0.75em;color:var(--text-muted);margin-top:4px;}
+.list-item .actions{display:flex;gap:8px;}
+.btn-sm{padding:6px 12px;border-radius:var(--radius-sm);border:none;font-size:0.8em;font-weight:600;cursor:pointer;transition:var(--transition-smooth);font-family:inherit;}
+.btn-ban{background:var(--danger-bg);color:var(--danger);}
+.btn-unban{background:var(--brand-bg);color:var(--brand-dark);}
+.banned-tag{background:var(--danger-bg);color:var(--danger);font-size:0.65em;padding:2px 6px;border-radius:4px;}
+
+/* 骨架屏 */
+.skeleton-item{display:flex;gap:12px;padding:16px;border-bottom:1px solid var(--border-subtle);}
+.skeleton-avatar{width:40px;height:40px;border-radius:50%;}
+.skeleton-line{height:16px;background:var(--border);border-radius:4px;margin-bottom:6px;animation:shimmer 1.5s infinite linear;background-image: linear-gradient(90deg, #E5E7EB 0px, #F3F4F6 40px, #E5E7EB 80px);background-size:200% 100%;}
+@keyframes shimmer{0%{background-position:-200% 0;}100%{background-position:200% 0;}}
+</style>
+</head>
+<body>
+<div id="mainApp">
+  <div class="app-header">
+    <button class="back" onclick="history.back()"><svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+    <span class="title">后台管理</span>
+    <div style="width:32px;"></div>
+  </div>
+  
+  <div class="admin-body">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">总注册用户</div>
+        <div class="value" id="totalUsers">--</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">当前封禁数</div>
+        <div class="value" style="color:var(--danger);" id="bannedUsers">--</div>
+      </div>
+    </div>
+
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-tab="users" onclick="switchTab('users')">用户管理</button>
+      <button class="admin-tab" data-tab="reports" onclick="switchTab('reports')">举报处理</button>
+    </div>
+
+    <div id="listContainer" class="list-container">
+      <!-- 数据列表 -->
+    </div>
+  </div>
+</div>
+
+<script>
+var currentUser = getSessionUser();
+if (!currentUser) window.location.href = './index.html';
+
+var currentTab = 'users';
+
+function $(id) { return document.getElementById(id); }
+function escapeHtml(s) { if (!s) return ''; return String(s).replace(/[&<>"']/g, function(c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function showToast(msg) { alert(msg); }
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.admin-tab').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
+  if (tab === 'users') loadUsers();
+  else if (tab === 'reports') loadReports();
+}
+window.switchTab = switchTab;
+
+async function loadUsers() {
+  if(window.showLoading) window.showLoading();
+  var container = $('listContainer');
+  container.innerHTML = '<div class="skeleton-item"><div class="skeleton skeleton-avatar"></div><div style="flex:1"><div class="skeleton skeleton-line" style="width:40%"></div><div class="skeleton skeleton-line" style="width:60%"></div></div></div>'.repeat(3);
+
+  try {
+    // 调用你在数据库里写好的管理接口
+    var r = await window.sb.rpc('admin_list_users');
+    if (r.error) throw r.error;
+    var users = r.data || [];
+    
+    var total = users.length;
+    var bannedCount = 0;
+    
+    var html = '';
+    users.forEach(function(u) {
+      var isBanned = u.banned_until && new Date(u.banned_until) > new Date();
+      if (isBanned) bannedCount++;
+      
+      var avStyle = (u.avatar_url && u.avatar_url.indexOf('http') === 0) ? 'background-image:url('+u.avatar_url+');' : '';
+      var initial = avStyle ? '' : escapeHtml(String(u.nickname||'U').charAt(0).toUpperCase());
+      
+      html += '<div class="list-item" style="cursor:pointer;" onclick="if(!event.target.closest(\'.btn-sm\')) window.location.href=\'./user.html?id=' + u.id + '\'">';
+      html += '<div class="avatar" style="'+avStyle+'">'+initial+'</div>';
+      html += '<div class="info">';
+      html += '<div class="name">' + escapeHtml(u.nickname || '未命名') + ' ' + (isBanned ? '<span class="banned-tag">已封禁</span>' : '') + '</div>';
+      html += '<div class="meta">IP: ' + escapeHtml(u.ip_address || '未知') + ' | 注册于 ' + new Date(u.created_at).toLocaleDateString() + '</div>';
+      html += '</div>';
+      html += '<div class="actions">';
+      if (isBanned) {
+        html += '<button class="btn-sm btn-unban" onclick="unbanUser(\'' + u.id + '\')">解封</button>';
+      } else {
+        if (u.id !== currentUser.id) {
+          html += '<button class="btn-sm btn-ban" onclick="banUser(\'' + u.id + '\')">封禁</button>';
+        }
+      }
+      html += '</div></div>';
+    });
+    
+    container.innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--text-muted);">暂无用户</div>';
+    $('totalUsers').textContent = total;
+    $('bannedUsers').textContent = bannedCount;
+    
+  } catch(e) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger);">加载失败：请确保数据库有 admin_list_users 函数</div>';
+  } finally {
+    if(window.hideLoading) window.hideLoading();
+  }
+}
+
+async function banUser(id) {
+  if (!confirm('确定要封禁该用户吗？')) return;
+  try {
+    var r = await window.sb.rpc('admin_ban_user', { p_user_id: id, p_days: 36500, p_reason: '违反社区规定' }); // 封100年
+    if (r.error) throw r.error;
+    showToast('已封禁');
+    loadUsers();
+  } catch(e) { showToast('操作失败: ' + e.message); }
+}
+window.banUser = banUser;
+
+async function unbanUser(id) {
+  if (!confirm('确定要解封该用户吗？')) return;
+  try {
+    var r = await window.sb.rpc('admin_unban_user', { p_user_id: id });
+    if (r.error) throw r.error;
+    showToast('已解封');
+    loadUsers();
+  } catch(e) { showToast('操作失败: ' + e.message); }
+}
+window.unbanUser = unbanUser;
+
+async function loadReports() {
+  var container = $('listContainer');
+  container.innerHTML = '<div class="skeleton-item"><div class="skeleton skeleton-avatar"></div><div style="flex:1"><div class="skeleton skeleton-line" style="width:40%"></div><div class="skeleton skeleton-line" style="width:60%"></div></div></div>'.repeat(3);
+  
+  $('totalUsers').textContent = '-';
+  $('bannedUsers').textContent = '-';
+
+  try {
+    // 从 messages 表中查找所有以【系统举报】开头的留言
+    var r = await window.sb.from('messages').select('*').like('text', '【系统举报】%').order('created_at', { ascending: false });
+    if (r.error) throw r.error;
+    var reports = r.data || [];
+    
+    if (!reports.length) {
+      container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-muted);">暂无举报记录</div>';
+      return;
+    }
+
+    var html = '';
+    reports.forEach(function(rep) {
+      var time = new Date(rep.created_at).toLocaleString('zh-CN');
+      // 处理多行文本展示
+      var safeText = escapeHtml(rep.text).replace(/\n/g, '<br>');
+      
+      html += '<div class="list-item" style="align-items:flex-start; flex-direction:column; gap:10px;">';
+      html += '<div style="display:flex; width:100%; justify-content:space-between; align-items:center;">';
+      html += '<span style="font-weight:600; color:var(--danger);">举报信息</span>';
+      html += '<span style="font-size:0.75em; color:var(--text-light);">' + time + '</span>';
+      html += '</div>';
+      html += '<div style="font-size:0.85em; line-height:1.5; color:var(--text); width:100%; background:var(--bg); padding:12px; border-radius:8px;">' + safeText + '</div>';
+      html += '<div style="display:flex; width:100%; justify-content:flex-end; gap:8px;">';
+      html += '<button class="btn-sm btn-ban" onclick="deleteReport(\''+ rep.id +'\')">已处理 / 删除</button>';
+      html += '</div></div>';
+    });
+
+    container.innerHTML = html;
+  } catch(e) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger);">加载失败：' + e.message + '</div>';
+  }
+}
+
+window.deleteReport = async function(id) {
+  if (!confirm('确认已处理该举报并删除记录？')) return;
+  try {
+    await window.sb.from('messages').delete().eq('id', id);
+    loadReports();
+  } catch(e) {
+    alert('删除失败: ' + e.message);
+  }
+};
+
+// 初始化
+loadUsers();
+  setTimeout(() => { if(window.hideLoading) window.hideLoading(); }, 5000);
+</script>
+</body>
+</html>

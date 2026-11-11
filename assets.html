@@ -2,50 +2,61 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8" />
-    <link rel="manifest" href="./manifest.json" />
-    <meta name="theme-color" content="#2e7d32" />
-    <link rel="apple-touch-icon" href="./icon.svg" />
+<link rel="manifest" href="./manifest.json" />
+<meta name="theme-color" content="#65A30D" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>我的资产 · Seven戚</title>
+<link rel="stylesheet" href="./theme.css" />
 <script src="./vendor/supabase.js"></script>
 <script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/script>');</script>
 <script src="common.js"></script>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; }
-:root {
-  --bg:#f5faf5; --bg-card:#fff; --border:#c8e0c8; --text:#1e3a2e; --text-muted:#5a7a6a; --text-light:#8aaa9a;
-  --primary:#2e7d32; --primary-light:#4caf50; --primary-bg:#e8f5e9; --radius:16px; --radius-sm:10px;
-  --shadow:0 8px 32px rgba(46,125,50,.12);
-  --font:"Space Grotesk","PingFang SC","Segoe UI",system-ui,sans-serif;
-  --safe-bottom:env(safe-area-inset-bottom,0px);
-  --danger:#e57373; --danger-text:#c62828;
-}
-html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);}
-#mainApp{display:flex;flex-direction:column;height:100vh;height:100dvh;}
-.app-header{flex-shrink:0;padding:12px 16px;background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;z-index:50;min-height:56px;}
-.app-header .back{background:none;border:none;cursor:pointer;color:var(--text);display:flex;padding:4px;border-radius:8px;}
+.app-header .back{background:none;border:none;cursor:pointer;color:var(--text);display:flex;padding:4px;border-radius:8px;transition:var(--transition-smooth);}
+.app-header .back:hover{background:var(--border);}
 .app-header .back svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.app-header .title{font-weight:800;font-size:1.05em;}
-.asset-body{flex:1;overflow-y:auto;padding:20px 16px calc(24px + var(--safe-bottom));-webkit-overflow-scrolling:touch;}
-.balance-card{background:linear-gradient(135deg,#2e7d32,#4caf50);border-radius:var(--radius);padding:28px 24px;color:#fff;text-align:center;box-shadow:0 12px 32px rgba(46,125,50,.28);position:relative;overflow:hidden;}
-.balance-card::after{content:"";position:absolute;top:-40%;right:-20%;width:200px;height:200px;background:rgba(255,255,255,.08);border-radius:50%;}
-.balance-card .bc-label{font-size:.8em;opacity:.85;font-weight:600;letter-spacing:.05em;}
-.balance-card .bc-num{font-size:2.8em;font-weight:900;margin:8px 0 4px;line-height:1;position:relative;z-index:1;}
-.balance-card .bc-num small{font-size:.35em;font-weight:700;opacity:.85;margin-left:6px;}
-.balance-card .bc-coin{font-size:.75em;opacity:.8;}
-.section-title{font-size:.72em;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin:24px 0 10px 2px;}
-.tx-list{display:flex;flex-direction:column;gap:8px;}
-.tx-item{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.app-header .title{font-weight:700;font-size:1.05em;}
+
+.asset-body{flex:1;overflow-y:auto;padding:20px 16px calc(24px + env(safe-area-inset-bottom));}
+.balance-card{
+  background: linear-gradient(135deg, var(--brand-light), var(--brand));
+  border-radius: var(--radius-lg);padding:32px 24px;color:#fff;text-align:center;
+  box-shadow: 0 12px 32px rgba(132,204,22,0.3);position:relative;overflow:hidden;
+}
+.balance-card::after{content:"";position:absolute;top:-40%;right:-20%;width:200px;height:200px;background:rgba(255,255,255,.2);border-radius:50%;filter:blur(20px);}
+.balance-card .bc-label{font-size:.85em;opacity:.9;font-weight:600;letter-spacing:.05em;position:relative;z-index:1;}
+.balance-card .bc-num{font-size:3em;font-weight:700;margin:12px 0 8px;line-height:1;position:relative;z-index:1;}
+.balance-card .bc-num small{font-size:.35em;font-weight:600;opacity:.9;margin-left:8px;}
+.balance-card .bc-coin{font-size:.8em;opacity:.85;position:relative;z-index:1;}
+
+.section-title{font-size:.8em;font-weight:600;color:var(--text-muted);margin:28px 0 12px 4px;}
+.tx-list{display:flex;flex-direction:column;gap:10px;}
+.tx-item{
+  background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-md);
+  padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  box-shadow:var(--shadow-sm);transition:var(--transition-smooth);
+}
+.tx-item:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);}
 .tx-item .tx-info{min-width:0;flex:1;}
-.tx-item .tx-reason{font-size:.86em;font-weight:600;color:var(--text);word-break:break-word;}
-.tx-item .tx-time{font-size:.68em;color:var(--text-light);margin-top:3px;}
-.tx-item .tx-amount{font-size:1.05em;font-weight:800;white-space:nowrap;}
-.tx-item .tx-amount.plus{color:var(--primary);}
-.tx-item .tx-amount.minus{color:var(--danger-text);}
-.empty{text-align:center;color:var(--text-muted);padding:50px 20px;font-size:.85em;line-height:1.8;}
-.empty svg{width:48px;height:48px;stroke:var(--text-light);fill:none;stroke-width:1.5;margin-bottom:10px;}
-.refresh-btn{display:block;width:100%;margin-top:20px;padding:11px;border-radius:var(--radius-sm);border:2px solid var(--border);background:transparent;color:var(--text-muted);font-weight:700;font-size:.85em;cursor:pointer;font-family:inherit;transition:.2s;}
-.refresh-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-bg);}
+.tx-item .tx-reason{font-size:.95em;font-weight:600;color:var(--text);word-break:break-word;}
+.tx-item .tx-time{font-size:.75em;color:var(--text-light);margin-top:4px;}
+.tx-item .tx-amount{font-size:1.15em;font-weight:700;white-space:nowrap;}
+.tx-item .tx-amount.plus{color:var(--brand);}
+.tx-item .tx-amount.minus{color:var(--danger);}
+
+.empty{text-align:center;color:var(--text-muted);padding:50px 20px;font-size:.9em;}
+.empty svg{width:48px;height:48px;stroke:var(--text-light);fill:none;stroke-width:1.5;margin-bottom:12px;}
+
+.refresh-btn{
+  display:flex;align-items:center;justify-content:center;width:100%;margin-top:24px;padding:12px;
+  border-radius:var(--radius-pill);border:1px solid var(--border-subtle);background:var(--bg-surface);
+  color:var(--text-muted);font-weight:600;font-size:.9em;cursor:pointer;font-family:inherit;
+  transition:var(--transition-smooth);box-shadow:var(--shadow-sm);
+}
+.refresh-btn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-bg);box-shadow:var(--shadow-md);}
+.refresh-btn:active{transform:scale(.98);}
+
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:12px 24px;border-radius:var(--radius-pill);font-size:.85em;font-weight:500;opacity:0;transition:var(--transition-smooth);z-index:9999;pointer-events:none;box-shadow:var(--shadow-md);}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(-10px)}
 </style>
 </head>
 <body>
@@ -53,6 +64,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   <div class="app-header">
     <button class="back" onclick="history.back()"><svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <span class="title">我的资产</span>
+    <div style="width:32px;"></div>
   </div>
   <div class="asset-body">
     <div class="balance-card">
@@ -88,7 +100,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       var r = await window.sb.rpc('get_my_profile');
       var c = (r.data && r.data.coins) || 0;
       document.getElementById('balanceNum').innerHTML = c + '<small>币</small>';
-      // 同步本地缓存
       currentUser.coins = c;
       setSessionUser(currentUser);
     } catch(e){
@@ -114,7 +125,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
         var plus = t.amount >= 0;
         return '<div class="tx-item">' +
           '<div class="tx-info">' +
-            '<div class="tx-reason">' + escapeHtml(t.reason || '调整') + '</div>' +
+            '<div class="tx-reason">' + escapeHtml(t.reason || '系统调整') + '</div>' +
             '<div class="tx-time">' + fmtTime(t.created_at) + '</div>' +
           '</div>' +
           '<div class="tx-amount ' + (plus ? 'plus' : 'minus') + '">' + (plus ? '+' : '') + t.amount + '</div>' +
@@ -125,31 +136,20 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
     }
   }
 
-  async function refreshAll(){ await loadBalance(); await loadTx(); }
+  async function refreshAll(){
+  if(window.showLoading) window.showLoading();
+  try { await loadBalance(); await loadTx(); } finally { if(window.hideLoading) window.hideLoading(); }
+}
 
-  document.getElementById('refreshBtn').onclick = function(){ showToast('已刷新'); refreshAll(); };
+  document.getElementById('refreshBtn').onclick = function(){ 
+    var t = document.getElementById('toast');
+    t.textContent = '已刷新'; t.classList.add('show');
+    clearTimeout(window.tt); window.tt = setTimeout(()=>t.classList.remove('show'), 2000);
+    refreshAll(); 
+  };
   refreshAll();
+  setTimeout(() => { if(window.hideLoading) window.hideLoading(); }, 5000);
 })();
-
-/* ★★ 服务端身份确认后再刷新权限 ★★
-   本地 localStorage 里的 is_admin 可以随便改，但不能决定任何事：
-   只有 get_my_profile 返回的 is_admin 才会被采纳 */
-window.addEventListener('sq-user-ready', function (e) {
-  var u = e.detail && e.detail.user;
-  if (!u) return;
-  try { currentUser = u; } catch (err) { window.currentUser = u; }
-  var admin = (u.is_admin === true);
-  try { isAdmin = admin; } catch (err) { window.isAdmin = admin; }
-  window.isAdmin = admin;
-  ['renderChat','renderMessages','renderPosts','render','renderShop','renderActivity','refreshAll','loadCategories','updateBannedBanner']
-    .forEach(function (fn) {
-      try { if (typeof window[fn] === 'function') window[fn](); } catch (err) {}
-    });
-  var ap = document.getElementById('adminPanelBtn');
-  if (ap) ap.style.display = admin ? 'inline-flex' : 'none';
-  var cc = document.getElementById('clearChatBtn');
-  if (cc) cc.style.display = admin ? 'inline-block' : 'none';
-});
 </script>
 </body>
 </html>

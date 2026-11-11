@@ -3,108 +3,117 @@
 <head>
 <meta charset="UTF-8" />
 <link rel="manifest" href="./manifest.json" />
-<meta name="theme-color" content="#2e7d32" />
+<meta name="theme-color" content="#65A30D" />
 <link rel="apple-touch-icon" href="./icon.svg" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>通行证 · Seven戚社区</title>
+<link rel="stylesheet" href="./theme.css" />
 <script src="./vendor/supabase.js"></script>
-<script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/script>');</script>
-<script>sessionStorage.setItem('sq_boot_shown', '1');</script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
-:root {
---bg: #f5faf5; --bg-card: #ffffff; --bg-input: #eaf3ea; --border: #c8e0c8;
---text: #1e3a2e; --text-muted: #5a7a6a; --primary: #2e7d32; --primary-light: #4caf50;
---primary-glow: rgba(46, 125, 50, 0.25); --primary-bg: #e8f5e9;
---shadow: 0 8px 32px rgba(46, 125, 50, 0.12); --radius: 16px; --radius-sm: 10px;
---font: "Space Grotesk", "PingFang SC", "Segoe UI", system-ui, sans-serif;
-}
-html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); overflow: hidden; }
-
-/* 1. 开屏动画 */
-#bootScreen { position: fixed; inset: 0; z-index: 99999; background: #000; display: flex; align-items: center; justify-content: center; font-family: "Poppins", sans-serif; font-size: 1.6em; font-weight: 600; color: #fff; transition: opacity 0.8s ease; opacity: 1; overflow: hidden; }
+/* 1. 开屏动画（白底黑字，每天首次打开显示） */
+#bootScreen { position: fixed; inset: 0; z-index: 99999; background: #ffffff; display: flex; align-items: center; justify-content: center; transition: opacity 0.6s ease; opacity: 1; }
 #bootScreen.hide { opacity: 0; pointer-events: none; }
-.boot-loader-inner { position: relative; display: flex; align-items: center; justify-content: center; height: 120px; width: auto; margin: 2rem; transform: scale(1.55); }
-.boot-loader { position: absolute; top: 0; left: 0; height: 100%; width: 100%; z-index: 1; -webkit-mask: repeating-linear-gradient(90deg, transparent 0, transparent 6px, black 7px, black 8px); mask: repeating-linear-gradient(90deg, transparent 0, transparent 6px, black 7px, black 8px); }
-.boot-loader::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(circle at 50% 50%, #ff0 0%, transparent 50%), radial-gradient(circle at 45% 45%, #f00 0%, transparent 45%), radial-gradient(circle at 55% 55%, #0ff 0%, transparent 45%), radial-gradient(circle at 45% 55%, #0f0 0%, transparent 45%), radial-gradient(circle at 55% 45%, #00f 0%, transparent 45%); -webkit-mask: radial-gradient(circle at 50% 50%, transparent 0%, transparent 10%, black 25%); mask: radial-gradient(circle at 50% 50%, transparent 0%, transparent 10%, black 25%); animation: boot-transform 2s infinite alternate, boot-opacity 4s infinite; animation-timing-function: cubic-bezier(0.6, 0.8, 0.5, 1); }
-@keyframes boot-transform { 0% { transform: translate(-55%); } 100% { transform: translate(55%); } }
-@keyframes boot-opacity { 0%, 100% { opacity: 0; } 15% { opacity: 1; } 65% { opacity: 0; } }
-.boot-letter { display: inline-block; opacity: 0; animation: boot-letter-anim 4s infinite linear; z-index: 2; white-space: pre; }
-@keyframes boot-letter-anim { 0% { opacity: 0; } 5% { opacity: 1; text-shadow: 0 0 4px #fff; transform: scale(1.1) translateY(-2px); } 20% { opacity: 0.2; } 100% { opacity: 0; } }
+.loader-wrapper { position: relative; display: flex; align-items: center; justify-content: center; height: 120px; width: auto; font-family: "Poppins", sans-serif; font-size: 1.6em; font-weight: 600; user-select: none; color: #000000; scale: 2; }
+.loader { position: absolute; top: 0; left: 0; height: 100%; width: 100%; z-index: 1; background-color: transparent; mask: repeating-linear-gradient(90deg, transparent 0, transparent 6px, black 7px, black 8px); }
+.loader::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: radial-gradient(circle at 50% 50%, #ff0 0%, transparent 50%), radial-gradient(circle at 45% 45%, #f00 0%, transparent 45%), radial-gradient(circle at 55% 55%, #0ff 0%, transparent 45%), radial-gradient(circle at 45% 55%, #0f0 0%, transparent 45%), radial-gradient(circle at 55% 45%, #00f 0%, transparent 45%); mask: radial-gradient(circle at 50% 50%, transparent 0%, transparent 10%, black 25%); animation: transform-animation 2s infinite alternate, opacity-animation 4s infinite; animation-timing-function: cubic-bezier(0.6, 0.8, 0.5, 1); }
+@keyframes transform-animation { 0% { transform: translate(-55%); } 100% { transform: translate(55%); } }
+@keyframes opacity-animation { 0%, 100% { opacity: 0; } 15% { opacity: 1; } 65% { opacity: 0; } }
+.loader-letter { display: inline-block; opacity: 0; animation: loader-letter-anim 4s infinite linear; z-index: 2; }
+.loader-letter:nth-child(1) { animation-delay: 0.1s; }
+.loader-letter:nth-child(2) { animation-delay: 0.205s; }
+.loader-letter:nth-child(3) { animation-delay: 0.31s; }
+.loader-letter:nth-child(4) { animation-delay: 0.415s; }
+.loader-letter:nth-child(5) { animation-delay: 0.521s; }
+.loader-letter:nth-child(6) { animation-delay: 0.626s; }
+.loader-letter:nth-child(7) { animation-delay: 0.731s; }
+.loader-letter:nth-child(8) { animation-delay: 0.837s; }
+@keyframes loader-letter-anim { 0% { opacity: 0; } 5% { opacity: 1; text-shadow: 0 0 4px #000; transform: scale(1.1) translateY(-2px); } 20% { opacity: 0.2; } 100% { opacity: 0; } }
 
 /* 2. 引导页 */
-#introScreen { position: fixed; inset: 0; z-index: 9000; background: #fff; display: none; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; opacity: 1; overflow: hidden; }
+#introScreen { position: fixed; inset: 0; z-index: 9000; background: var(--bg); display: none; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; opacity: 1; overflow: hidden; }
 #introScreen.hide { opacity: 0; pointer-events: none; }
-.intro-orb { position: absolute; border-radius: 50%; filter: blur(80px); z-index: 1; opacity: 0.6; animation: floatOrb 8s ease-in-out infinite alternate; }
-.orb1 { width: 350px; height: 350px; background: rgba(76,175,80,0.25); top: -100px; left: -100px; }
-.orb2 { width: 450px; height: 450px; background: rgba(46,125,50,0.15); bottom: -150px; right: -100px; animation-delay: -4s; }
+.intro-orb { position: absolute; border-radius: 50%; filter: blur(80px); z-index: 1; opacity: 0.5; animation: floatOrb 8s ease-in-out infinite alternate; }
+.orb1 { width: 350px; height: 350px; background: var(--brand-light); top: -100px; left: -100px; }
+.orb2 { width: 450px; height: 450px; background: rgba(132,204,22,0.15); bottom: -150px; right: -100px; animation-delay: -4s; }
 @keyframes floatOrb { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 30px) scale(1.1); } }
 .slides-wrap { position: relative; z-index: 2; width: 100%; max-width: 400px; height: 440px; display: flex; align-items: center; justify-content: center; }
 .intro-slide { display: none; text-align: center; padding: 20px; width: 100%; }
 .intro-slide.active { display: block; }
 .intro-slide .anim-item { opacity: 0; }
-.intro-slide.active .anim-item { animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
+.intro-slide.active .anim-item { animation: slideUpFade 0.6s cubic-bezier(0.4, 0, 0.2, 1) both; }
 .intro-slide.active .delay-1 { animation-delay: 0.1s; }
-.intro-slide.active .delay-2 { animation-delay: 0.25s; }
-.intro-slide.active .delay-3 { animation-delay: 0.4s; }
-@keyframes popIn { 0% { opacity: 0; transform: translateY(-40px) scale(0.5) rotate(-5deg); filter: blur(10px); } 100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); filter: blur(0); } }
-.intro-icon { width: 100px; height: 100px; border-radius: 30px; margin: 0 auto 28px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #4caf50, #2e7d32); box-shadow: 0 16px 32px rgba(46,125,50,0.25), inset 0 2px 4px rgba(255,255,255,0.4); position: relative; }
-.intro-icon::after { content: ''; position: absolute; inset: -10px; border-radius: 36px; background: inherit; filter: blur(20px); opacity: 0.4; z-index: -1; }
-.intro-icon svg { width: 52px; height: 52px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2)); }
-.intro-title { font-size: 1.8em; font-weight: 900; margin-bottom: 12px; color: #1e3a2e; letter-spacing: 1px; }
-.intro-desc { font-size: 0.95em; color: #5a7a6a; line-height: 1.8; }
+.intro-slide.active .delay-2 { animation-delay: 0.2s; }
+.intro-slide.active .delay-3 { animation-delay: 0.3s; }
+@keyframes slideUpFade { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+.intro-icon { width: 100px; height: 100px; border-radius: 28px; margin: 0 auto 32px; display: flex; align-items: center; justify-content: center; background: #fff; box-shadow: var(--shadow-md); border: 1px solid var(--border); }
+.intro-icon svg { width: 48px; height: 48px; filter: drop-shadow(0 4px 8px rgba(132,204,22,0.2)); }
+.intro-title { font-size: 1.8em; font-weight: 700; margin-bottom: 16px; color: var(--text); letter-spacing: -0.5px; }
+.intro-desc { font-size: 1em; color: var(--text-muted); line-height: 1.6; font-weight: 500; }
 .intro-footer { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
-.intro-dots { display: flex; gap: 8px; margin-bottom: 24px; }
-.intro-dots .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(46,125,50,0.2); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-.intro-dots .dot.active { width: 28px; border-radius: 4px; background: #2e7d32; }
-.intro-btn { background: linear-gradient(135deg, #4caf50, #2e7d32); color: #fff; border: none; padding: 16px 48px; font-size: 1.05em; font-weight: 700; border-radius: 99px; cursor: pointer; min-width: 220px; box-shadow: 0 10px 25px rgba(46,125,50,0.3); transition: all 0.3s; position: relative; overflow: hidden; }
-.intro-btn:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(46,125,50,0.4); }
+.intro-dots { display: flex; gap: 8px; margin-bottom: 32px; }
+.intro-dots .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border-subtle); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.intro-dots .dot.active { width: 24px; border-radius: 4px; background: var(--brand); }
+.intro-btn { background: var(--brand); color: #fff; border: none; padding: 16px 48px; font-size: 1.05em; font-weight: 600; border-radius: var(--radius-pill); cursor: pointer; min-width: 220px; box-shadow: 0 8px 24px rgba(132,204,22,0.3); transition: all 0.3s; }
+.intro-btn:hover { background: var(--brand-light); transform: translateY(-2px); box-shadow: 0 12px 28px rgba(132,204,22,0.4); }
 .intro-btn:active { transform: scale(0.96); }
-.intro-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); transform: skewX(-20deg); transition: 0.5s; }
-.intro-btn:hover::before { left: 150%; }
-.skip-btn { background: none; border: none; color: #8aaa9a; font-size: 0.85em; margin-top: 16px; cursor: pointer; transition: color 0.2s; }
-.skip-btn:hover { color: #2e7d32; }
+.skip-btn { background: none; border: none; color: var(--text-muted); font-size: 0.9em; margin-top: 20px; cursor: pointer; font-weight: 500; transition: color 0.2s; }
+.skip-btn:hover { color: var(--brand); }
 
 /* 3. 登录/注册层 */
-#authScreen { position: fixed; inset: 0; z-index: 8000; background: var(--bg); display: none; align-items: center; justify-content: center; padding: 20px; background-image: radial-gradient(circle at 20% 10%, rgba(46, 125, 50, 0.06) 0%, transparent 45%), radial-gradient(circle at 80% 90%, rgba(76, 175, 80, 0.06) 0%, transparent 45%); transition: opacity 0.4s ease; opacity: 1; overflow-y: auto; }
+#authScreen { position: fixed; inset: 0; z-index: 8000; background: var(--bg); display: none; align-items: center; justify-content: center; padding: 20px; background-image: radial-gradient(circle at 20% 10%, rgba(132, 204, 22, 0.08) 0%, transparent 40%), radial-gradient(circle at 80% 90%, rgba(132, 204, 22, 0.06) 0%, transparent 45%); transition: opacity 0.4s ease; opacity: 1; overflow-y: auto; }
 #authScreen.hide { opacity: 0; pointer-events: none; }
-.login-card { width: 23em; max-width: 92vw; background: #fff; border-radius: 16px; padding: 2.2em 2em; border: 1px solid #c8e0c8; box-shadow: 0 8px 32px rgba(46,125,50,0.12); }
-.login-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5em; }
-.login-logo { font-weight: 900; font-size: 1.35em; color: #1e3a2e; display: flex; align-items: center; gap: 0.35em; }
-.login-logo span { color: #2e7d32; }
-.login-title { font-size: 1.4em; font-weight: 700; text-align: center; margin-bottom: 1em; }
-.login-title span { display: block; font-weight: 400; color: #5a7a6a; font-size: 0.55em; margin-top: 0.2em; }
-.login-form { display: flex; flex-direction: column; gap: 0.9em; }
-.field-group { display: flex; flex-direction: column; gap: 0.35em; }
-.field-group label { font-size: 0.7em; font-weight: 600; color: #5a7a6a; }
-.field-group input { width: 100%; padding: 0.8em 1em; border-radius: 10px; border: 2px solid #c8e0c8; background: #eaf3ea; font-size: 0.95em; outline: none; transition: all 0.2s; }
-.field-group input:focus { border-color: #2e7d32; box-shadow: 0 0 0 4px rgba(46,125,50,0.1); }
-.login-continue { width: 100%; padding: 0.85em; border-radius: 10px; border: none; background: #2e7d32; color: #fff; font-weight: 700; font-size: 0.95em; cursor: pointer; margin-top: 0.3em; transition: all 0.2s; }
-.login-continue:hover { background: #4caf50; transform: translateY(-1px); }
-.login-footer { text-align: center; margin-top: 1.1em; font-size: 0.82em; color: #5a7a6a; }
-.login-footer .switch-link { color: #2e7d32; font-weight: 700; cursor: pointer; border: none; background: none; padding: 0 4px; text-decoration: underline; }
-.login-error { color: #c62828; font-size: 0.78em; text-align: center; min-height: 1.5em; margin-top: 0.2em; line-height: 1.4; }
+.login-card { width: 100%; max-width: 400px; background: var(--bg-glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: var(--radius-lg); padding: 36px 32px; border: 1px solid var(--border); box-shadow: 0 24px 64px rgba(0,0,0,0.04); }
+.login-header { display: flex; justify-content: center; align-items: center; margin-bottom: 24px; }
+.login-logo { font-weight: 800; font-size: 1.6em; color: var(--text); display: flex; align-items: center; gap: 0.2em; }
+.login-logo span { color: var(--brand); }
+.login-title { font-size: 1.2em; font-weight: 600; text-align: center; margin-bottom: 24px; color: var(--text); }
+.login-title span { display: block; font-weight: 500; color: var(--text-muted); font-size: 0.75em; margin-top: 6px; }
+.login-form { display: flex; flex-direction: column; gap: 16px; }
+.field-group { display: flex; flex-direction: column; gap: 8px; }
+.field-group label { font-size: 0.85em; font-weight: 600; color: var(--text-muted); }
+.field-group input { width: 100%; padding: 14px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); background: var(--bg-surface); font-size: 0.95em; outline: none; transition: all 0.3s; color: var(--text); }
+.field-group input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-bg); }
+.login-continue { width: 100%; padding: 14px; border-radius: var(--radius-sm); border: none; background: var(--brand); color: #fff; font-weight: 600; font-size: 1em; cursor: pointer; margin-top: 8px; transition: all 0.3s; box-shadow: 0 4px 12px rgba(132,204,22,0.25); }
+.login-continue:hover { background: var(--brand-light); transform: translateY(-1px); }
+.login-continue:active { transform: scale(0.98); }
+.login-footer { text-align: center; margin-top: 20px; font-size: 0.9em; color: var(--text-muted); }
+.login-footer .switch-link { color: var(--brand); font-weight: 600; cursor: pointer; border: none; background: none; padding: 0 4px; text-decoration: none; transition: color 0.2s; }
+.login-footer .switch-link:hover { color: var(--brand-dark); text-decoration: underline; }
+.login-error { color: var(--danger); font-size: 0.85em; text-align: center; min-height: 20px; margin-top: 4px; line-height: 1.4; }
 .auth-card { display: none; }
-.auth-card.active { display: block; animation: slideUp 0.3s ease; }
-@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-.field-hint { font-size: 0.72em; margin-top: 4px; min-height: 1.2em; transition: color 0.2s; }
-.field-hint.error { color: #c62828; }
-.field-hint.success { color: #2e7d32; }
-.oauth-row { display: flex; gap: 10px; margin-bottom: 12px; }
-.oauth-btn { flex: 1; padding: 10px; border: 1.5px solid #c8e0c8; border-radius: 10px; background: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85em; font-weight: 700; color: #1e3a2e; cursor: pointer; font-family: inherit; }
-.oauth-btn:hover { background: #f5faf5; }
-.oauth-divider { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; font-size: 0.75em; color: #8aaa9a; }
-.oauth-divider div { flex: 1; height: 1px; background: #c8e0c8; }
+.auth-card.active { display: block; animation: slideUpFade 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+.field-hint { font-size: 0.75em; margin-top: 6px; min-height: 1.2em; transition: color 0.2s; font-weight: 500; }
+.field-hint.error { color: var(--danger); }
+.field-hint.success { color: var(--brand); }
 </style>
+
+<script>
+  window.onerror = function(msg, url, line, col, error) {
+    alert("【系统提示】代码报错啦！\n错误信息: " + msg + "\n行号: " + line + "\n列号: " + col);
+    return false;
+  };
+  window.addEventListener('unhandledrejection', function(event) {
+    alert("【系统提示】异步请求报错啦！\n" + (event.reason ? event.reason.message : event.reason));
+  });
+</script>
+<script src="./common.js"></script>
 </head>
 <body>
 
 <div id="bootScreen">
-    <div class="boot-loader-inner">
-        <div class="boot-loader"></div>
-        <div id="bootText"></div>
-    </div>
+  <div class="loader-wrapper">
+    <span class="loader-letter">S</span>
+    <span class="loader-letter">e</span>
+    <span class="loader-letter">v</span>
+    <span class="loader-letter">e</span>
+    <span class="loader-letter">n</span>
+    <span class="loader-letter">戚</span>
+    <span class="loader-letter">出</span>
+    <span class="loader-letter">品</span>
+    <div class="loader"></div>
+  </div>
 </div>
 
 <div id="introScreen">
@@ -112,30 +121,22 @@ html, body { height: 100%; font-family: var(--font); background: var(--bg); colo
     <div class="intro-orb orb2"></div>
     <div class="slides-wrap">
         <div id="introSlide0" class="intro-slide active">
-            <div class="intro-icon anim-item delay-1">
-                <svg viewBox="0 0 48 48" fill="none"><path d="M8 20C8 12.268 14.268 6 22 6H26C33.732 6 40 12.268 40 20V26C40 33.732 33.732 40 26 40H20L10 46V40C8.791 40 8 39.209 8 38V20Z" fill="white" fill-opacity="0.9"/><path d="M16 18H32M16 26H28" stroke="#2e7d32" stroke-width="3" stroke-linecap="round"/><circle cx="36" cy="12" r="6" fill="#ff6b6b" stroke="white" stroke-width="2"/></svg>
-            </div>
+            <div class="intro-icon anim-item delay-1"><svg viewBox="0 0 48 48" fill="none"><path d="M8 20C8 12.268 14.268 6 22 6H26C33.732 6 40 12.268 40 20V26C40 33.732 33.732 40 26 40H20L10 46V40C8.791 40 8 39.209 8 38V20Z" fill="var(--brand-bg)"/><path d="M16 18H32M16 26H28" stroke="var(--brand)" stroke-width="3" stroke-linecap="round"/><circle cx="36" cy="12" r="6" fill="var(--brand)" stroke="#fff" stroke-width="2"/></svg></div>
             <div class="intro-title anim-item delay-2">社区广场</div>
             <div class="intro-desc anim-item delay-3">帖子广场、实时聊天群、匿名留言板<br>发布动态，随便聊聊</div>
         </div>
         <div id="introSlide1" class="intro-slide">
-            <div class="intro-icon anim-item delay-1" style="background: linear-gradient(135deg, #a855f7, #7e22ce);">
-                <svg viewBox="0 0 48 48" fill="none"><path d="M16 18C10 18 6 24 6 32C6 38 10 42 14 42C18 42 20 40 22 36H26C28 40 30 42 34 42C38 42 42 38 42 32C42 24 38 18 32 18H16Z" fill="white" fill-opacity="0.9"/><circle cx="18" cy="30" r="4" fill="#7e22ce"/><path d="M32 26V34M28 30H36" stroke="#c084fc" stroke-width="3" stroke-linecap="round"/></svg>
-            </div>
+            <div class="intro-icon anim-item delay-1"><svg viewBox="0 0 48 48" fill="none"><path d="M16 18C10 18 6 24 6 32C6 38 10 42 14 42C18 42 20 40 22 36H26C28 40 30 42 34 42C38 42 42 38 42 32C42 24 38 18 32 18H16Z" fill="var(--brand-bg)"/><circle cx="18" cy="30" r="4" fill="var(--brand)"/><path d="M32 26V34M28 30H36" stroke="var(--brand)" stroke-width="3" stroke-linecap="round"/></svg></div>
             <div class="intro-title anim-item delay-2">互动游戏</div>
             <div class="intro-desc anim-item delay-3">开个房间，和朋友一起玩<br>斗地主、五子棋等</div>
         </div>
         <div id="introSlide2" class="intro-slide">
-            <div class="intro-icon anim-item delay-1" style="background: linear-gradient(135deg, #fbbf24, #d97706);">
-                <svg viewBox="0 0 48 48" fill="none"><path d="M12 18H36L38 42H10L12 18Z" fill="white" fill-opacity="0.9"/><path d="M18 18V12C18 8.686 20.686 6 24 6C27.314 6 30 8.686 30 12V18" stroke="white" stroke-width="3" stroke-linecap="round"/><circle cx="24" cy="28" r="4" fill="#d97706"/></svg>
-            </div>
+            <div class="intro-icon anim-item delay-1"><svg viewBox="0 0 48 48" fill="none"><path d="M12 18H36L38 42H10L12 18Z" fill="var(--brand-bg)"/><path d="M18 18V12C18 8.686 20.686 6 24 6C27.314 6 30 8.686 30 12V18" stroke="var(--brand)" stroke-width="3" stroke-linecap="round"/><circle cx="24" cy="28" r="4" fill="var(--brand)"/></svg></div>
             <div class="intro-title anim-item delay-2">皮肤商城</div>
             <div class="intro-desc anim-item delay-3">45 款精美气泡皮肤任你挑<br>每日签到赚小七币</div>
         </div>
         <div id="introSlide3" class="intro-slide">
-            <div class="intro-icon anim-item delay-1" style="background: linear-gradient(135deg, #38bdf8, #0284c7);">
-                <svg viewBox="0 0 48 48" fill="none"><rect x="6" y="12" width="36" height="24" rx="4" fill="white" fill-opacity="0.9"/><path d="M6 16L24 28L42 16" stroke="#0284c7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="36" cy="32" r="6" fill="#f87171" stroke="white" stroke-width="2"/><path d="M34 32H38M36 30V34" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
-            </div>
+            <div class="intro-icon anim-item delay-1"><svg viewBox="0 0 48 48" fill="none"><rect x="6" y="12" width="36" height="24" rx="4" fill="var(--brand-bg)"/><path d="M6 16L24 28L42 16" stroke="var(--brand)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="36" cy="32" r="6" fill="var(--brand)" stroke="#fff" stroke-width="2"/><path d="M34 32H38M36 30V34" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
             <div class="intro-title anim-item delay-2">匿名留言</div>
             <div class="intro-desc anim-item delay-3">无需登录，随写随发<br>每天 3 条额度，安全审核</div>
         </div>
@@ -153,13 +154,8 @@ html, body { height: 100%; font-family: var(--font); background: var(--bg); colo
     <div class="login-card">
         <div class="login-header"><div class="login-logo"><span>Seven</span>戚</div></div>
         <div id="loginCard" class="auth-card active">
-            <div class="login-title"><span>欢迎回来</span><span>登录以继续</span></div>
+            <div class="login-title">欢迎回来<span>登录以继续</span></div>
             <div class="login-form">
-                <div class="oauth-row">
-                    <button class="oauth-btn" onclick="alert('Google 登录暂未配置')"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Google</button>
-                    <button class="oauth-btn" onclick="alert('Github 登录暂未配置')"><svg viewBox="0 0 24 24" width="16" height="16" fill="#24292e"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg> Github</button>
-                </div>
-                <div class="oauth-divider"><div></div><span>或</span><div></div></div>
                 <div class="field-group"><label>邮箱账号</label><input type="email" id="loginEmail" placeholder="请输入真实邮箱" /></div>
                 <div class="field-group"><label>密码</label><input type="password" id="loginPassword" placeholder="请输入密码" /></div>
                 <button class="login-continue" id="loginBtn">登录</button>
@@ -167,8 +163,9 @@ html, body { height: 100%; font-family: var(--font); background: var(--bg); colo
             </div>
             <div class="login-footer"><span>没有账号？</span><button class="switch-link" id="toRegisterBtn">去注册</button></div>
         </div>
+        
         <div id="registerCard" class="auth-card">
-            <div class="login-title"><span>创建账户</span><span>加入 Seven戚 社区</span></div>
+            <div class="login-title">创建账户<span>加入 Seven戚 社区</span></div>
             <div class="login-form">
                 <div class="field-group"><label>昵称</label><input type="text" id="regNick" maxlength="12" placeholder="请输入昵称" /></div>
                 <div class="field-group">
@@ -187,8 +184,8 @@ html, body { height: 100%; font-family: var(--font); background: var(--bg); colo
 </div>
 
 <script>
-var SUPABASE_URL = "https://ljbxeuqnlxiffvbnwepv.supabase.co";
-var SUPABASE_ANON_KEY = "sb_publishable_OT_i4T2SnTxA8bHKnSQ1sw_0Es4l8SP";
+var SUPABASE_URL = "https://你的新项目ID.supabase.co";
+var SUPABASE_ANON_KEY = "sb_publishable_mQbWq3yUoa8U5fmlk61WnA_W_rsrqCL";
 if (!window.sb && window.supabase) window.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 var DOMESTIC_EMAIL_REGEX = /^[a-zA-Z0-9_.-]+@(qq|vip\.qq|foxmail|163|126|yeah|sina|sohu|139|189|aliyun)\.(com|cn|net)$/i;
@@ -279,67 +276,70 @@ function switchCard(which) {
 }
 
 (function init() {
-    var bootText = document.getElementById('bootText');
-    if (bootText) {
-        var text = 'Seven戚  出品';
-        text.split('').forEach(function(c, i) {
-            var span = document.createElement('span');
-            span.className = 'boot-letter';
-            span.style.animationDelay = (0.1 + i * 0.105).toFixed(3) + 's';
-            span.textContent = c;
-            bootText.appendChild(span);
-        });
-    }
-    var isBootShown = sessionStorage.getItem('index_boot_shown');
-    if (isBootShown) { document.getElementById('bootScreen').style.display = 'none'; }
-    else { sessionStorage.setItem('index_boot_shown', '1'); setTimeout(function() { document.getElementById('bootScreen').classList.add('hide'); setTimeout(function() { document.getElementById('bootScreen').style.display = 'none'; }, 800); }, 1500); }
+    // 判断是否每天首次访问
+    var today = new Date().toDateString();
+    var lastVisit = localStorage.getItem('sq_last_visit_date');
+    var bootScreen = document.getElementById('bootScreen');
 
-    document.getElementById('toRegisterBtn').onclick = function() { switchCard('register'); };
-    document.getElementById('toLoginBtn').onclick = function() { switchCard('login'); };
-    document.getElementById('loginBtn').onclick = doLogin;
-    document.getElementById('registerBtn').onclick = doRegister;
-    document.getElementById('loginPassword').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
-    document.getElementById('regPassword2').addEventListener('keydown', function(e) { if (e.key === 'Enter') doRegister(); });
-    document.getElementById('regEmail').addEventListener('input', function() {
-        var val = this.value.trim(); var hint = document.getElementById('regEmailHint');
-        if (!val) { hint.textContent = ''; hint.className = 'field-hint'; return; }
-        if (DOMESTIC_EMAIL_REGEX.test(val)) { hint.textContent = '✅ 邮箱格式正确'; hint.className = 'field-hint success'; }
-        else { hint.textContent = '❌ 仅支持 QQ、163、126 等国内邮箱'; hint.className = 'field-hint error'; }
-    });
-
-    var currentSlide = 0, totalSlides = 4;
-    function updateSlide(idx) {
-        currentSlide = idx;
-        document.querySelectorAll('.intro-slide').forEach(function(el, i) { el.classList.toggle('active', i === idx); });
-        document.querySelectorAll('.intro-dots .dot').forEach(function(el, i) { el.classList.toggle('active', i === idx); });
-        document.getElementById('introNextBtn').textContent = idx === totalSlides - 1 ? '开启体验' : '下一步';
-    }
-    document.getElementById('introNextBtn').onclick = function() { if (currentSlide < totalSlides - 1) updateSlide(currentSlide + 1); else finishIntro(); };
-    document.getElementById('introSkipBtn').onclick = finishIntro;
-    function finishIntro() {
-        localStorage.setItem('seven_intro_shown_v6', '1');
-        document.getElementById('introScreen').classList.add('hide');
-        setTimeout(function() { document.getElementById('introScreen').style.display = 'none'; window.location.href = './messages.html'; }, 400);
-    }
-
-    if (window.sb) {
-        window.sb.auth.getSession().then(function(s) {
-            if (s.data && s.data.session) return fetchMyProfileServer().then(function(p) { return p || ensureProfileFromAuth(); });
-            return null;
-        }).then(function(profile) {
-            if (profile) { saveLocalSession(profile); window.location.replace('./posts.html'); return; }
-            var urlParams = new URLSearchParams(location.search);
-            var isLoginIntent = urlParams.get('login') === '1';
-            var hasSeenIntro = localStorage.getItem('seven_intro_shown_v6');
-            var isReferrerInternal = document.referrer && document.referrer.includes(window.location.host);
-            if (isLoginIntent || isReferrerInternal) document.getElementById('authScreen').style.display = 'flex';
-            else if (!hasSeenIntro) document.getElementById('introScreen').style.display = 'flex';
-            else window.location.replace('./messages.html');
-        }).catch(function() {
-            if (document.getElementById('introScreen').style.display !== 'flex' && document.getElementById('authScreen').style.display !== 'flex') document.getElementById('introScreen').style.display = 'flex';
-        });
+    if (lastVisit === today) {
+        bootScreen.style.display = 'none';
+        checkAuth();
     } else {
-        setTimeout(function(){ if (document.getElementById('introScreen').style.display !== 'flex' && document.getElementById('authScreen').style.display !== 'flex') document.getElementById('introScreen').style.display = 'flex'; }, 1500);
+        localStorage.setItem('sq_last_visit_date', today);
+        setTimeout(function() {
+            bootScreen.classList.add('hide');
+            setTimeout(function() { bootScreen.style.display = 'none'; checkAuth(); }, 600);
+        }, 2500);
+    }
+
+    function checkAuth() {
+        document.getElementById('toRegisterBtn').onclick = function() { switchCard('register'); };
+        document.getElementById('toLoginBtn').onclick = function() { switchCard('login'); };
+        document.getElementById('loginBtn').onclick = doLogin;
+        document.getElementById('registerBtn').onclick = doRegister;
+        document.getElementById('loginPassword').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+        document.getElementById('regPassword2').addEventListener('keydown', function(e) { if (e.key === 'Enter') doRegister(); });
+        document.getElementById('regEmail').addEventListener('input', function() {
+            var val = this.value.trim(); var hint = document.getElementById('regEmailHint');
+            if (!val) { hint.textContent = ''; hint.className = 'field-hint'; return; }
+            if (DOMESTIC_EMAIL_REGEX.test(val)) { hint.textContent = '✅ 邮箱格式正确'; hint.className = 'field-hint success'; }
+            else { hint.textContent = '❌ 仅支持 QQ、163、126 等国内邮箱'; hint.className = 'field-hint error'; }
+        });
+
+        var currentSlide = 0, totalSlides = 4;
+        function updateSlide(idx) {
+            currentSlide = idx;
+            document.querySelectorAll('.intro-slide').forEach(function(el, i) { el.classList.toggle('active', i === idx); });
+            document.querySelectorAll('.intro-dots .dot').forEach(function(el, i) { el.classList.toggle('active', i === idx); });
+            document.getElementById('introNextBtn').textContent = idx === totalSlides - 1 ? '开启体验' : '下一步';
+        }
+        document.getElementById('introNextBtn').onclick = function() { if (currentSlide < totalSlides - 1) updateSlide(currentSlide + 1); else finishIntro(); };
+        document.getElementById('introSkipBtn').onclick = finishIntro;
+        function finishIntro() {
+            localStorage.setItem('seven_intro_shown_v6', '1');
+            document.getElementById('introScreen').classList.add('hide');
+            setTimeout(function() { document.getElementById('introScreen').style.display = 'none'; window.location.href = './messages.html'; }, 400);
+        }
+
+        if (window.sb) {
+            window.sb.auth.getSession().then(function(s) {
+                if (s.data && s.data.session) return fetchMyProfileServer().then(function(p) { return p || ensureProfileFromAuth(); });
+                return null;
+            }).then(function(profile) {
+                if (profile) { saveLocalSession(profile); window.location.replace('./posts.html'); return; }
+                var urlParams = new URLSearchParams(location.search);
+                var isLoginIntent = urlParams.get('login') === '1';
+                var hasSeenIntro = localStorage.getItem('seven_intro_shown_v6');
+                var isReferrerInternal = document.referrer && document.referrer.includes(window.location.host);
+                if (isLoginIntent || isReferrerInternal) document.getElementById('authScreen').style.display = 'flex';
+                else if (!hasSeenIntro) document.getElementById('introScreen').style.display = 'flex';
+                else window.location.replace('./messages.html');
+            }).catch(function() {
+                if (document.getElementById('introScreen').style.display !== 'flex' && document.getElementById('authScreen').style.display !== 'flex') document.getElementById('introScreen').style.display = 'flex';
+            });
+        } else {
+            setTimeout(function(){ if (document.getElementById('introScreen').style.display !== 'flex' && document.getElementById('authScreen').style.display !== 'flex') document.getElementById('introScreen').style.display = 'flex'; }, 1500);
+        }
     }
 })();
 </script>

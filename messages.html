@@ -3,81 +3,121 @@
 <head>
 <meta charset="UTF-8" />
 <link rel="manifest" href="./manifest.json" />
-<meta name="theme-color" content="#2e7d32" />
+<meta name="theme-color" content="#65A30D" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Seven戚 · 留言板</title>
+<link rel="stylesheet" href="./theme.css" />
 <script src="./vendor/supabase.js"></script>
 <script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/script>');</script>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; }
-:root {
-  --bg:#f5faf5; --bg-card:#fff; --bg-input:#eaf3ea; --border:#c8e0c8; --text:#1e3a2e; --text-muted:#5a7a6a; --text-light:#8aaa9a;
-  --primary:#2e7d32; --primary-light:#4caf50; --primary-bg:#e8f5e9; --shadow:0 8px 32px rgba(46,125,50,.12);
-  --radius:16px; --radius-sm:10px; --font:"Space Grotesk","PingFang SC","Segoe UI",system-ui,sans-serif;
-  --danger:#e57373; --danger-bg:#ffebee; --official-blue:#2b6cff; --safe-bottom:env(safe-area-inset-bottom,0px);
-}
-html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);overflow:hidden}
-#mainApp{display:flex;flex-direction:column;height:100vh;height:100dvh;background:var(--bg)}
-.app-header{flex-shrink:0;padding:12px 20px 8px;background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;z-index:50;min-height:56px}
-.app-header .brand{font-weight:900;font-size:1.1em;color:var(--text);display:flex;align-items:center;gap:.4em;cursor:pointer}
-.app-header .brand span{color:var(--primary)}
-.app-header .brand small{font-weight:400;font-size:.55em;color:var(--text-muted);margin-left:.3em}
-.app-header .user-area{display:flex;align-items:center;gap:10px;cursor:pointer;padding:4px 10px 4px 6px;border-radius:99px}
-.app-header .avatar{width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px;background-size:cover;background-position:center}
-.app-header .user-name{font-weight:600;font-size:.85em;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.app-tabs{flex-shrink:0;display:flex;background:rgba(255,255,255,.96);border-top:1px solid var(--border);padding:6px 0 calc(6px + var(--safe-bottom));z-index:50}
-.tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;font-family:var(--font);font-size:.6em;font-weight:600;color:var(--text-muted);padding:4px 0;cursor:pointer;text-decoration:none;position:relative}
-.tab-btn .tab-icon{font-size:1.6em;line-height:1.2;display:flex;align-items:center;justify-content:center;width:1.7em;height:1.7em}
-.tab-btn .tab-icon svg{width:100%;height:100%;display:block;stroke:currentColor;fill:none}
-.tab-btn.active{color:var(--primary)}
-.tab-btn.active::after{content:'';position:absolute;top:-1px;left:30%;right:30%;height:3px;background:var(--primary);border-radius:0 0 4px 4px}
+/* 仅保留 messages 独有样式 */
 .app-content{flex:1;min-height:0;display:flex;flex-direction:column}
-.msg-list{flex:1;overflow-y:auto;padding:16px 20px 8px;display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch}
-.msg{display:flex;gap:12px;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);flex-shrink:0}
-.msg .avatar{width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:700;font-size:16px;color:#fff;background:var(--primary);background-size:cover;background-position:center}
+.msg-list{flex:1;overflow-y:auto;padding:20px 16px 8px;display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch}
+
+.msg{display:flex;gap:14px;padding:16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-md);flex-shrink:0;box-shadow:var(--shadow-sm);transition:var(--transition-smooth)}
+.msg:hover{box-shadow:var(--shadow-md)}
+.msg .avatar{width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:600;font-size:16px;color:var(--brand-dark);background:var(--brand-bg);background-size:cover;background-position:center}
 .msg .body{flex:1;min-width:0}
-.msg .meta{display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap}
-.msg .name{font-size:14px;font-weight:600}
-.msg .official-tag{background:var(--official-blue);color:#fff;font-size:10px;font-weight:600;padding:0 8px;border-radius:999px;line-height:18px}
-.msg .time{font-size:11.5px;color:var(--text-muted)}
-.msg .txt{font-size:14px;line-height:1.6;color:var(--text);word-break:break-word}
-.msg .ip{margin-top:6px;font-size:11.5px;color:var(--text-muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.msg .ip .comment-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:13px;display:flex;align-items:center;gap:4px;padding:2px 6px;border-radius:999px;font-family:inherit}
-.msg .ip .comment-btn:hover{background:rgba(0,0,0,0.05);color:var(--text)}
-.msg .ip .del-btn{background:none;border:none;color:var(--danger);cursor:pointer;font-size:13px;opacity:0.6;padding:0 4px;margin-left:auto;display:flex;align-items:center;gap:4px}
-.empty-state{text-align:center;color:var(--text-muted);padding:40px 20px;font-size:0.85em}
-.loading-state{text-align:center;color:var(--text-muted);padding:40px 20px;font-size:0.9em}
-.fixed-input-area{flex-shrink:0;padding:10px 20px calc(10px + var(--safe-bottom));background:var(--bg);border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.fixed-input-area .input-wrapper{flex:1;display:flex;gap:8px;min-width:0}
-.fixed-input-area input{flex:1;padding:10px 14px;border-radius:99px;border:2px solid var(--border);background:var(--bg-input);font-family:inherit;font-size:0.85em;outline:none;color:var(--text);min-width:0}
-.fixed-input-area input:focus{border-color:var(--primary)}
-.fixed-input-area button{padding:8px 20px;border-radius:99px;border:none;background:var(--primary);color:#fff;font-weight:700;font-size:0.85em;cursor:pointer;font-family:inherit;white-space:nowrap}
-.comment-overlay{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;}
-.comment-overlay.active{display:flex;}
-.comment-panel{background:var(--bg-card);border-radius:20px 20px 0 0;max-width:100%;width:100%;max-height:80vh;display:flex;flex-direction:column;}
+.msg .meta{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+.msg .name{font-size:.95em;font-weight:600;color:var(--text)}
+.msg .official-tag{ background:#EFF6FF; color:#2563EB; font-size:.6em; padding:2px 8px; border-radius:var(--radius-pill); font-weight:600; border:1px solid #BFDBFE; }
+.msg .time{font-size:.75em;color:var(--text-light)}
+.msg .txt{font-size:.95em;line-height:1.6;color:var(--text);word-break:break-word}
+.msg .ip{margin-top:10px;font-size:.75em;color:var(--text-light);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.msg .ip .comment-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:.9em;display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--radius-pill);transition:var(--transition-smooth);}
+.msg .ip .comment-btn:hover{background:var(--bg);color:var(--brand)}
+.msg .ip .del-btn{background:none;border:none;color:var(--danger);cursor:pointer;font-size:.9em;opacity:0.7;padding:4px 10px;border-radius:var(--radius-pill);margin-left:auto;display:flex;align-items:center;gap:4px;transition:var(--transition-smooth);}
+.msg .ip .del-btn:hover{opacity:1;background:var(--danger-bg)}
+.empty-state{text-align:center;color:var(--text-muted);padding:40px 20px;font-size:.9em}
+.loading-state{text-align:center;color:var(--text-muted);padding:40px 20px;font-size:.9em}
+
+/* 输入区 */
+.fixed-input-area{flex-shrink:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--bg-glass);backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-wrap:wrap;box-shadow:0 -4px 12px rgba(0,0,0,.02);}
+.fixed-input-area .input-wrapper{flex:1;display:flex;gap:10px;min-width:0}
+.fixed-input-area input{flex:1;padding:12px 16px;border-radius:var(--radius-pill);border:1px solid var(--border-subtle);background:var(--bg-surface);font-family:inherit;font-size:.9em;outline:none;color:var(--text);min-width:0;transition:var(--transition-smooth);}
+.fixed-input-area input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-bg)}
+.fixed-input-area button{padding:12px 24px;border-radius:var(--radius-pill);border:none;background:var(--brand);color:#fff;font-weight:600;font-size:.9em;cursor:pointer;font-family:inherit;white-space:nowrap;transition:var(--transition-smooth);}
+.fixed-input-area button:active{transform:scale(.96)}
+
+/* 评论弹层 */
+.comment-overlay{position:fixed;inset:0;z-index:999;background:rgba(17,24,39,0.4);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;}
+.comment-overlay.active{display:flex;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.comment-panel{background:var(--bg-surface);border-radius:24px 24px 0 0;max-width:100%;width:100%;max-height:80vh;display:flex;flex-direction:column;animation:slideUp .3s cubic-bezier(0.4, 0, 0.2, 1);}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .comment-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);}
-.comment-close{background:none;border:none;font-size:1.2em;color:var(--text-muted);cursor:pointer;}
+.comment-close{background:none;border:none;font-size:1.2em;color:var(--text-muted);cursor:pointer;transition:var(--transition-smooth);}
+.comment-close:hover{color:var(--text)}
 .comment-list{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
-.comment-item{padding:10px 12px;background:var(--bg-input);border-radius:10px;}
-.comment-item .c-meta{display:flex;justify-content:space-between;font-size:0.75em;color:var(--text-muted);margin-bottom:4px;}
-.comment-item .c-txt{font-size:0.9em;line-height:1.5;}
-.comment-input-area{display:flex;gap:8px;padding:12px 20px calc(12px + var(--safe-bottom));border-top:1px solid var(--border);background:var(--bg-card);}
-.comment-input-area input{flex:1;padding:10px 14px;border-radius:99px;border:2px solid var(--border);background:var(--bg-input);outline:none;}
-.comment-input-area button{padding:10px 20px;border-radius:99px;border:none;background:var(--primary);color:#fff;font-weight:700;cursor:pointer;}
-#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:.7em 1.6em;border-radius:2em;font-weight:600;font-size:.85em;opacity:0;transition:all .4s ease;z-index:9999;pointer-events:none;white-space:nowrap;box-shadow:var(--shadow);}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.comment-item{padding:12px 14px;background:var(--bg);border-radius:var(--radius-sm);}
+.comment-item .c-meta{display:flex;justify-content:space-between;font-size:.8em;color:var(--text-muted);margin-bottom:6px;font-weight:600;}
+.comment-item .c-txt{font-size:.9em;line-height:1.5;color:var(--text);}
+.comment-input-area{display:flex;gap:10px;padding:12px 20px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:var(--bg-surface);}
+.comment-input-area input{flex:1;padding:12px 16px;border-radius:var(--radius-pill);border:1px solid var(--border-subtle);background:var(--bg);outline:none;transition:var(--transition-smooth);}
+.comment-input-area input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-bg)}
+.comment-input-area button{padding:12px 24px;border-radius:var(--radius-pill);border:none;background:var(--brand);color:#fff;font-weight:600;cursor:pointer;transition:var(--transition-smooth);}
+.comment-input-area button:active{transform:scale(.96)}
+
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:12px 24px;border-radius:var(--radius-pill);font-size:.85em;font-weight:500;opacity:0;transition:var(--transition-smooth);z-index:9999;pointer-events:none;box-shadow:var(--shadow-md);}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(-10px)}
 </style>
+
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (let registration of registrations) {
+            registration.unregister();
+        }
+    });
+}
+if ('caches' in window) {
+    caches.keys().then(function(names) {
+        for (let name of names) {
+            caches.delete(name);
+        }
+    });
+}
+</script>
+
+<!-- 强制注销 Service Worker 并清空所有缓存 -->
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (let registration of registrations) {
+            registration.unregister();
+        }
+    });
+}
+if ('caches' in window) {
+    caches.keys().then(function(names) {
+        for (let name of names) {
+            caches.delete(name);
+        }
+    });
+}
+</script>
+
+<script src="./common.js"></script>
 </head>
 <body>
 <div id="mainApp">
   <div id="header-container"></div>
   <div class="app-content">
     <div class="msg-list" id="messageList">
-      <div class="loading-state">加载中...</div>
+
+  <div class="skeleton-card" style="padding:16px;margin-bottom:12px;">
+    <div class="skeleton-header"><div class="skeleton skeleton-avatar" style="width:40px;height:40px;"></div><div class="skeleton skeleton-title" style="width:30%;"></div></div>
+    <div class="skeleton skeleton-line" style="width:80%;margin-top:8px;"></div>
+  </div>
+  <div class="skeleton-card" style="padding:16px;">
+    <div class="skeleton-header"><div class="skeleton skeleton-avatar" style="width:40px;height:40px;"></div><div class="skeleton skeleton-title" style="width:30%;"></div></div>
+    <div class="skeleton skeleton-line" style="width:60%;margin-top:8px;"></div>
+  </div>
+
     </div>
     <div class="fixed-input-area" id="messageInputArea">
       <div class="input-wrapper">
-        <input type="text" id="msgInput" placeholder="写留言…" maxlength="200" />
+        <input type="text" id="msgInput" placeholder="写下你的留言…" maxlength="200" />
         <button id="sendMsgBtn">发送</button>
       </div>
     </div>
@@ -100,7 +140,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 </div>
 
 <div id="toast"></div>
-<script src="./common.js"></script>
+<script src="./common.js?v=1794220383198"></script>
 <script>
 var currentUser = getSessionUser();
 var isAdmin = currentUser && currentUser.is_admin === true;
@@ -112,11 +152,11 @@ function renderHeaderUI() {
     var has = u.avatar_url && String(u.avatar_url).indexOf('http') === 0;
     var userAreaHtml = '';
     if (currentUser && currentUser.id) {
-        userAreaHtml = `<div class="user-area" onclick="window.location.href='./user.html'"><div class="avatar" style="${has ? 'background-image:url(\'' + safeUrl(u.avatar_url) + '\');background-size:cover;background-position:center;' : ''}">${has ? '' : escapeHtml(name.charAt(0).toUpperCase())}</div><span class="user-name">${escapeHtml(name)}</span></div>`;
+        userAreaHtml = '<div class="user-area" onclick="window.location.href=\'./user.html\'"><div class="avatar" style="' + (has ? 'background-image:url(\'' + safeUrl(u.avatar_url) + '\');background-size:cover;background-position:center;' : '') + '">' + (has ? '' : escapeHtml(name.charAt(0).toUpperCase())) + '</div><span class="user-name">' + escapeHtml(name) + '</span></div>';
     } else {
-        userAreaHtml = `<div class="user-area" style="background:var(--primary);color:#fff;border-radius:99px;padding:6px 16px;font-weight:700;font-size:0.85em;cursor:pointer;" onclick="window.location.href='./index.html?login=1'">登录 / 注册</div>`;
+        userAreaHtml = '<div class="user-area" style="background:var(--brand);color:#fff;border-radius:99px;padding:6px 16px;font-weight:600;font-size:0.85em;cursor:pointer;" onclick="window.location.href=\'./index.html?login=1\'">登录 / 注册</div>';
     }
-    headerContainer.innerHTML = `<div class="app-header"><div class="brand" onclick="window.location.href='./posts.html'">Seven<span>戚</span><small>· 留言板</small></div>${userAreaHtml}</div>`;
+    headerContainer.innerHTML = '<div class="app-header"><div class="brand" onclick="window.location.href=\'./posts.html\'">Seven<span>戚</span><small>· 留言板</small></div>' + userAreaHtml + '</div>';
 }
 renderHeaderUI();
 renderFooter('messages');
@@ -136,42 +176,49 @@ var currentParentId = null;
 
 async function loadMessages() {
     var list = document.getElementById('messageList');
+    list.innerHTML = `
+  <div class="skeleton-card" style="padding:16px;margin-bottom:12px;">
+    <div class="skeleton-header"><div class="skeleton skeleton-avatar" style="width:40px;height:40px;"></div><div class="skeleton skeleton-title" style="width:30%;"></div></div>
+    <div class="skeleton skeleton-line" style="width:80%;margin-top:8px;"></div>
+  </div>
+  <div class="skeleton-card" style="padding:16px;">
+    <div class="skeleton-header"><div class="skeleton skeleton-avatar" style="width:40px;height:40px;"></div><div class="skeleton skeleton-title" style="width:30%;"></div></div>
+    <div class="skeleton skeleton-line" style="width:60%;margin-top:8px;"></div>
+  </div>
+`;
     try {
         var res = await window.sb.from('messages').select('*').order('created_at', { ascending: false });
         if(res.error) throw res.error;
         messages = res.data || [];
         renderMessages();
-    } catch(e) { list.innerHTML = '<div class="empty-state">加载失败：' + escapeHtml(e.message) + '</div>'; }
+    } catch(e) { list.innerHTML = '<div class="empty-state">加载失败：' + escapeHtml(e.message) + '</div>'; }  
 }
 
 function renderMessages() {
     var list = document.getElementById('messageList');
-    if(!messages.length) { list.innerHTML = '<div class="empty-state">暂无留言，快来抢沙发！</div>'; return; }
+    if(!messages.length) { list.innerHTML = '<div class="empty-state">暂无留言，快来抢沙发吧！</div>'; return; }
     var html = '';
-    messages.filter(m => !m.parent_id).forEach(function(m) {
+    messages.filter(function(m) { return !m.parent_id; }).forEach(function(m) {
         var isOfficial = m.is_official || m.name === 'Seven戚';
         var timeStr = new Date(m.created_at).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         var delBtn = isAdmin ? '<button class="del-btn" data-id="'+m.id+'">删除</button>' : '';
         html += '<div class="msg">';
-        html += '<div class="avatar" style="background:' + (m.color || 'var(--primary)') + '">' + escapeHtml(m.name.charAt(0).toUpperCase()) + '</div>';
+        html += '<div class="avatar" style="background:' + (m.color || 'var(--brand-bg)') + '">' + escapeHtml(String(m.name || 'U').charAt(0).toUpperCase()) + '</div>';
         html += '<div class="body">';
         html += '<div class="meta"><span class="name">' + escapeHtml(m.name) + '</span>' + (isOfficial ? '<span class="official-tag">官方</span>' : '') + '<span class="time">' + timeStr + '</span></div>';
         html += '<div class="txt">' + escapeHtml(m.text) + '</div>';
         html += '<div class="ip">';
         html += '<span>' + escapeHtml(m.ip || '未知IP') + '</span>';
-        
-        // 恢复评论按钮的 SVG 图标
         html += '<button class="comment-btn" data-id="'+m.id+'">' +
                 '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
                 '评论</button>';
-                
         html += delBtn;
         html += '</div></div></div>';
     });
     list.innerHTML = html;
 
-    list.querySelectorAll('.comment-btn').forEach(btn => { btn.onclick = function() { openComment(this.dataset.id); }; });
-    list.querySelectorAll('.del-btn').forEach(btn => {
+    list.querySelectorAll('.comment-btn').forEach(function(btn) { btn.onclick = function() { openComment(this.dataset.id); }; });
+    list.querySelectorAll('.del-btn').forEach(function(btn) {
         btn.onclick = async function() {
             if(!confirm('确定删除此留言？')) return;
             try { await window.sb.from('messages').delete().eq('id', this.dataset.id); showToast('已删除'); loadMessages(); } catch(e) { showToast('删除失败'); }
@@ -183,10 +230,10 @@ document.getElementById('sendMsgBtn').onclick = async function() {
     var input = document.getElementById('msgInput');
     var text = input.value.trim();
     if(!text) return showToast('请输入内容');
-    if(!currentUser) { showToast('请先登录后留言'); setTimeout(()=> window.location.href='./index.html?login=1', 1000); return; }
+    if(!currentUser) { showToast('请先登录后留言'); setTimeout(function(){ window.location.href='./index.html?login=1'; }, 1000); return; }
     var btn = this; btn.disabled = true;
     try {
-        var ip = window.sqClientGeo ? window.sqClientGeo.ip : '0.0.0.0';
+        var ip = window.sqClientGeo ? (window.sqClientGeo.location !== '未知' ? window.sqClientGeo.location : window.sqClientGeo.ip) : '未知';
         var res = await window.sb.from('messages').insert([{ name: currentUser.nickname, text: text, ip: ip, is_official: false, user_id: currentUser.id }]);
         if(res.error) throw res.error;
         input.value = ''; showToast('留言成功'); loadMessages();
@@ -204,12 +251,25 @@ document.getElementById('commentOverlay').onclick = function(e) { if(e.target ==
 
 async function renderComments() {
     var box = document.getElementById('commentList');
-    box.innerHTML = '<div class="loading-state">加载中...</div>';
+    list.innerHTML = `
+        <div class="skeleton-card">
+          <div class="skeleton-header"><div class="skeleton skeleton-avatar" style="width:40px;height:40px;"></div><div class="skeleton skeleton-title"></div></div>
+          <div class="skeleton skeleton-line" style="width:70%;margin-top:10px;"></div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-header"><div class="skeleton skeleton-avatar" style="width:40px;height:40px;"></div><div class="skeleton skeleton-title"></div></div>
+          <div class="skeleton skeleton-line short" style="margin-top:10px;"></div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-header"><div class="skeleton skeleton-avatar" style="width:40px;height:40px;"></div><div class="skeleton skeleton-title"></div></div>
+          <div class="skeleton skeleton-line" style="width:80%;margin-top:10px;"></div>
+        </div>
+      `;
     try {
         var res = await window.sb.from('messages').select('*').eq('parent_id', currentParentId).order('created_at');
         var list = res.data || [];
         if(!list.length) { box.innerHTML = '<div class="empty-state">还没有评论</div>'; return; }
-        box.innerHTML = list.map(c => {
+        box.innerHTML = list.map(function(c) {
             var time = new Date(c.created_at).toLocaleString('zh-CN', {hour:'2-digit', minute:'2-digit'});
             return '<div class="comment-item"><div class="c-meta"><b>'+escapeHtml(c.name)+'</b><span>'+time+'</span></div><div class="c-txt">'+escapeHtml(c.text)+'</div></div>';
         }).join('');
@@ -221,7 +281,7 @@ document.getElementById('sendCommentBtn').onclick = async function() {
     var input = document.getElementById('commentInput');
     var text = input.value.trim();
     if(!text) return;
-    if(!currentUser) { showToast('请先登录后评论'); setTimeout(()=> window.location.href='./index.html?login=1', 1000); return; }
+    if(!currentUser) { showToast('请先登录后评论'); setTimeout(function(){ window.location.href='./index.html?login=1'; }, 1000); return; }
     var btn = this; btn.disabled = true;
     try {
         var res = await window.sb.from('messages').insert([{ name: currentUser.nickname, text: text, parent_id: currentParentId, user_id: currentUser.id }]);
