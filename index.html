@@ -311,46 +311,40 @@ function switchCard(which) {
         document.getElementById('registerBtn').onclick = doRegister;
 
     document.getElementById('verifyBtn').onclick = async function() {
-        var otp = document.getElementById('regOtp').value.trim();
+        if (this.disabled) return; // 防连点拦截
+        var rawOtp = document.getElementById('regOtp').value;
+        var otp = rawOtp.replace(/\D/g, ''); 
         var err = document.getElementById('verifyError');
-        if (otp.length < 6 || otp.length > 8) return err.textContent = '请输入 6-8 位数字验证码';
         
-        this.disabled = true; this.textContent = '验证中...';
+        if (otp.length < 6) return err.textContent = '请输入正确的数字验证码';
+        
+        var targetEmail = (window.tempRegEmail || localStorage.getItem('sq_temp_reg_email') || '').trim().toLowerCase();
+        if (!targetEmail) return err.textContent = '邮箱信息丢失，请刷新页面重新注册';
+        
+        this.disabled = true; 
+        this.textContent = '验证中...';
         err.textContent = '';
         
         try {
-            // 兼容可能丢失的情况，从 localStorage 读取
-            var targetEmail = window.tempRegEmail || localStorage.getItem('sq_temp_reg_email');
-            if (!targetEmail) {
-                throw new Error('邮箱信息丢失，请刷新页面重新注册');
-            }
-
-            // 优先尝试 signup 类型
+            console.log("【单次验证请求】邮箱:", targetEmail, "验证码:", otp);
             var res = await window.sb.auth.verifyOtp({
                 email: targetEmail,
                 token: otp,
-                type: 'magiclink'
+                type: 'signup'
             });
             
-            // 如果 signup 失败，尝试 email 类型（部分版本的 Supabase 默认使用 email 验证）
-            if (res.error && (res.error.message.includes('invalid') || res.error.message.includes('expired'))) {
-                var res2 = await window.sb.auth.verifyOtp({
-                    email: targetEmail,
-                    token: otp,
-                    type: 'magiclink'
-                });
-                if (!res2.error) res = res2;
-            }
             if (res.error) throw res.error;
             
-            // 验证成功，补建档案
+            await ensureProfileFromAuth(window.tempRegNick || '新用户');
             localStorage.removeItem('sq_temp_reg_email');
-            await ensureProfileFromAuth(window.tempRegNick || '用户');
             document.getElementById('authScreen').classList.add('hide');
             setTimeout(() => window.location.href = './posts.html', 400);
+            
         } catch(e) {
+            console.error("【验证失败】", e);
             err.textContent = '验证失败：' + e.message;
-            this.disabled = false; this.textContent = '提交验证';
+            this.disabled = false; 
+            this.textContent = '提交验证';
         }
     };
 
