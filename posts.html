@@ -355,7 +355,7 @@ async function loadComments(postId) {
             h += '<div class="actions">';
             h += '<button onclick="startReply(\'' + topParentId + '\', \'' + c.user_id + '\', \'' + escapeHtml(cn) + '\')">回复</button>';
             h += '<button style="color:#F59E0B;" onclick="reportItem(\'comment\', \'' + c.id + '\', \'' + escapeHtml(c.content) + '\')">举报</button>';
-            if (currentUser && (currentUser.is_admin || currentUser.id === c.user_id)) {
+            if (currentUser && (currentUser.is_admin || String(currentUser.id) === String(c.user_id))) {
                 h += '<button style="color:var(--danger);" onclick="deleteComment(\'' + c.id + '\')">删除</button>';
             }
             h += '</div>';
