@@ -269,6 +269,7 @@ async function doRegister() {
             document.getElementById('registerBtn').style.display = 'none';
             document.getElementById('otpVerifyArea').style.display = 'block';
             window.tempRegEmail = email;
+            localStorage.setItem('sq_temp_reg_email', email);
             window.tempRegNick = nickname;
             errEl.innerHTML = '✅ 验证码已发送，请查看邮箱（含垃圾箱）';
             errEl.style.color = 'var(--brand)';
@@ -318,15 +319,33 @@ function switchCard(which) {
         err.textContent = '';
         
         try {
+            // 兼容可能丢失的情况，从 localStorage 读取
+            var targetEmail = window.tempRegEmail || localStorage.getItem('sq_temp_reg_email');
+            if (!targetEmail) {
+                throw new Error('邮箱信息丢失，请刷新页面重新注册');
+            }
+
+            // 优先尝试 signup 类型
             var res = await window.sb.auth.verifyOtp({
-                email: window.tempRegEmail,
+                email: targetEmail,
                 token: otp,
-                type: 'signup'
+                type: 'email'
             });
+            
+            // 如果 signup 失败，尝试 email 类型（部分版本的 Supabase 默认使用 email 验证）
+            if (res.error && (res.error.message.includes('invalid') || res.error.message.includes('expired'))) {
+                var res2 = await window.sb.auth.verifyOtp({
+                    email: targetEmail,
+                    token: otp,
+                    type: 'email'
+                });
+                if (!res2.error) res = res2;
+            }
             if (res.error) throw res.error;
             
             // 验证成功，补建档案
-            await ensureProfileFromAuth(window.tempRegNick);
+            localStorage.removeItem('sq_temp_reg_email');
+            await ensureProfileFromAuth(window.tempRegNick || '用户');
             document.getElementById('authScreen').classList.add('hide');
             setTimeout(() => window.location.href = './posts.html', 400);
         } catch(e) {
