@@ -169,6 +169,16 @@
                 <div class="field-group"><label>确认密码</label><input type="password" id="regPassword2" placeholder="再次输入密码" /></div>
                 <button class="login-continue" id="registerBtn">注册</button>
                 <div class="login-error" id="registerError"></div>
+
+                <div id="otpVerifyArea" style="display: none; margin-top: 16px; border-top: 1px dashed var(--border); padding-top: 16px;">
+                    <div class="field-group">
+                        <label>验证码 (已发送至邮箱)</label>
+                        <input type="text" id="regOtp" placeholder="请输入 6 位验证码" maxlength="6" style="text-align: center; letter-spacing: 4px; font-weight: 600; font-size: 1.1em;" />
+                    </div>
+                    <button class="login-continue" id="verifyBtn" style="background: #10B981;">提交验证</button>
+                    <div class="login-error" id="verifyError"></div>
+                </div>
+
             </div>
             <div class="login-footer"><span>已有账号？</span><button class="switch-link" id="toLoginBtn">去登录</button></div>
         </div>
@@ -254,7 +264,16 @@ async function doRegister() {
             if (msg.includes('already registered')) throw new Error('该邮箱已注册');
             throw new Error(msg);
         }
-        if (!res.data.session) { alert('注册成功，请去邮箱查收验证邮件后再登录。\n(注：如未收到邮件，请检查垃圾箱或联系站主QQ 2103686588)'); switchCard('login'); document.getElementById('loginEmail').value = email; return; }
+        if (!res.data.session) {
+            // 显示验证码输入区，隐藏注册表单上半部分
+            document.getElementById('registerBtn').style.display = 'none';
+            document.getElementById('otpVerifyArea').style.display = 'block';
+            window.tempRegEmail = email;
+            window.tempRegNick = nickname;
+            errEl.innerHTML = '✅ 验证码已发送，请查看邮箱（含垃圾箱）';
+            errEl.style.color = 'var(--brand)';
+            return;
+        }
         await ensureProfileFromAuth(nickname);
         document.getElementById('authScreen').classList.add('hide');
         setTimeout(() => window.location.href = './posts.html', 400);
@@ -289,6 +308,33 @@ function switchCard(which) {
         document.getElementById('toLoginBtn').onclick = function() { switchCard('login'); };
         document.getElementById('loginBtn').onclick = doLogin;
         document.getElementById('registerBtn').onclick = doRegister;
+
+    document.getElementById('verifyBtn').onclick = async function() {
+        var otp = document.getElementById('regOtp').value.trim();
+        var err = document.getElementById('verifyError');
+        if (otp.length !== 6) return err.textContent = '请输入 6 位数字验证码';
+        
+        this.disabled = true; this.textContent = '验证中...';
+        err.textContent = '';
+        
+        try {
+            var res = await window.sb.auth.verifyOtp({
+                email: window.tempRegEmail,
+                token: otp,
+                type: 'signup'
+            });
+            if (res.error) throw res.error;
+            
+            // 验证成功，补建档案
+            await ensureProfileFromAuth(window.tempRegNick);
+            document.getElementById('authScreen').classList.add('hide');
+            setTimeout(() => window.location.href = './posts.html', 400);
+        } catch(e) {
+            err.textContent = '验证失败：' + e.message;
+            this.disabled = false; this.textContent = '提交验证';
+        }
+    };
+
         document.getElementById('loginPassword').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
         document.getElementById('regPassword2').addEventListener('keydown', function(e) { if (e.key === 'Enter') doRegister(); });
         document.getElementById('regEmail').addEventListener('input', function() {

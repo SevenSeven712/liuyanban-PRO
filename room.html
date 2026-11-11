@@ -8,6 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>房间 · Seven戚</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./common.js"></script>
 <style>
 /* ===== 基础样式 & 房间骨架 ===== */
 *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -249,17 +250,15 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 
 <script>
 // 基础 Supabase & Session
-var SUPABASE_URL="https://bdflblooezmhgawkzhkv.supabase.co";
-var SUPABASE_ANON_KEY="sb_publishable_mQbWq3yUoa8U5fmlk61WnA_W_rsrqCL";
-window.sb=window.sb||window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+// window.sb 已从 common.js 初始化
 
 var currentUser=getSessionUser();
 if(!currentUser||!currentUser.id)window.location.href='./index.html';
 var isAdmin=!!(currentUser&&currentUser.is_admin===true);
 if(isAdmin)document.getElementById('createRoomBtn').style.display='inline-flex';
 
-function showToast(m){var t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(function(){t.classList.remove('show')},2600)}
-function escapeHtml(s){if(!s)return '';return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+// showToast 已从 common.js 引入
+// escapeHtml 已从 common.js 引入
 function showConfirm(title,body,onOk){
   var m=document.getElementById('confirmModal');
   document.getElementById('confirmTitle').textContent=title;
