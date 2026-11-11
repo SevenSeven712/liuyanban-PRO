@@ -89,15 +89,7 @@
 .field-hint.success { color: var(--brand); }
 </style>
 
-<script>
-  window.onerror = function(msg, url, line, col, error) {
-    alert("【系统提示】代码报错啦！\n错误信息: " + msg + "\n行号: " + line + "\n列号: " + col);
-    return false;
-  };
-  window.addEventListener('unhandledrejection', function(event) {
-    alert("【系统提示】异步请求报错啦！\n" + (event.reason ? event.reason.message : event.reason));
-  });
-</script>
+
 <script src="./common.js"></script>
 </head>
 <body>

@@ -159,7 +159,15 @@ window.hidePageLoading = function () {
       </div>
       <div style="margin-top: 24px; font-weight: 600; color: #4B5563; font-size: 0.9em; letter-spacing: 4px;">加 载 中</div>
     `;
-    document.body.appendChild(div);
+    if (document.body) {
+      document.body.appendChild(div);
+    } else {
+      window.addEventListener('DOMContentLoaded', function() {
+        if (!document.getElementById('coffeeLoadingMask')) {
+          document.body.appendChild(div);
+        }
+      });
+    }
   }
 
   window.showLoading = function() { 
