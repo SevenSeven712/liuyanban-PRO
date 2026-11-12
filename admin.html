@@ -8,7 +8,7 @@
 <title>后台管理 · Seven戚</title>
 <link rel="stylesheet" href="./theme.css" />
 <script src="./vendor/supabase.js"></script>
-<script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/script>');</script>
+<script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>');</script>
 <script src="common.js"></script>
 <style>
 .app-header .back{background:none;border:none;cursor:pointer;color:var(--text);display:flex;padding:4px;border-radius:8px;transition:var(--transition-smooth);}
@@ -34,20 +34,37 @@
 .list-item .info{flex:1;min-width:0;}
 .list-item .name{font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;}
 .list-item .meta{font-size:0.75em;color:var(--text-muted);margin-top:4px;}
-.list-item .actions{display:flex;gap:8px;}
-.btn-sm{padding:6px 12px;border-radius:var(--radius-sm);border:none;font-size:0.8em;font-weight:600;cursor:pointer;transition:var(--transition-smooth);font-family:inherit;}
+.list-item .actions{display:flex;gap:8px;flex-wrap:wrap;}
+.btn-sm{padding:6px 12px;border-radius:var(--radius-sm);border:none;font-size:0.8em;font-weight:600;cursor:pointer;transition:var(--transition-smooth);font-family:inherit;white-space:nowrap;}
 .btn-ban{background:var(--danger-bg);color:var(--danger);}
 .btn-unban{background:var(--brand-bg);color:var(--brand-dark);}
+.btn-coin-add{background:#EFF6FF;color:#2563EB;}
+.btn-coin-sub{background:#FEF2F2;color:#DC2626;}
 .banned-tag{background:var(--danger-bg);color:var(--danger);font-size:0.65em;padding:2px 6px;border-radius:4px;}
 
 .skeleton-item{display:flex;gap:12px;padding:16px;border-bottom:1px solid var(--border-subtle);}
 .skeleton-avatar{width:40px;height:40px;border-radius:50%;}
 .skeleton-line{height:16px;background:var(--border);border-radius:4px;margin-bottom:6px;animation:shimmer 1.5s infinite linear;background-image: linear-gradient(90deg, #E5E7EB 0px, #F3F4F6 40px, #E5E7EB 80px);background-size:200% 100%;}
 @keyframes shimmer{0%{background-position:-200% 0;}100%{background-position:200% 0;}}
+
+/* 403 页面样式 */
+.forbidden-wrap{position:fixed;inset:0;background:#f8fafc;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;font-family:var(--font-family);}
+.forbidden-code{font-size:6em;font-weight:900;color:#ef4444;line-height:1;}
+.forbidden-desc{font-size:1.2em;color:#64748b;margin:16px 0 24px;font-weight:500;}
+.forbidden-btn{padding:10px 24px;border-radius:8px;background:#10b981;color:#fff;text-decoration:none;font-weight:600;transition:all .2s;}
+.forbidden-btn:hover{background:#059669;}
 </style>
 </head>
 <body>
-<div id="mainApp">
+
+<!-- 拦截遮罩（默认隐藏） -->
+<div id="forbiddenScreen" class="forbidden-wrap" style="display:none;">
+  <div class="forbidden-code">403</div>
+  <div class="forbidden-desc">Access Denied. 您没有权限访问此页面。</div>
+  <a href="./posts.html" class="forbidden-btn">返回首页</a>
+</div>
+
+<div id="mainApp" style="display:none;"> <!-- 默认隐藏，验证通过后再显示 -->
   <div class="app-header">
     <button class="back" onclick="history.back()"><svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
     <span class="title">后台管理</span>
@@ -81,10 +98,48 @@ var currentUser = getSessionUser();
 if (!currentUser) window.location.href = './index.html';
 
 var currentTab = 'users';
+var isAdminValid = false;
 
 function $(id) { return document.getElementById(id); }
 function escapeHtml(s) { if (!s) return ''; return String(s).replace(/[&<>"']/g, function(c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 async function showToast(msg) { await window.showCustomAlert('提示', msg); }
+
+// 🚨 核心 403 拦截验证引擎 🚨
+async function checkAdminPermission() {
+  if (!currentUser || !currentUser.id) return false;
+  try {
+    // 向服务端确认身份
+    var r = await window.sb.rpc('get_my_profile');
+    if (r.data && r.data.is_admin === true) {
+       currentUser.is_admin = true;
+       setSessionUser(currentUser);
+       return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+// 页面初始化
+(async function initAuth() {
+  if(window.showLoading) window.showLoading();
+  var pass = await checkAdminPermission();
+  if(window.hideLoading) window.hideLoading();
+
+  if (!pass) {
+    // 验证失败，显示 403 页，隐藏主体
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('forbiddenScreen').style.display = 'flex';
+    return;
+  }
+
+  // 验证通过，展示页面
+  document.getElementById('mainApp').style.display = 'flex';
+  document.getElementById('forbiddenScreen').style.display = 'none';
+  isAdminValid = true;
+
+  // 加载数据
+  loadUsers();
+})();
 
 function switchTab(tab) {
   currentTab = tab;
@@ -96,6 +151,7 @@ function switchTab(tab) {
 window.switchTab = switchTab;
 
 async function loadUsers() {
+  if (!isAdminValid) return;
   if(window.showLoading) window.showLoading();
   var container = $('listContainer');
   container.innerHTML = '<div class="skeleton-item"><div class="skeleton skeleton-avatar"></div><div style="flex:1"><div class="skeleton skeleton-line" style="width:40%"></div><div class="skeleton skeleton-line" style="width:60%"></div></div></div>'.repeat(3);
@@ -116,18 +172,24 @@ async function loadUsers() {
       var avStyle = (u.avatar_url && u.avatar_url.indexOf('http') === 0) ? 'background-image:url('+u.avatar_url+');' : '';
       var initial = avStyle ? '' : escapeHtml(String(u.nickname||'U').charAt(0).toUpperCase());
       
-      html += '<div class="list-item" style="cursor:pointer;" onclick="if(!event.target.closest(\'.btn-sm\')) window.location.href=\'./user.html?id=' + u.id + '\'">';
+      html += '<div class="list-item">';
       html += '<div class="avatar" style="'+avStyle+'">'+initial+'</div>';
       html += '<div class="info">';
       html += '<div class="name">' + escapeHtml(u.nickname || '未命名') + ' ' + (isBanned ? '<span class="banned-tag">已封禁</span>' : '') + '</div>';
-      html += '<div class="meta">IP: ' + escapeHtml(u.ip_address || '未知') + ' | 注册于 ' + new Date(u.created_at).toLocaleDateString() + '</div>';
+      html += '<div class="meta">余额: <span style="color:var(--warning);font-weight:700;">'+ (u.coins || 0) +'</span> 币 | IP: ' + escapeHtml(u.ip_address || '未知') + ' | 注册于 ' + new Date(u.created_at).toLocaleDateString() + '</div>';
       html += '</div>';
+      
       html += '<div class="actions">';
+      // 加减币按钮
+      html += '<button class="btn-sm btn-coin-add" onclick="changeCoins(''+u.id+'', 'add')">加币</button>';
+      html += '<button class="btn-sm btn-coin-sub" onclick="changeCoins(''+u.id+'', 'sub')">减币</button>';
+      
+      // 封禁按钮
       if (isBanned) {
-        html += '<button class="btn-sm btn-unban" onclick="unbanUser(\'' + u.id + '\')">解封</button>';
+        html += '<button class="btn-sm btn-unban" onclick="unbanUser('' + u.id + '')">解封</button>';
       } else {
         if (u.id !== currentUser.id) {
-          html += '<button class="btn-sm btn-ban" onclick="banUser(\'' + u.id + '\')">封禁</button>';
+          html += '<button class="btn-sm btn-ban" onclick="banUser('' + u.id + '')">封禁</button>';
         }
       }
       html += '</div></div>';
@@ -144,7 +206,40 @@ async function loadUsers() {
   }
 }
 
+// 🚨 加币 / 减币逻辑 🚨
+window.changeCoins = async function(uid, type) {
+  if (!isAdminValid) return;
+  var promptMsg = type === 'add' ? '请输入要增加的金额（小七币）' : '请输入要扣除的金额（小七币）';
+  var amountStr = await window.showCustomPrompt('修改用户余额', promptMsg);
+  if (amountStr === null || amountStr.trim() === '') return;
+  
+  var amount = parseInt(amountStr, 10);
+  if (isNaN(amount) || amount <= 0) {
+    return showToast('请输入大于 0 的有效数字');
+  }
+
+  try {
+    // 1. 获取该用户当前余额
+    var r = await window.sb.from('users').select('coins').eq('id', uid).single();
+    if (r.error) throw r.error;
+    var currentCoins = r.data.coins || 0;
+    
+    // 2. 计算新余额
+    var newCoins = type === 'add' ? (currentCoins + amount) : Math.max(0, currentCoins - amount);
+    
+    // 3. 更新余额
+    var up = await window.sb.from('users').update({ coins: newCoins }).eq('id', uid);
+    if (up.error) throw up.error;
+    
+    showToast('修改成功！当前用户余额：' + newCoins + ' 币');
+    loadUsers(); // 刷新列表
+  } catch(e) {
+    showToast('修改失败：' + e.message + ' (请确保数据库 users 表允许管理员更新)');
+  }
+};
+
 async function banUser(id) {
+  if (!isAdminValid) return;
   if (!(await window.showCustomConfirm('封禁用户', '确定要封禁该用户吗？'))) return;
   try {
     var r = await window.sb.rpc('admin_ban_user', { p_user_id: id, p_days: 36500, p_reason: '违反社区规定' });
@@ -156,6 +251,7 @@ async function banUser(id) {
 window.banUser = banUser;
 
 async function unbanUser(id) {
+  if (!isAdminValid) return;
   if (!(await window.showCustomConfirm('解封用户', '确定要解封该用户吗？'))) return;
   try {
     var r = await window.sb.rpc('admin_unban_user', { p_user_id: id });
@@ -167,55 +263,60 @@ async function unbanUser(id) {
 window.unbanUser = unbanUser;
 
 async function loadReports() {
+  if (!isAdminValid) return;
   var container = $('listContainer');
   container.innerHTML = '<div class="skeleton-item"><div class="skeleton skeleton-avatar"></div><div style="flex:1"><div class="skeleton skeleton-line" style="width:40%"></div><div class="skeleton skeleton-line" style="width:60%"></div></div></div>'.repeat(3);
-  
   $('totalUsers').textContent = '-';
   $('bannedUsers').textContent = '-';
 
   try {
-    var r = await window.sb.from('messages').select('*').like('text', '【系统举报】%').order('created_at', { ascending: false });
-    if (r.error) throw r.error;
-    var reports = r.data || [];
-    
-    if (!reports.length) {
-      container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-muted);">暂无举报记录</div>';
+    var r = await window.sb.from('reports').select('*').order('created_at', { ascending: false });
+    if (r.error) {
+      // 如果 reports 表查询失败，尝试旧的 messages 表逻辑作为备用
+      var r2 = await window.sb.from('messages').select('*').like('text', '【系统举报】%').order('created_at', { ascending: false });
+      if(r2.error) throw r2.error;
+      var reports = r2.data || [];
+      if (!reports.length) { container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);">暂无举报记录</div>'; return; }
+      
+      container.innerHTML = reports.map(function(rep) {
+        var time = new Date(rep.created_at).toLocaleString('zh-CN');
+        return '<div class="list-item" style="flex-direction:column;align-items:flex-start;gap:10px;">' +
+          '<div style="display:flex;width:100%;justify-content:space-between;"><b style="color:var(--danger);">举报信息</b><span style="font-size:0.75em;">'+time+'</span></div>' +
+          '<div style="font-size:.85em;width:100%;background:var(--bg);padding:12px;border-radius:8px;">'+escapeHtml(rep.text).replace(/
+/g, '<br>')+'</div>' +
+          '<div style="display:flex;width:100%;justify-content:flex-end;"><button class="btn-sm btn-ban" onclick="deleteReport(''+rep.id+'')">已处理 / 删除</button></div>' +
+        '</div>';
+      }).join('');
       return;
     }
-
-    var html = '';
-    reports.forEach(function(rep) {
+    
+    var list = r.data || [];
+    if (!list.length) { container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);">暂无举报记录</div>'; return; }
+    container.innerHTML = list.map(function(rep) {
       var time = new Date(rep.created_at).toLocaleString('zh-CN');
-      var safeText = escapeHtml(rep.text).replace(/\n/g, '<br>');
-      
-      html += '<div class="list-item" style="align-items:flex-start; flex-direction:column; gap:10px;">';
-      html += '<div style="display:flex; width:100%; justify-content:space-between; align-items:center;">';
-      html += '<span style="font-weight:600; color:var(--danger);">举报信息</span>';
-      html += '<span style="font-size:0.75em; color:var(--text-light);">' + time + '</span>';
-      html += '</div>';
-      html += '<div style="font-size:0.85em; line-height:1.5; color:var(--text); width:100%; background:var(--bg); padding:12px; border-radius:8px;">' + safeText + '</div>';
-      html += '<div style="display:flex; width:100%; justify-content:flex-end; gap:8px;">';
-      html += '<button class="btn-sm btn-ban" onclick="deleteReport(\''+ rep.id +'\')">已处理 / 删除</button>';
-      html += '</div></div>';
-    });
-
-    container.innerHTML = html;
+      return '<div class="list-item" style="flex-direction:column;align-items:flex-start;gap:10px;">' +
+        '<div style="display:flex;width:100%;justify-content:space-between;"><b style="color:var(--danger);">举报人：'+escapeHtml(rep.reporter_name||'')+'</b><span style="font-size:0.75em;">'+time+'</span></div>' +
+        '<div style="font-size:.85em;width:100%;background:var(--bg);padding:12px;border-radius:8px;">类型：' + escapeHtml(rep.type) + '<br>内容：' + escapeHtml(rep.content_snapshot) + '<br>备注：' + escapeHtml(rep.remark || '无') + '</div>' +
+        '<div style="display:flex;width:100%;justify-content:flex-end;"><button class="btn-sm btn-ban" onclick="deleteReport(''+rep.id+'')">已处理 / 删除</button></div>' +
+      '</div>';
+    }).join('');
   } catch(e) {
     container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger);">加载失败：' + e.message + '</div>';
   }
 }
 
 window.deleteReport = async function(id) {
+  if (!isAdminValid) return;
   if (!(await window.showCustomConfirm('删除举报', '确认已处理该举报并删除记录？'))) return;
   try {
-    await window.sb.from('messages').delete().eq('id', id);
+    await window.sb.from('reports').delete().eq('id', id);
+    await window.sb.from('messages').delete().eq('id', id); // 兼容老逻辑
     loadReports();
-  } catch(e) {
-    showToast('删除失败: ' + e.message);
-  }
+  } catch(e) { showToast('删除失败: ' + e.message); }
 };
 
 async function loadCategories() {
+  if (!isAdminValid) return;
   var container = $('listContainer');
   container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);">加载中...</div>';
   $('totalUsers').textContent = '-';
@@ -252,6 +353,7 @@ async function loadCategories() {
 }
 
 window.addCategory = async function() {
+  if (!isAdminValid) return;
   var name = document.getElementById('newCatName').value.trim();
   if(!name) return showToast('请输入分类名称');
   try {
@@ -261,6 +363,7 @@ window.addCategory = async function() {
 };
 
 window.deleteCategory = async function(id) {
+  if (!isAdminValid) return;
   if (!(await window.showCustomConfirm('删除分类', '确定删除该分类吗？该分类下的帖子将变为未分类。'))) return;
   try {
     await window.sb.from('categories').delete().eq('id', id);
@@ -268,8 +371,7 @@ window.deleteCategory = async function(id) {
   } catch(e) { showToast('删除失败：' + e.message); }
 };
 
-// 初始化
-loadUsers();
+// 兜底：如果因为网络卡住，2秒后强制关闭遮罩
 setTimeout(() => { if(window.hideLoading) window.hideLoading(); }, 2000);
 </script>
 </body>

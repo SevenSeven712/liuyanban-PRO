@@ -120,7 +120,7 @@ window.hidePageLoading = function () {
 };
 
 // ============================================================
-// 全局咖啡 Loading 动画 (智能避让底部导航栏)
+// 全局咖啡 Loading 动画
 // ============================================================
 (function() {
   var css = document.createElement('style');
@@ -173,56 +173,41 @@ window.hidePageLoading = function () {
   window.showLoading = function() { 
     createMask();
     var el = document.getElementById('coffeeLoadingMask');
+    if(!el) return; 
     
-    // 智能避让底部导航栏
     var footer = document.querySelector('.app-tabs');
     if (footer) {
-      // 底部导航栏的高度
       var footerHeight = footer.offsetHeight;
       el.style.bottom = footerHeight + 'px';
     } else {
       el.style.bottom = '0';
     }
     
-    if(el) el.classList.add('show'); 
+    el.classList.add('show'); 
   };
   
   window.hideLoading = function() { 
     var el = document.getElementById('coffeeLoadingMask');
     if(el) el.classList.remove('show'); 
     
-    // 同时触发页面内容入场动画
     var app = document.getElementById('mainApp');
     if (app && !app.classList.contains('animate-in')) {
       app.classList.add('animate-in');
     }
   };
 
-  // 智能加载：只在首次进入页面时展示短暂动画，一旦 DOM 挂载完毕就迅速淡出
   if (!window.location.pathname.includes('index.html')) {
     var isCached = sessionStorage.getItem('sq_page_cached_' + window.location.pathname);
-    
     if (!isCached) {
-      // 首次访问，显示 Loading
       if (document.readyState === 'loading') {
         window.showLoading();
       }
-      // 一旦页面基础骨架渲染完毕
       window.addEventListener('DOMContentLoaded', function() {
-        // 记录已访问，下次刷新直接跳过动画
         sessionStorage.setItem('sq_page_cached_' + window.location.pathname, '1');
-        
-        // 留 350ms 给用户看到丝滑的入场动画，然后立刻消失！
-        setTimeout(function() {
-          window.hideLoading();
-        }, 350);
+        setTimeout(function() { window.hideLoading(); }, 350);
       });
-      
-      // 极端情况兜底：如果 DOMContentLoaded 因为某种原因卡住，2秒后强制关闭
       setTimeout(function() { window.hideLoading(); }, 2000);
-      
     } else {
-      // 如果是有缓存/二次访问，直接跳过全屏 Loading
       window.hideLoading();
     }
   }
@@ -231,28 +216,17 @@ window.hidePageLoading = function () {
 // ============================================================
 // 全局页面丝滑切换过渡动画
 // ============================================================
-
-
-// ============================================================
-// 全局页面丝滑切换过渡动画（拦截所有 a 标签和 location.href 跳转）
-// ============================================================
 (function() {
-  // 封装跳转函数，确保跳转前播放动画
   window.smoothNavigate = function(targetUrl) {
     if (!targetUrl || targetUrl.startsWith('#') || targetUrl.startsWith('javascript')) return;
-    
     var app = document.getElementById('mainApp');
     if (app) app.classList.add('page-exit');
-    
     setTimeout(function() {
       if (window.showLoading) window.showLoading();
-      setTimeout(function() {
-        window.location.href = targetUrl;
-      }, 200);
+      setTimeout(function() { window.location.href = targetUrl; }, 200);
     }, 250);
   };
 
-  // 拦截所有 <a> 标签点击
   document.addEventListener('click', function(e) {
     var link = e.target.closest('a');
     if (link) {
@@ -265,58 +239,36 @@ window.hidePageLoading = function () {
       return;
     }
 
-    // 拦截带 onclick 属性且包含 location.href 或 location.replace 的按钮
     var btn = e.target.closest('[onclick]');
     if (btn) {
       var onclickStr = btn.getAttribute('onclick');
       if (onclickStr.includes('location.href') || onclickStr.includes('location.replace')) {
-        // 提取出目标 URL（简单提取）
-        var match = onclickStr.match(/location\.(href|replace)\s*=\s*['"]([^'"]+)['"]/);
-        if (match && match[2]) {
-          e.preventDefault();
-          window.smoothNavigate(match[2]);
-          return;
-        }
-        // 对于 window.location.href 等
-        var match2 = onclickStr.match(/window\.location\.href\s*=\s*['"]([^'"]+)['"]/);
-        if (match2 && match2[1]) {
-          e.preventDefault();
-          window.smoothNavigate(match2[1]);
-          return;
-        }
+        var match = onclickStr.match(/location.(href|replace)s*=s*['"]([^'"]+)['"]/);
+        if (match && match[2]) { e.preventDefault(); window.smoothNavigate(match[2]); return; }
+        var match2 = onclickStr.match(/window.location.hrefs*=s*['"]([^'"]+)['"]/);
+        if (match2 && match2[1]) { e.preventDefault(); window.smoothNavigate(match2[1]); return; }
       }
     }
-  }, true); // 使用捕获模式，确保最先执行
+  }, true);
 
-  // 拦截所有原生的 window.location.href 赋值（更彻底的方案）
-  // 我们不劫持整个 location，而是通过 Proxy 拦截，但这会导致一些浏览器兼容问题
-  // 所以这里我们只兜底处理那些通过 JS 触发的跳转。
   var originalAssign = window.location.assign;
   var originalReplace = window.location.replace;
-  
-  window.location.assign = function(url) {
-    window.smoothNavigate(url);
-  };
-  window.location.replace = function(url) {
-    window.smoothNavigate(url);
-  };
+  window.location.assign = function(url) { window.smoothNavigate(url); };
+  window.location.replace = function(url) { window.smoothNavigate(url); };
 })();
 
-// 终极防白屏兜底：无论发生什么错误，1.5秒后强制显示页面并隐藏加载
 setTimeout(function() {
   if (window.hideLoading) window.hideLoading();
   var app = document.getElementById('mainApp');
   if (app && !app.classList.contains('animate-in')) {
     app.classList.add('animate-in');
-    // 如果页面里有遮罩层，也一并隐藏
     var masks = document.querySelectorAll('.loading-overlay, #coffeeLoadingMask');
     masks.forEach(function(m) { if(m) m.classList.remove('show'); });
   }
 }, 1500);
 
-
 // ============================================================
-// 全局自定义 UI 弹窗 (覆盖原生 alert/confirm)
+// 全局自定义 UI 弹窗
 // ============================================================
 window.showCustomAlert = function(title, desc) {
   return new Promise(function(resolve) {
@@ -342,7 +294,6 @@ window.showCustomConfirm = function(title, desc) {
     mask.querySelector('#mo').onclick = function() { close(true); };
   });
 };
-
 
 window.showCustomPrompt = function(title, placeholder) {
   return new Promise(function(resolve) {

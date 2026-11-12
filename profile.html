@@ -270,7 +270,8 @@ window.submitFeedback = submitFeedback;
 
 async function doLogout() {
   if (confirm('确定要退出登录吗？')) {
-    await clearSession();
+    try { await window.sb.auth.signOut(); } catch(e) {}
+    localStorage.removeItem('sq_user_session');
     location.href = './index.html';
   }
 }

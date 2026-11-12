@@ -543,6 +543,11 @@ window.submitFeedback = submitFeedback;
 
 async function doLogout() {
   if (await window.showCustomConfirm('退出登录', '确定要退出登录吗？')) {
+    if(window.showLoading) window.showLoading();
+    try {
+      // 清理 Supabase 底层的 Cookie 和 Token
+      await window.sb.auth.signOut();
+    } catch(e) {}
     localStorage.removeItem('sq_user_session');
     location.href = './index.html';
   }

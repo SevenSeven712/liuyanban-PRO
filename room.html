@@ -2,39 +2,39 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8" />
-    <link rel="manifest" href="./manifest.json" />
-    <meta name="theme-color" content="#2e7d32" />
-    <link rel="apple-touch-icon" href="./icon.svg" />
+<link rel="manifest" href="./manifest.json" />
+<meta name="theme-color" content="#2e7d32" />
+<link rel="apple-touch-icon" href="./icon.svg" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>房间 · Seven戚</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./common.js"></script>
 <style>
-/* ===== 基础样式 & 房间骨架 ===== */
 *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
+svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 :root{--bg:#f5faf5;--bg-card:#fff;--bg-input:#eaf3ea;--border:#c8e0c8;--text:#1e3a2e;--text-muted:#5a7a6a;--text-light:#8aaa9a;--primary:#2e7d32;--primary-light:#4caf50;--primary-bg:#e8f5e9;--shadow:0 8px 32px rgba(46,125,50,.12);--radius-sm:10px;--font:"Space Grotesk","PingFang SC","Segoe UI",system-ui,sans-serif;--danger:#e57373;--danger-bg:#ffebee;--danger-text:#c62828;--warning:#ffa726;--official-blue:#2b6cff;--safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px)}
 html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);overflow:hidden}
-body{display:flex;flex-direction:column;height:100vh;height:100dvh}
+#mainApp{display:flex;flex-direction:column;height:100vh;height:100dvh;width:100%}
 .view-list,.view-detail{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);transition:transform .3s cubic-bezier(.4,0,.2,1)}
 .view-list.hidden{transform:translateX(-30%);opacity:.5;pointer-events:none}
 .view-detail{transform:translateX(100%)}
 .view-detail.open{transform:translateX(0)}
 .page-header{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:calc(10px + var(--safe-t)) 14px 10px;background:rgba(255,255,255,.96);border-bottom:1px solid var(--border);min-height:56px;backdrop-filter:blur(8px);z-index:10}
 .page-header .back{background:none;border:none;cursor:pointer;padding:4px;color:var(--text);display:flex;flex-shrink:0}
-.page-header .back svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.page-header .back svg{width:22px;height:22px}
 .page-header .title{font-weight:700;font-size:1em;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .header-actions{display:flex;gap:6px;flex-shrink:0}
 .header-action{background:var(--bg-input);color:var(--text);border:none;border-radius:99px;padding:6px 12px;font-size:.75em;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:4px;position:relative}
 .header-action.primary{background:var(--primary);color:#fff}
-.header-action svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.header-action svg{width:16px;height:16px}
 .header-action .cnt{background:var(--danger);color:#fff;font-size:.85em;font-weight:800;min-width:16px;height:16px;line-height:16px;text-align:center;border-radius:99px;padding:0 4px}
 .room-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:16px;overflow-y:auto}
 .room-card{position:relative;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:18px 12px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;transition:.2s;min-height:126px;justify-content:center;text-align:center}
 .room-card:hover{border-color:var(--primary);box-shadow:var(--shadow);transform:translateY(-2px)}
 .room-card-icon{color:var(--primary)}
-.room-card-icon svg{width:44px;height:44px;stroke:currentColor;fill:none;stroke-width:1.5}
-.room-card-name{font-weight:700;font-size:.9em;line-height:1.3;word-break:break-word;max-width:100%}
-.room-card-meta{font-size:.66em;color:var(--text-muted)}
+.room-card-icon svg{width:44px;height:44px;stroke-width:1.5}
+.room-card-name{font-weight:700;font-size:.9em;line-height:1.3;word-break:break-word;max-width:100%;color:var(--text)!important}
+.room-card-meta{font-size:.66em;color:var(--text-muted)!important}
 .empty-state{grid-column:1/-1;text-align:center;color:var(--text-muted);padding:60px 20px;font-size:.85em}
 .loading-state{grid-column:1/-1;text-align:center;color:var(--text-muted);padding:40px 20px;font-size:.9em}
 .spinner{display:inline-block;width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px}
@@ -52,7 +52,6 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .room-body[data-theme="spy"] .mic-panel,.room-body[data-theme="werewolf"] .mic-panel{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2)}
 .mic-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .mic-title{font-size:.8em;font-weight:700}
-.mic-mode{font-size:.65em;color:var(--primary);background:var(--primary-bg);padding:2px 10px;border-radius:99px;font-weight:700}
 .mic-seats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .mic-seat{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:10px;background:rgba(255,255,255,.7);border:1.5px dashed var(--border)}
 .mic-seat.on{background:var(--primary-bg);border-style:solid;border-color:var(--primary)}
@@ -60,56 +59,50 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .mic-avatar.empty{background:#dfe9df;color:var(--text-light);font-size:18px}
 .mic-name{font-size:.62em;color:var(--text-muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 .mic-seat.on .mic-name{color:var(--text)}
-.mic-x{position:absolute;top:1px;right:1px;background:none;border:none;color:var(--danger);cursor:pointer;font-size:11px;padding:0 3px;line-height:1}
 .mic-actions{display:flex;gap:8px;margin-top:10px}
 .mic-btn{flex:1;padding:8px;border-radius:99px;border:none;font-family:inherit;font-weight:700;font-size:.78em;cursor:pointer}
 .mic-btn.join{background:var(--primary);color:#fff}
 .mic-btn.leave{background:var(--danger-bg);color:var(--danger-text)}
-.mic-btn.waiting{background:var(--warning);color:#fff}
-.mic-queue{margin-top:10px;border-top:1px dashed var(--border);padding-top:8px}
-.mic-queue-title{font-size:.68em;color:var(--text-muted);font-weight:700;margin-bottom:6px}
-.mic-queue-item{display:flex;align-items:center;gap:6px;font-size:.75em;padding:5px 8px;background:rgba(255,255,255,.5);border-radius:8px;margin-bottom:5px}
-.mic-queue-item span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
-.mic-queue-item button{border:none;border-radius:99px;padding:3px 10px;font-size:.85em;font-weight:700;cursor:pointer;font-family:inherit}
-.mic-queue-item button:first-of-type{background:var(--primary);color:#fff}
-.mic-queue-item button:last-of-type{background:var(--danger-bg);color:var(--danger-text)}
-.game-stage{display:none;background:rgba(255,255,255,.9);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;backdrop-filter:blur(10px);position:relative;margin-top:10px;flex-direction:column}
+.game-stage{display:none;background:#fff !important;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;position:relative;margin-top:10px;flex-direction:column;color:var(--text) !important;box-shadow:0 4px 12px rgba(0,0,0,.05)}
 .game-stage.active{display:flex}
-.game-topbar{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid rgba(0,0,0,.06);flex-shrink:0}
+.game-topbar{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid rgba(0,0,0,.06);flex-shrink:0;background:#fafafa}
 .gpm-players{display:flex;align-items:center;gap:6px;flex:1;overflow-x:auto;padding:2px 0}
-.gpm-player{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.05);border-radius:99px;padding:3px 10px 3px 3px;flex-shrink:0}
+.gpm-player{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.05);border-radius:99px;padding:3px 10px 3px 3px;flex-shrink:0;transition:opacity .3s;color:var(--text) !important;font-weight:700}
+.gpm-player.offline{opacity:0.4;filter:grayscale(1)}
 .gpm-avatar{width:22px;height:22px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:10px;background-size:cover;background-position:center;flex-shrink:0}
 .gpm-name{font-size:.68em;font-weight:700;white-space:nowrap;max-width:60px;overflow:hidden;text-overflow:ellipsis}
-.gpm-turn{box-shadow:0 0 0 2px var(--primary);animation:pulseTurn 1.5s infinite}
-@keyframes pulseTurn{0%,100%{box-shadow:0 0 0 2px var(--primary)}50%{box-shadow:0 0 0 4px rgba(46,125,50,.3)}}
-.fs-btn{background:rgba(0,0,0,.06);border:none;border-radius:8px;width:30px;height:30px;display:grid;place-items:center;cursor:pointer;color:inherit;flex-shrink:0}
-.game-content{padding:10px;min-height:180px;max-height:60vh;overflow-y:auto;position:relative;flex:1}
-/* 游戏大厅 UI */
-.game-lobby{display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px 10px;text-align:center}
-.lobby-icon{width:72px;height:72px;display:grid;place-items:center;color:var(--primary)}
-.lobby-icon svg{width:56px;height:56px;stroke:currentColor;fill:none;stroke-width:1.5}
-.lobby-title{font-size:1.1em;font-weight:800}
-.lobby-desc{font-size:.8em;color:var(--text-muted);max-width:320px;line-height:1.6}
+.fs-btn{background:rgba(0,0,0,.04);border:none;border-radius:8px;width:30px;height:30px;display:grid;place-items:center;cursor:pointer;color:var(--text-muted);flex-shrink:0;transition:all .2s}
+.fs-btn:hover{background:rgba(0,0,0,.08);color:var(--text)}
+.fs-btn svg{width:18px;height:18px}
+.game-content{padding:10px;min-height:180px;max-height:60vh;overflow-y:auto;position:relative;flex:1;background:#fff}
+
+.game-lobby{display:flex;flex-direction:column;align-items:center;gap:14px;padding:40px 20px;text-align:center;background:#fff;color:var(--text) !important}
+.lobby-icon{width:80px;height:80px;display:grid;place-items:center;color:var(--primary);background:var(--primary-bg);border-radius:24px;margin-bottom:10px;box-shadow:0 8px 16px rgba(46,125,50,.15)}
+.lobby-icon svg{width:44px;height:44px}
+.lobby-title{font-size:1.4em;font-weight:900;color:var(--text) !important;letter-spacing:1px}
+.lobby-desc{font-size:.85em;color:var(--text-muted) !important;max-width:320px;line-height:1.6;font-weight:500}
 .lobby-players{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:6px 0;max-width:100%}
-.lobby-player{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.05);border-radius:99px;padding:4px 12px 4px 4px;font-size:.78em;font-weight:700}
-.lobby-player .gpm-avatar{width:24px;height:24px}
-.lobby-player.host{border:1px solid var(--primary);background:var(--primary-bg)}
-.lobby-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px}
-.lobby-btn{padding:10px 24px;border-radius:99px;border:none;font-family:inherit;font-weight:700;font-size:.88em;cursor:pointer;transition:.2s}
+
+/* 🚨 恢复：头像在左侧，名字在右侧 🚨 */
+.lobby-player{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.05);border-radius:99px;padding:4px 14px 4px 4px;font-size:.85em;font-weight:700;color:var(--text) !important;}
+.lobby-player .gpm-avatar{width:24px;height:24px;font-size:11px;}
+.lobby-player.host{border:1.5px solid var(--primary);background:var(--primary-bg);color:var(--brand-dark) !important}
+
+.lobby-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.lobby-btn{padding:12px 32px;border-radius:99px;border:none;font-family:inherit;font-weight:700;font-size:.95em;cursor:pointer;transition:.2s;box-shadow:0 4px 12px rgba(0,0,0,.1)}
 .lobby-btn.join{background:var(--primary);color:#fff}
-.lobby-btn.spectate{background:rgba(0,0,0,.06);color:var(--text);border:2px solid var(--border)}
-.lobby-btn.start{background:var(--official-blue);color:#fff;animation:pulseStart 1.6s infinite}
-.lobby-btn:disabled{opacity:.5;pointer-events:none;animation:none}
-.lobby-count{font-size:.75em;color:var(--text-muted);font-weight:700}
-.lobby-hint{font-size:.78em;color:var(--text-muted);margin-top:2px}
-/* 聊天区 & 抽屉 */
+.lobby-btn.start{background:linear-gradient(135deg,#3B82F6,#2563EB);color:#fff}
+.lobby-btn:disabled{opacity:.5;pointer-events:none;animation:none;box-shadow:none}
+.lobby-hint{font-size:.82em;color:var(--text-light) !important;margin-top:8px;font-weight:500}
+
 .room-messages{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;position:relative;z-index:1;min-height:0}
 .rm-msg{display:flex;gap:9px;flex-shrink:0;max-width:92%}
 .rm-msg.self{align-self:flex-end;flex-direction:row-reverse}
 .rm-avatar{width:30px;height:30px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px;flex-shrink:0;background-size:cover;background-position:center}
-.rm-bubble{background:rgba(255,255,255,.85);border:1px solid rgba(0,0,0,.06);border-radius:12px;padding:7px 11px;min-width:0}
-.rm-name{font-size:.66em;color:var(--text-muted);font-weight:700;margin-bottom:2px}
-.rm-text{font-size:.84em;line-height:1.5;word-break:break-word}
+.rm-bubble{background:rgba(255,255,255,.95);border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:7px 11px;min-width:0;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.rm-name{font-size:.66em;color:#666 !important;font-weight:700;margin-bottom:2px}
+.rm-text{font-size:.85em;line-height:1.5;word-break:break-word;color:#1a1a1a !important;font-weight:500}
+
 .room-input-area{flex-shrink:0;display:flex;gap:8px;align-items:center;padding:10px 14px calc(10px + var(--safe-b));background:rgba(255,255,255,.9);border-top:1px solid var(--border);backdrop-filter:blur(8px);z-index:2}
 .room-input-area input{flex:1;padding:10px 14px;border-radius:99px;border:2px solid var(--border);background:var(--bg-input);font-family:inherit;font-size:.85em;outline:none;min-width:0;color:var(--text)}
 .room-input-area button{background:var(--primary);color:#fff;border:none;padding:9px 16px;border-radius:99px;font-weight:700;font-size:.8em;cursor:pointer;font-family:inherit}
@@ -118,28 +111,28 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .game-drawer{position:fixed;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:8px 16px calc(20px + var(--safe-b));transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);z-index:400;max-height:70vh;overflow-y:auto;box-shadow:0 -8px 32px rgba(0,0,0,.15)}
 .game-drawer.open{transform:translateY(0)}
 .drawer-handle{width:44px;height:5px;background:#ddd;border-radius:99px;margin:0 auto 12px}
-.drawer-title{font-size:1em;font-weight:800;margin-bottom:14px;text-align:center}
+.drawer-title{font-size:1em;font-weight:800;margin-bottom:14px;text-align:center;color:var(--text)}
 .game-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .game-card{background:var(--bg);border:2px solid var(--border);border-radius:14px;padding:16px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:.2s;text-align:center}
 .game-card:hover{border-color:var(--primary);background:var(--primary-bg);transform:translateY(-2px)}
 .game-card.active{border-color:var(--primary);background:var(--primary-bg);box-shadow:0 0 0 3px rgba(46,125,50,.15)}
 .game-card-icon{width:44px;height:44px;display:grid;place-items:center;color:var(--primary)}
-.game-card-icon svg{width:32px;height:32px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.game-card-name{font-weight:800;font-size:.9em}
+.game-card-icon svg{width:32px;height:32px}
+.game-card-name{font-weight:800;font-size:.9em;color:var(--text)}
 .game-card-desc{font-size:.66em;color:var(--text-muted)}
-/* 其他弹窗基础 */
 .member-drawer{position:fixed;top:0;right:0;bottom:0;width:300px;max-width:85vw;background:#fff;box-shadow:-8px 0 32px rgba(0,0,0,.15);transform:translateX(100%);transition:transform .35s;z-index:401;display:flex;flex-direction:column;padding-top:var(--safe-t)}
 .member-drawer.open{transform:translateX(0)}
-.member-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--border)}
+.member-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--border);color:var(--text)}
 .member-body{flex:1;overflow-y:auto;padding:12px 14px}
-.member-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;margin-bottom:6px}
+.member-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;margin-bottom:6px;transition:opacity .3s}
+.member-row.offline{opacity:0.4;filter:grayscale(1)}
 .member-row .avatar{width:38px;height:38px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;font-size:15px;background-size:cover;background-position:center}
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:.7em 1.5em;border-radius:2em;font-weight:600;font-size:.85em;opacity:0;transition:all .4s ease;z-index:9999;pointer-events:none;box-shadow:var(--shadow);max-width:90vw}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .custom-modal{position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px}
 .custom-modal.active{display:flex}
 .custom-modal .modal-box{background:#fff;border-radius:16px;max-width:420px;width:100%;padding:24px;box-shadow:var(--shadow);border:1px solid var(--border)}
-.modal-title{font-size:1.2em;font-weight:700;margin-bottom:8px}
+.modal-title{font-size:1.2em;font-weight:700;margin-bottom:8px;color:var(--text)}
 .modal-body{font-size:.95em;color:var(--text-muted);margin-bottom:12px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end}
 .modal-actions button{padding:6px 18px;border-radius:10px;border:none;font-weight:600;cursor:pointer;font-family:inherit}
@@ -157,108 +150,112 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 </style>
 </head>
 <body>
-
-<!-- 外部引入游戏逻辑 -->
-<script src="room-games.js"></script>
-
-<div class="view-list" id="listView">
-  <div class="page-header">
-    <button class="back" onclick="window.location.href='./chats.html'">
-      <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-    </button>
-    <span class="title">房间</span>
-    <div class="header-actions">
-      <button class="header-action primary" id="createRoomBtn" style="display:none;">＋ 创建</button>
-    </div>
-  </div>
-  <div class="room-grid" id="roomGrid"></div>
-</div>
-
-<div class="view-detail" id="detailView">
-  <div class="page-header">
-    <button class="back" id="detailBackBtn">
-      <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-    </button>
-    <span class="title" id="roomTitle">房间</span>
-    <div class="header-actions">
-      <button class="header-action" id="memberBtn" title="房间成员">
-        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        <span class="cnt" id="memberBtnCount">0</span>
+<div id="mainApp">
+  <div class="view-list" id="listView">
+    <div class="page-header">
+      <button class="back" onclick="window.location.href='./chats.html'">
+        <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       </button>
-      <button class="header-action" id="roomSettingsBtn" title="房间设置" style="display:none;">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      </button>
-    </div>
-  </div>
-  <div class="room-body" id="roomBody">
-    <div class="stage-wrap" id="stageWrap">
-      <div id="micArea"></div>
-      <div class="game-stage" id="gameStage">
-        <div class="game-topbar">
-          <div class="gpm-players" id="gpmPlayers"></div>
-          <button class="fs-btn" id="gamePrefsBtn" type="button" title="游戏设置">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          </button>
-          <button class="fs-btn" id="fsBtn" type="button" title="全屏">
-            <svg viewBox="0 0 24 24" id="fsIcon"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-          </button>
-        </div>
-        <div class="game-content" id="gameContent"></div>
-        <div class="game-modal-layer" id="gameModalLayer"></div>
+      <span class="title">房间</span>
+      <div class="header-actions">
+        <button class="header-action primary" id="createRoomBtn" style="display:none;">＋ 创建</button>
       </div>
     </div>
-    <div class="chat-panel" id="chatPanel">
-      <div class="room-messages" id="roomMessages"></div>
-      <div class="room-input-area">
-        <button class="game-btn" id="gameBtn" type="button" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--primary);">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="3"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><circle cx="15" cy="11" r="1"/><circle cx="17.5" cy="13" r="1"/></svg>
+    <div class="room-grid" id="roomGrid"></div>
+  </div>
+
+  <div class="view-detail" id="detailView">
+    <div class="page-header">
+      <button class="back" id="detailBackBtn">
+        <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      </button>
+      <span class="title" id="roomTitle">房间</span>
+      <div class="header-actions">
+        <button class="header-action" id="memberBtn" title="房间成员">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="cnt" id="memberBtnCount">0</span>
         </button>
-        <input type="text" id="roomInput" placeholder="说点什么…" maxlength="200" />
-        <button class="send-btn" id="roomSendBtn">发送</button>
+        <button class="header-action" id="roomSettingsBtn" title="房间设置" style="display:none;">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="room-body" id="roomBody">
+      <div class="stage-wrap" id="stageWrap">
+        <div id="micArea"></div>
+        <div class="game-stage" id="gameStage">
+          <div class="game-topbar">
+            <div class="gpm-players" id="gpmPlayers"></div>
+            <button class="fs-btn" id="gamePrefsBtn" type="button" title="游戏设置">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+            <button class="fs-btn" id="fsBtn" type="button" title="全屏">
+              <svg viewBox="0 0 24 24" id="fsIcon"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            </button>
+          </div>
+          <div class="game-content" id="gameContent"></div>
+          <div class="game-modal-layer" id="gameModalLayer"></div>
+        </div>
+      </div>
+      <div class="chat-panel" id="chatPanel">
+        <div class="room-messages" id="roomMessages"></div>
+        <div class="room-input-area">
+          <button class="game-btn" id="gameBtn" type="button" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--primary);">
+            <svg viewBox="0 0 24 24" width="24" height="24"><rect x="2" y="6" width="20" height="12" rx="3"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><circle cx="15" cy="11" r="1"/><circle cx="17.5" cy="13" r="1"/></svg>
+          </button>
+          <input type="text" id="roomInput" placeholder="说点什么…" maxlength="200" />
+          <button class="send-btn" id="roomSendBtn">发送</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<div class="drawer-backdrop" id="drawerBackdrop"></div>
-<div class="game-drawer" id="gameDrawer">
-  <div class="drawer-handle"></div>
-  <div class="drawer-title">选择游戏</div>
-  <div class="game-grid" id="gameGrid"></div>
-</div>
-
-<div class="member-drawer" id="memberDrawer">
-  <div class="member-head">
-    <h3>房间成员 <span id="memberCount" style="font-size:0.8em;color:var(--text-muted);">0</span></h3>
-    <button id="closeMemberDrawer" style="background:none;border:none;font-size:1.2em;cursor:pointer;">✕</button>
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <div class="game-drawer" id="gameDrawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-title">选择游戏</div>
+    <div class="game-grid" id="gameGrid"></div>
   </div>
-  <div class="member-body" id="memberList"></div>
-</div>
 
-<div class="custom-modal" id="confirmModal">
-  <div class="modal-box">
-    <div class="modal-title" id="confirmTitle">确认</div>
-    <div class="modal-body" id="confirmBody"></div>
-    <div class="modal-actions">
-      <button class="btn-secondary" id="confirmCancel">取消</button>
-      <button class="btn-danger" id="confirmOk">确定</button>
+  <div class="member-drawer" id="memberDrawer">
+    <div class="member-head">
+      <h3>房间成员 <span id="memberCount" style="font-size:0.8em;color:var(--text-muted);">0</span></h3>
+      <button id="closeMemberDrawer" style="background:none;border:none;font-size:1.2em;cursor:pointer;color:var(--text);">✕</button>
+    </div>
+    <div class="member-body" id="memberList"></div>
+  </div>
+
+  <div class="custom-modal" id="confirmModal">
+    <div class="modal-box">
+      <div class="modal-title" id="confirmTitle">确认</div>
+      <div class="modal-body" id="confirmBody"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="confirmCancel">取消</button>
+        <button class="btn-danger" id="confirmOk">确定</button>
+      </div>
     </div>
   </div>
+  <div id="toast"></div>
 </div>
 
-<div id="toast"></div>
-
+<script src="room-games.js"></script>
 <script>
-// 基础 Supabase & Session
-// window.sb 已从 common.js 初始化
-
 var currentUser=getSessionUser();
 if(!currentUser||!currentUser.id)window.location.href='./index.html';
 var isAdmin=!!(currentUser&&currentUser.is_admin===true);
+
+(async function syncAdmin(){
+  try {
+    var r = await window.sb.rpc('get_my_profile');
+    if(r.data && r.data.is_admin === true) {
+      isAdmin = true; currentUser.is_admin = true; setSessionUser(currentUser);
+      if(document.getElementById('createRoomBtn')) document.getElementById('createRoomBtn').style.display='inline-flex';
+      if(document.getElementById('roomGrid')) loadRooms();
+    }
+  } catch(e){}
+})();
 if(isAdmin)document.getElementById('createRoomBtn').style.display='inline-flex';
 
-// showToast 已从 common.js 引入
-// escapeHtml 已从 common.js 引入
 function showConfirm(title,body,onOk){
   var m=document.getElementById('confirmModal');
   document.getElementById('confirmTitle').textContent=title;
@@ -270,7 +267,6 @@ function showConfirm(title,body,onOk){
   o.onclick=function(){if(onOk)onOk();cleanup()};
 }
 
-// 游戏基础配置（分离后，UI与元数据放这里，具体逻辑去 RoomGames）
 var GAMES=[
   {id:'gomoku',name:'五子棋',desc:'2人对弈',min:2,max:2,icon:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>'},
   {id:'draw',name:'你画我猜',desc:'2-8人 · 3分钟一轮',min:2,max:8,icon:'<svg viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>'},
@@ -279,18 +275,46 @@ var GAMES=[
   {id:'doudizhu',name:'斗地主',desc:'3人 · 经典扑克',min:3,max:3,icon:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="12" height="16" rx="2"/><path d="M8 7h5M8 11h5"/><path d="M18 6v13a2 2 0 0 1-2 2H8"/></svg>'}
 ];
 
-var rooms=[]; var state={room:null,messages:[],roomChannel:null,msgChannel:null,memberChannel:null,spectating:false};
-var gameTickInterval=null; var offlineCheckTimer=null;
+var rooms=[]; var state={room:null,messages:[],roomChannel:null,msgChannel:null,memberChannel:null,spectating:false, onlineMembers:[]};
+var gameTickInterval=null; 
+var pollTimer = null;
 
-// === 视图切换 ===
 function showList(){document.getElementById('listView').classList.remove('hidden');document.getElementById('detailView').classList.remove('open')}
 function showDetail(){document.getElementById('listView').classList.add('hidden');document.getElementById('detailView').classList.add('open')}
-document.getElementById('detailBackBtn').onclick=function(){
-  if(state.room&&state.room.current_game){try{leaveGame()}catch(e){}}
+
+document.getElementById('detailBackBtn').onclick=async function(){
+  if(state.room&&state.room.current_game){
+    try{ await checkAndForceEndGame(currentUser.id, true); }catch(e){}
+  }
   leaveRoomLocal(); history.replaceState({},'',location.pathname); showList(); loadRooms();
 };
 
-// === 房间列表 ===
+window.addEventListener('beforeunload', function(e) {
+  if(state.room && state.room.current_game) {
+    try{ checkAndForceEndGame(currentUser.id, true); }catch(e){}
+    leaveRoomLocal();
+  }
+});
+
+function startPolling() {
+  if(pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(async function(){
+    if(!state.room || !state.room.id) return;
+    try {
+      var r = await window.sb.from('rooms').select('*').eq('id', state.room.id).single();
+      if(r.data) {
+        var oldStr = JSON.stringify(state.room.current_game);
+        var newStr = JSON.stringify(r.data.current_game);
+        if(oldStr !== newStr) {
+          state.room = r.data;
+          renderMic();
+          renderGame();
+        }
+      }
+    } catch(e){}
+  }, 2000);
+}
+
 async function loadRooms(){
   var grid=document.getElementById('roomGrid');
   grid.innerHTML='<div class="loading-state"><div class="spinner"></div>加载中…</div>';
@@ -307,12 +331,12 @@ async function loadRooms(){
     renderGrid();
   } catch(e) {
     clearTimeout(timeout);
-    grid.innerHTML = '<div class="empty-state">房间加载失败，请检查网络或表结构' + (isAdmin ? '<br><small style="font-size:0.85em;color:var(--text-light)">请先在 Supabase 创建 rooms 数据表</small>' : '') + '</div>';
+    grid.innerHTML = '<div class="empty-state">房间加载失败，请检查网络或表结构</div>';
   }
 }
 function renderGrid(){
   var grid=document.getElementById('roomGrid');
-  if(!rooms.length){grid.innerHTML='<div class="empty-state">还没有房间，点右上角创建</div>';return}
+  if(!rooms.length){grid.innerHTML='<div class="empty-state">还没有房间。' + (isAdmin ? '请点击右上角的“＋ 创建”' : '请联系管理员创建房间') + '</div>';return}
   grid.innerHTML=rooms.map(function(r){
     var isCo=(r.co_admin_ids||[]).indexOf(currentUser.id)>=0;
     var badge=(isAdmin||isCo)?'<span style="position:absolute;top:8px;left:8px;background:var(--official-blue);color:#fff;font-size:.55em;font-weight:700;padding:1px 7px;border-radius:99px;">管理</span>':'';
@@ -323,40 +347,25 @@ function renderGrid(){
   grid.querySelectorAll('.room-card').forEach(function(el){el.addEventListener('click',function(e){if(e.target.closest('[data-edit]'))return;enterRoom(this.dataset.id)})});
   grid.querySelectorAll('[data-edit]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();enterRoom(this.dataset.edit,true)})});
 }
-document.getElementById('createRoomBtn').onclick=async function(){
-  if(!isAdmin)return;
-  var name = await window.showCustomPrompt('创建新房间', '请输入房间名称...');
-  if(name===null)return;
+document.getElementById('createRoomBtn').onclick = async function(){
+  if(!isAdmin) return;
+  var name = null;
+  if (typeof window.showCustomPrompt === 'function') { name = await window.showCustomPrompt('创建新房间', '请输入房间名称...'); } 
+  else { name = prompt('请输入房间名称：'); }
+  if(name === null || name === undefined) return;
   name = name.trim();
-  if(!name){ window.showCustomAlert('提示', '房间名称不能为空'); return; }
-  
+  if(!name){ if(typeof window.showCustomAlert === 'function') window.showCustomAlert('提示', '房间名称不能为空'); else alert('房间名称不能为空'); return; }
   if(window.showLoading) window.showLoading();
   try{
-    var res = await window.sb.from('rooms').insert([{
-      name: name,
-      creator_id: currentUser.id,
-      co_admin_ids: [],
-      co_admin_permissions: {},
-      muted_user_ids: [],
-      mic_enabled: true,
-      mic_mode: 'free',
-      mic_speaking: [],
-      mic_requests: [],
-      game_disabled: false
-    }]).select().single();
-    
+    var res = await window.sb.from('rooms').insert([{ name: name, creator_id: currentUser.id, co_admin_ids: [], co_admin_permissions: {}, muted_user_ids: [], mic_enabled: true, mic_mode: 'free', mic_speaking: [], mic_requests: [], game_disabled: false }]).select().single();
     if(res.error) throw res.error;
-    
-    await window.showCustomAlert('成功', '房间「'+name+'」已创建！');
+    if(typeof window.showCustomAlert === 'function') await window.showCustomAlert('成功', '房间「'+name+'」已创建！');
     await loadRooms();
   }catch(e){
-    window.showCustomAlert('创建失败', e.message);
-  }finally{
-    if(window.hideLoading) window.hideLoading();
-  }
+    if(typeof window.showCustomAlert === 'function') window.showCustomAlert('创建失败', e.message || '网络错误');
+  }finally{ if(window.hideLoading) window.hideLoading(); }
 };
 
-// === 房间进出 ===
 async function enterRoom(roomId,openSettings){
   try{
     var res=await window.sb.from('rooms').select('*').eq('id',roomId).single();
@@ -364,8 +373,7 @@ async function enterRoom(roomId,openSettings){
     state.room=res.data;state.messages=[];state.spectating=false;
     document.getElementById('roomTitle').textContent=state.room.name;
     history.replaceState({},'','?id='+roomId); showDetail(); updateHeaderBtns();
-    renderMic(); renderGame(); await loadMessages(); subscribe(); initRoomMembers(); startGameTick();
-    if(openSettings&&isAdmin)setTimeout(openRoomEditor,300);
+    renderMic(); renderGame(); await loadMessages(); subscribe(); initRoomMembers(); startGameTick(); startPolling();
   }catch(e){showToast('进入房间失败：'+e.message)}
 }
 function leaveRoomLocal(){
@@ -378,13 +386,13 @@ function leaveRoomLocal(){
   if(state.msgChannel){window.sb.removeChannel(state.msgChannel);state.msgChannel=null}
   if(state.memberChannel){window.sb.removeChannel(state.memberChannel);state.memberChannel=null}
   if(gameTickInterval){clearInterval(gameTickInterval);gameTickInterval=null}
-  stopOfflineCheck(); state.room=null;state.messages=[];state.spectating=false;
+  if(pollTimer){clearInterval(pollTimer);pollTimer=null}
+  state.room=null;state.messages=[];state.spectating=false;state.onlineMembers=[];
 }
 function updateHeaderBtns(){var setBtn=document.getElementById('roomSettingsBtn');if(setBtn)setBtn.style.display=isAdmin?'inline-flex':'none'}
 async function freshRoom(){var r=await window.sb.from('rooms').select('*').eq('id',state.room.id).single();if(r.error)throw r.error;return r.data}
 async function patchRoom(patch){var res=await window.sb.from('rooms').update(patch).eq('id',state.room.id).select().single();if(res.error)throw res.error;state.room=res.data;document.getElementById('roomTitle').textContent=state.room.name;renderMic();renderGame();return state.room}
 
-// === 房间成员 Presence ===
 function initRoomMembers(){
   if(state.memberChannel){window.sb.removeChannel(state.memberChannel);state.memberChannel=null}
   if(!state.room)return;
@@ -396,10 +404,53 @@ function initRoomMembers(){
     renderMemberList(arr);
     var cnt=document.getElementById('memberBtnCount');if(cnt)cnt.textContent=arr.length;
     var cnt2=document.getElementById('memberCount');if(cnt2)cnt2.textContent=arr.length;
+    
     var onlineIds=arr.map(function(u){return u.id});
-    cleanupOfflineGamePlayers(onlineIds);
+    handlePresenceChange(onlineIds);
+    state.onlineMembers = onlineIds;
+    renderGame();
   });
   state.memberChannel.subscribe(function(status){if(status==='SUBSCRIBED'){state.memberChannel.track({user_id:currentUser.id,nickname:currentUser.nickname,avatar_url:currentUser.avatar_url||''})}});
+}
+
+function handlePresenceChange(onlineIds) {
+  if(!state.room || !state.room.current_game) return;
+  var game = state.room.current_game;
+  if(game.status !== 'playing') return;
+
+  var players = game.players || [];
+  var droppedPlayers = players.filter(p => onlineIds.indexOf(p.user_id) === -1);
+  
+  if (droppedPlayers.length > 0) {
+    droppedPlayers.forEach(dp => {
+      checkAndForceEndGame(dp.user_id, false);
+    });
+  }
+}
+
+async function checkAndForceEndGame(quitUserId, isVoluntary) {
+  if(!state.room || !state.room.current_game) return;
+  var game = state.room.current_game;
+  if(game.status !== 'playing') return;
+
+  var isHost = game.host_id === quitUserId;
+  var is2P = ['gomoku', 'doudizhu'].includes(game.type);
+
+  if (isHost || is2P) {
+    var newState = Object.assign({}, game.state, { 
+       ended_reason: isHost ? '房主已退出，游戏结束' : '玩家已离线，游戏结束' 
+    });
+    var patch = Object.assign({}, game, { status: 'finished', state: newState });
+    
+    try {
+      var res = await window.sb.from('rooms').update({current_game: patch}).eq('id',state.room.id).select().single();
+      if(!res.error) {
+         state.room = res.data;
+         renderGame();
+         if (isVoluntary) showToast("已强制结束游戏");
+      }
+    } catch(e) {}
+  }
 }
 
 function renderMemberList(arr){
@@ -407,13 +458,12 @@ function renderMemberList(arr){
   if(!arr.length){el.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:30px 20px;font-size:.85em;">暂无成员</div>';return}
   el.innerHTML=arr.map(function(u){
     var has=u.avatar_url&&String(u.avatar_url).indexOf('http')===0;
-    return '<div class="member-row"><div class="avatar" style="'+(has?'background-image:url('+escapeHtml(u.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(u.nickname).charAt(0).toUpperCase()))+'</div><div class="info"><div class="name">'+escapeHtml(u.nickname)+'</div></div></div>';
+    return '<div class="member-row"><div class="avatar" style="'+(has?'background-image:url('+escapeHtml(u.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(u.nickname).charAt(0).toUpperCase()))+'</div><div class="info"><div class="name" style="color:var(--text);font-weight:600;">'+escapeHtml(u.nickname)+'</div></div></div>';
   }).join('');
 }
 document.getElementById('memberBtn').onclick=function(){document.getElementById('memberDrawer').classList.add('open')};
 document.getElementById('closeMemberDrawer').onclick=function(){document.getElementById('memberDrawer').classList.remove('open')};
 
-// === 麦位渲染 ===
 function renderMic(){
   var el=document.getElementById('micArea');var r=state.room;if(!r){el.innerHTML='';return}
   if(r.current_game){el.innerHTML='';return}
@@ -425,15 +475,18 @@ function renderMic(){
     else{h+='<div class="mic-avatar empty">+</div><div class="mic-name">空位</div>'}
     h+='</div>'}
   h+='</div><div class="mic-actions">';
-  if(iAmOn)h+='<button class="mic-btn leave" onclick="removeFromMic(\''+currentUser.id+'\')">下麦</button>';
-  else h+='<button class="mic-btn join" onclick="requestMic()">上麦</button>';
+  if(iAmOn)h+='<button class="mic-btn leave" id="btnMicLeave">下麦</button>';
+  else h+='<button class="mic-btn join" id="btnMicJoin">上麦</button>';
   h+='</div></div>';el.innerHTML=h;
+  
+  var btnLeave = document.getElementById('btnMicLeave');
+  if(btnLeave) btnLeave.onclick = function(){ removeFromMic(currentUser.id); };
+  var btnJoin = document.getElementById('btnMicJoin');
+  if(btnJoin) btnJoin.onclick = requestMic;
 }
 async function requestMic(){try{var r=await freshRoom();var speaking=r.mic_speaking||[];if(speaking.length>=4){showToast('麦位已满');return}speaking.push({user_id:currentUser.id,nickname:currentUser.nickname,avatar_url:currentUser.avatar_url||''});await patchRoom({mic_speaking:speaking})}catch(e){}}
 async function removeFromMic(userId){try{var r=await freshRoom();var speaking=(r.mic_speaking||[]).filter(function(m){return m.user_id!==userId});await patchRoom({mic_speaking:speaking})}catch(e){}}
-window.requestMic=requestMic;window.removeFromMic=removeFromMic;
 
-// === 游戏大厅 & 核心控制 ===
 function openGameDrawer(){
   if(state.room&&state.room.game_disabled){showToast('管理员已禁止本房间游戏');return}
   var game=state.room&&state.room.current_game;
@@ -444,18 +497,20 @@ function openGameDrawer(){
   document.getElementById('drawerBackdrop').classList.add('open');document.getElementById('gameDrawer').classList.add('open');
   var cur=game?game.type:null;
   document.getElementById('gameGrid').innerHTML=GAMES.map(function(g){
-    return '<div class="game-card'+(cur===g.id?' active':'')+'" onclick="selectGame(\''+g.id+'\')"><div class="game-card-icon">'+g.icon+'</div><div class="game-card-name">'+g.name+'</div><div class="game-card-desc">'+g.desc+'</div></div>';
+    return '<div class="game-card '+(cur===g.id?'active':'')+'" data-gid="'+g.id+'"><div class="game-card-icon">'+g.icon+'</div><div class="game-card-name">'+g.name+'</div><div class="game-card-desc">'+g.desc+'</div></div>';
   }).join('');
+  
+  document.querySelectorAll('#gameGrid .game-card').forEach(card => {
+    card.onclick = function() { selectGame(this.dataset.gid); };
+  });
 }
 function closeGameDrawer(){document.getElementById('drawerBackdrop').classList.remove('open');document.getElementById('gameDrawer').classList.remove('open')}
 document.getElementById('gameBtn').onclick=openGameDrawer;
 document.getElementById('drawerBackdrop').onclick=closeGameDrawer;
 
-function gameDeepEqual(a,b){if(a===b)return true;if(typeof a!=='object'||a===null||typeof b!=='object'||b===null)return false;var ka=Object.keys(a).sort(),kb=Object.keys(b).sort();if(ka.length!==kb.length)return false;for(var i=0;i<ka.length;i++){if(ka[i]!==kb[i]||!gameDeepEqual(a[ka[i]],b[kb[i]]))return false;}return true}
 async function updateGame(patch){
   var res=await window.sb.from('rooms').update({current_game:patch}).eq('id',state.room.id).select().single();
   if(res.error)throw res.error;
-  if(!gameDeepEqual(patch,res.data?res.data.current_game:null)) throw new Error('状态未写入');
   state.room=res.data;renderMic();renderGame();
 }
 window.updateGame = updateGame;
@@ -470,8 +525,6 @@ async function startGame(gameId){
   var newGame={type:gameId,status:'lobby',host_id:currentUser.id,players:[{user_id:currentUser.id,nickname:currentUser.nickname,avatar_url:currentUser.avatar_url||'',seat:0}],state:null};
   try{await updateGame(newGame);showToast('已创建「'+g.name+'」')}catch(e){}
 }
-window.selectGame = selectGame;
-
 async function joinGame(){
   var game=state.room.current_game;var g=GAMES.find(function(x){return x.id===game.type});
   var players=game.players||[];
@@ -479,23 +532,18 @@ async function joinGame(){
   players=players.concat([{user_id:currentUser.id,nickname:currentUser.nickname,avatar_url:currentUser.avatar_url||'',seat:players.length}]);
   await updateGame(Object.assign({},game,{players:players})); state.spectating=false;
 }
-window.joinGame = joinGame;
-
 async function beginGame(){
   var game=state.room.current_game;
   if(game.host_id!==currentUser.id)return;
   var g=GAMES.find(function(x){return x.id===game.type});
   if(game.players.length<g.min){showToast('人数不足');return}
-  // 调用分离的游戏初始化引擎
   var st = window.RoomGames ? window.RoomGames.initState(game.type, game.players) : {};
   await updateGame(Object.assign({},game,{status:'playing',state:st}));
 }
-window.beginGame = beginGame;
 
-// === 渲染分发 ===
 function renderGame(){
   var r=state.room;var stage=document.getElementById('gameStage');var body=document.getElementById('roomBody');
-  if(!r||!r.current_game){stage.classList.remove('active');body.removeAttribute('data-theme');closeGameModal();return}
+  if(!r||!r.current_game){stage.classList.remove('active');body.removeAttribute('data-theme');return}
   var game=r.current_game;body.setAttribute('data-theme',game.type);
   var g=GAMES.find(function(x){return x.id===game.type});
   var players=game.players||[]; var inGame=players.some(function(p){return p.user_id===currentUser.id});
@@ -503,18 +551,43 @@ function renderGame(){
   stage.classList.add('active');
   document.getElementById('gpmPlayers').innerHTML=players.map(function(p){
     var has=p.avatar_url&&String(p.avatar_url).indexOf('http')===0;
-    return '<div class="gpm-player"><div class="gpm-avatar" style="'+(has?'background-image:url('+escapeHtml(p.avatar_url)+');background-size:cover;':'')+'">'+(has?'':escapeHtml(String(p.nickname||'U').charAt(0).toUpperCase()))+'</div><div class="gpm-name">'+escapeHtml(p.nickname||'')+(p.user_id===game.host_id?' 👑':'')+'</div></div>';
+    var isOffline = state.onlineMembers.length > 0 && state.onlineMembers.indexOf(p.user_id) === -1;
+    return '<div class="gpm-player '+(isOffline?'offline':'')+'"><div class="gpm-avatar" style="'+(has?'background-image:url('+escapeHtml(p.avatar_url)+');background-size:cover;':'')+'">'+(has?'':escapeHtml(String(p.nickname||'U').charAt(0).toUpperCase()))+'</div><div class="gpm-name">'+escapeHtml(p.nickname||'')+(p.user_id===game.host_id?' 👑':'')+'</div></div>';
   }).join('');
 
   var el=document.getElementById('gameContent');
+  
+  if(game.status==='finished') {
+    el.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:20px;">'+
+      '<div style="font-size:1.5em;font-weight:900;color:var(--danger);margin-bottom:10px;">游戏已结束</div>'+
+      '<div style="font-size:0.9em;color:var(--text-muted);margin-bottom:20px;">'+(game.state.ended_reason||'对局已结束')+'</div>'+
+      (game.host_id===currentUser.id?'<button class="lobby-btn start" id="btnRestartGame">重新发起</button>':'<div class="lobby-hint">等待房主重新发起…</div>')+
+      '</div>';
+    var rBtn = document.getElementById('btnRestartGame');
+    if(rBtn) rBtn.onclick = function(){ selectGame(game.type); };
+    return;
+  }
+
   if(game.status==='lobby'){
-    // 渲染等待大厅...
     el.innerHTML='<div class="game-lobby"><div class="lobby-icon">'+g.icon+'</div><div class="lobby-title">'+g.name+'</div><div class="lobby-desc">'+g.desc+' · 当前 '+players.length+' 人</div>'+
-      '<div class="lobby-players">'+players.map(function(p){return '<div class="lobby-player'+(p.user_id===game.host_id?' host':'')+'">'+escapeHtml(p.nickname)+'</div>'}).join('')+'</div>'+
-      (game.host_id===currentUser.id?'<button class="lobby-btn start" onclick="beginGame()">开始游戏</button>':'<div class="lobby-hint">等待房主开始…</div>')+
-      (!inGame?'<button class="lobby-btn join" onclick="joinGame()" style="margin-top:10px;">加入游戏</button>':'')+'</div>';
+      '<div class="lobby-players">'+players.map(function(p){
+        var isOffline = state.onlineMembers.length > 0 && state.onlineMembers.indexOf(p.user_id) === -1;
+        var has=p.avatar_url&&String(p.avatar_url).indexOf('http')===0;
+        // 头像在左，名字在右
+        return '<div class="lobby-player '+(isOffline?'offline':'')+(p.user_id===game.host_id?' host':'')+'">'+
+                 '<div class="gpm-avatar" style="'+(has?'background-image:url('+escapeHtml(p.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(p.nickname||'U').charAt(0).toUpperCase()))+'</div>'+
+                 escapeHtml(p.nickname)+
+               '</div>';
+      }).join('')+'</div>'+
+      (game.host_id===currentUser.id?'<button class="lobby-btn start" id="btnStartGame">开始游戏</button>':'<div class="lobby-hint">等待房主开始…</div>')+
+      (!inGame?'<button class="lobby-btn join" id="btnJoinGame" style="margin-top:10px;">加入游戏</button>':'')+'</div>';
+    
+    var sBtn = document.getElementById('btnStartGame');
+    if(sBtn) sBtn.onclick = beginGame;
+    var jBtn = document.getElementById('btnJoinGame');
+    if(jBtn) jBtn.onclick = joinGame;
+    
   } else {
-    // 动态路由给外部分离的 room-games.js 中的渲染器
     if(window.RoomGames && window.RoomGames[game.type] && window.RoomGames[game.type].render){
       window.RoomGames[game.type].render(game, el);
     } else {
@@ -524,20 +597,8 @@ function renderGame(){
 }
 window.renderGame = renderGame;
 
-// 关闭游戏内弹窗 & 清理离线
-function closeGameModal(){var layer=document.getElementById('gameModalLayer');if(layer){layer.classList.remove('show');layer.innerHTML=''}}
-window.closeGameModal=closeGameModal;
-
-async function cleanupOfflineGamePlayers(onlineIds){
-  // 简化版，交由游戏内处理
-}
-
 function startGameTick(){ if(gameTickInterval)clearInterval(gameTickInterval); gameTickInterval=setInterval(()=>{ if(window.RoomGames && state.room && state.room.current_game) window.RoomGames.tick(state.room.current_game); },1000); }
-function stopOfflineCheck(){}
-window.startGameTick = startGameTick;
-window.stopOfflineCheck = stopOfflineCheck;
 
-// 聊天
 async function loadMessages(){
   var res=await window.sb.from('room_messages').select('*').eq('room_id',state.room.id).order('created_at',{ascending:false}).limit(200);
   if(!res.error) state.messages=(res.data||[]).slice().reverse(); renderMessages();
@@ -569,7 +630,6 @@ function subscribe(){
     }).subscribe();
 }
 
-// 初始化
 (function init(){
   var rid=new URLSearchParams(location.search).get('id');
   if(rid)enterRoom(rid);else{showList();loadRooms()}
