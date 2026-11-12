@@ -1,28 +1,30 @@
 (function(){
   var style = document.createElement('style');
   style.innerHTML = `
-    .gomoku-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+    .gomoku-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:100%;height:100%;overflow:hidden}
     .gomoku-status{font-size:.85em;font-weight:700;text-align:center;min-height:22px;color:var(--text) !important}
-    .gomoku-board{display:grid;grid-template-columns:repeat(15,1fr);width:min(78vw,320px);aspect-ratio:1;background:#dcb35c;border-radius:8px;padding:4px;box-shadow:0 4px 16px rgba(0,0,0,.2);overflow:hidden}
+    .gomoku-board{display:grid;grid-template-columns:repeat(15,1fr);width:min(82vw, 42vh);aspect-ratio:1;background:#dcb35c;border-radius:8px;padding:4px;box-shadow:0 4px 16px rgba(0,0,0,.2);overflow:hidden}
     .gmk-cell{position:relative;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 0.5px rgba(90,60,20,.5);cursor:pointer;overflow:hidden}
     .gmk-cell.gmk-last .gmk-stone{box-shadow:0 0 0 2.5px #e53935,0 1px 3px rgba(0,0,0,.35)}
-    .gmk-stone{width:84%;height:84%;border-radius:50%;display:block;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+    .gmk-stone{width:84%;height:84%;border-radius:50%;display:block;box-shadow:0 1px 3px rgba(0,0,0,.35); animation: dropIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
     .gmk-stone.black{background:radial-gradient(circle at 32% 32%,#6a6a6a,#000)}
     .gmk-stone.white{background:radial-gradient(circle at 32% 32%,#fff,#b9b9b9)}
-
-    .draw-wrap{display:flex;flex-direction:column;gap:10px}
+    @keyframes dropIn { 0% { transform: scale(2); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    
+    .draw-wrap{display:flex;flex-direction:column;gap:10px;width:100%;height:100%;overflow:hidden}
     .draw-info{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.8em;font-weight:700;flex-wrap:wrap;color:var(--text)!important}
+    .draw-timer{background:rgba(25,118,210,.15);color:#1976d2;padding:4px 12px;border-radius:99px;font-weight:800;font-size:1.05em}
     .draw-word{background:linear-gradient(135deg,#1976d2,#42a5f5);color:#fff;padding:5px 14px;border-radius:99px;font-size:1.05em;letter-spacing:2px}
-    .draw-canvas-wrap{position:relative;width:100%;background:#fff;border-radius:10px;overflow:hidden;border:2px solid #90caf9}
-    .draw-canvas{display:block;width:100%;touch-action:none;cursor:crosshair}
+    .draw-canvas-wrap{position:relative;flex:1;min-height:180px;background:#fff;border-radius:10px;overflow:hidden;border:2px solid #90caf9}
+    .draw-canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
     .draw-tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
     .draw-size{background:#fff;border:2px solid #90caf9;color:#1976d2;font-weight:700;padding:4px 10px;border-radius:8px;cursor:pointer;font-size:.75em}
     .draw-guess-box{display:flex;gap:6px}
     .draw-guess-box input{flex:1;padding:8px 12px;border:2px solid #90caf9;border-radius:10px;outline:none;color:var(--text)}
     .draw-guess-box button{padding:8px 16px;border:none;background:#1976d2;color:#fff;border-radius:10px;font-weight:700;cursor:pointer}
-    .draw-messages{max-height:80px;overflow-y:auto;font-size:.75em;background:rgba(0,0,0,.05);border-radius:8px;padding:6px 10px;color:var(--text)}
+    .draw-messages{max-height:60px;overflow-y:auto;font-size:.75em;background:rgba(0,0,0,.05);border-radius:8px;padding:6px 10px;color:var(--text)}
 
-    .spy-wrap{display:flex;flex-direction:column;gap:10px;color:var(--text)!important}
+    .spy-wrap{display:flex;flex-direction:column;gap:10px;color:var(--text)!important;width:100%;height:100%;overflow-y:auto}
     .spy-role-card{background:linear-gradient(135deg,rgba(139,92,246,.15),rgba(139,92,246,.05));border:2px solid rgba(139,92,246,.4);border-radius:12px;padding:14px;text-align:center;}
     .spy-role-word{font-size:1.4em;font-weight:900;letter-spacing:4px;color:#6d28d9}
     .spy-players{display:flex;flex-direction:column;gap:6px}
@@ -32,7 +34,7 @@
     .spy-desc-input input{flex:1;padding:8px 12px;border-radius:10px;border:1px solid #ccc;outline:none}
     .spy-desc-input button{background:#8b5cf6;color:#fff;border:none;padding:0 16px;border-radius:10px;cursor:pointer}
 
-    .ww-wrap{display:flex;flex-direction:column;gap:10px;color:var(--text)!important}
+    .ww-wrap{display:flex;flex-direction:column;gap:10px;color:var(--text)!important;width:100%;height:100%;overflow-y:auto}
     .ww-role-card{background:linear-gradient(135deg,rgba(239,68,68,.15),rgba(239,68,68,.05));border:2px solid rgba(239,68,68,.4);border-radius:12px;padding:14px;text-align:center;}
     .ww-role-word{font-size:1.4em;font-weight:900;letter-spacing:4px;color:#b91c1c}
     .ww-players{display:flex;flex-direction:column;gap:6px}
@@ -58,6 +60,8 @@
   var ddzSuit = function(id){return id<52?id%4:-1;}
   var ddzValName = function(v){return v===16?'小王':v===17?'大王':v===15?'2':v===14?'A':v===13?'K':v===12?'Q':v===11?'J':String(v);};
 
+  var DRAW_WORDS = ['苹果', '太阳', '月亮', '星星', '汽车', '飞机', '电脑', '手机', '猫咪', '小狗', '大象', '蝴蝶', '钢琴', '雨伞', '眼镜', '雪人', '蛋糕', '冰淇淋', '汉堡', '披萨'];
+
   function getOnlineMembers() {
     return (typeof state !== 'undefined' && state.onlineMembers) ? state.onlineMembers : [];
   }
@@ -66,8 +70,17 @@
     return online.length > 0 && online.indexOf(uid) === -1;
   }
 
+  async function grantCoinReward(amount, reason) {
+    if (typeof currentUser === 'undefined' || !currentUser || !currentUser.id) return;
+    try {
+       var r = await window.sb.rpc('add_user_coins', { p_amount: amount, p_reason: reason });
+       if(r.data && r.data.ok) {
+          if(window.showCustomToast) window.showCustomToast('🎉 游戏胜利，获得 ' + amount + ' 小七币！');
+       }
+    } catch(e) { console.warn('发放奖励失败', e); }
+  }
+
   window.RoomGames = {
-    // 1. 五子棋
     gomoku: {
       render: function(game, el) {
         var st = game.state || {}, board = st.board || [], players = game.players || [];
@@ -109,7 +122,6 @@
         var board = game.state.board.map(function(row){ return row.slice(); });
         board[r][c] = myColor === 'black' ? 'b' : 'w';
         
-        // 简单胜负判断
         var win = false;
         var dirs = [[0,1],[1,0],[1,1],[1,-1]];
         for(var i=0; i<4; i++) {
@@ -124,14 +136,20 @@
         }
         
         var ns = Object.assign({}, game.state, { board: board, turn: myColor === 'black' ? 'white' : 'black', lastMove: {r:r, c:c} });
-        if(win) ns.winner = myColor;
-        
-        updateGame(Object.assign({}, game, { state: ns }));
-        if(win) setTimeout(function(){ showToast(myColor==='black'?'黑方胜利':'白方胜利'); }, 100);
+        var newGame = Object.assign({}, game, { state: ns });
+        if(win) {
+           ns.winner = myColor;
+           newGame.status = 'finished';
+           newGame.state.ended_reason = (myColor === 'black' ? '黑方' : '白方') + '获胜';
+           setTimeout(function(){ showToast(myColor==='black'?'黑方胜利':'白方胜利'); }, 100);
+           if (myColor === (players[0].user_id === currentUser.id ? 'black' : 'white')) {
+               grantCoinReward(10, '五子棋获胜');
+           }
+        }
+        updateGame(newGame);
       }
     },
 
-    // 2. 你画我猜
     draw: {
       render: function(game, el) {
         var st = game.state || {}, players = game.players || [];
@@ -139,12 +157,28 @@
         var drawer = players.find(function(p){ return p.user_id === drawerId; }) || {};
         var isDrawer = drawerId === currentUser.id;
         var isDrawerOffline = drawer.user_id && isPlayerOffline(drawer.user_id);
+        var remain = st.end_time ? Math.max(0, Math.floor((st.end_time - Date.now())/1000)) : 0;
+        var timeStr = Math.floor(remain/60) + ':' + ('0' + (remain%60)).slice(-2);
         
-        var html = '<div class="draw-wrap"><div class="draw-info"><span>' + (isDrawer ? '轮到你画' : (escapeHtml(drawer.nickname || '某人') + (isDrawerOffline ? ' (掉线)' : '') + ' 画')) + '</span><span class="draw-word">' + (isDrawer ? escapeHtml(st.word || '') : '? ? ?') + '</span></div>';
+        var html = '<div class="draw-wrap">';
+        html += '<div class="draw-info">';
+        html += '<span>' + (isDrawer ? '轮到你画' : (escapeHtml(drawer.nickname || '某人') + (isDrawerOffline ? ' (掉线)' : '') + ' 画')) + '</span>';
+        html += '<span class="draw-timer" id="drawTimer">' + timeStr + '</span>';
+        html += '<span class="draw-word">' + (isDrawer ? escapeHtml(st.word || '') : '? ? ?') + '</span>';
+        html += '</div>';
         html += '<div class="draw-canvas-wrap"><canvas class="draw-canvas" id="drawCanvas"></canvas></div>';
         if(isDrawer) html += '<div class="draw-tools"><button class="draw-size" id="btnDrawClear">清空</button></div>';
         if(!isDrawer) html += '<div class="draw-guess-box"><input id="drawGuessInput" placeholder="输入猜测"><button id="btnDrawGuess">猜</button></div>';
-        html += '<div class="draw-messages">' + (st.messages||[]).map(function(m){ return '<div>'+escapeHtml(m.text)+'</div>'; }).join('') + '</div></div>';
+        
+        var scores = st.scores || {};
+        html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">';
+        players.forEach(function(p){
+           var sc = scores[p.user_id] || 0;
+           html += '<div style="font-size:.72em;background:rgba(0,0,0,.05);padding:4px 10px;border-radius:8px;font-weight:700;">' + escapeHtml(p.nickname) + ': ' + sc + '</div>';
+        });
+        html += '</div>';
+        
+        html += '<div class="draw-messages">' + (st.messages||[]).slice(-5).map(function(m){ return '<div>'+escapeHtml(m.text)+'</div>'; }).join('') + '</div></div>';
         el.innerHTML = html;
         
         var clearBtn = document.getElementById('btnDrawClear');
@@ -159,7 +193,7 @@
         
         var canvas = document.getElementById('drawCanvas');
         if(!canvas) return;
-        canvas.width = canvas.parentElement.clientWidth; canvas.height = 300;
+        canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight;
         var ctx = canvas.getContext('2d');
         
         if(st.strokes && st.strokes.length) {
@@ -204,7 +238,7 @@
           if(currentPoints.length > 0) {
              var game = state.room.current_game;
              var strokes = (game.state.strokes||[]).concat([{ color: '#000', size: 4, points: currentPoints }]);
-             if(strokes.length > 100) strokes.shift();
+             if(strokes.length > 200) strokes.shift();
              updateGame(Object.assign({}, game, {state: Object.assign({}, game.state, {strokes: strokes})}));
           }
           currentPoints = [];
@@ -215,11 +249,30 @@
         if(!text) return;
         var game = state.room.current_game;
         var st = game.state;
-        var ns = Object.assign({}, st);
-        ns.messages = (ns.messages||[]).concat([{ text: currentUser.nickname + '：' + text, correct: text === st.word }]);
-        if(text === st.word) ns.correct = (ns.correct||[]).concat([currentUser.id]);
-        updateGame(Object.assign({}, game, {state: ns}));
-        document.getElementById('drawGuessInput').value = '';
+        if(text === st.word) {
+           var ns = Object.assign({}, st);
+           ns.scores = ns.scores || {};
+           ns.scores[currentUser.id] = (ns.scores[currentUser.id] || 0) + 10;
+           ns.messages = (ns.messages||[]).concat([{ text: currentUser.nickname + ' 猜对啦！' }]);
+           
+           // 🚨 猜对后自动切换画手
+           var nextIndex = (st.drawer_index + 1) % st.order.length;
+           var newWord = DRAW_WORDS[Math.floor(Math.random() * DRAW_WORDS.length)];
+           ns.drawer_index = nextIndex;
+           ns.word = newWord;
+           ns.strokes = [];
+           ns.messages = [];
+           ns.end_time = Date.now() + 180000;
+           
+           updateGame(Object.assign({}, game, {state: ns}));
+           document.getElementById('drawGuessInput').value = '';
+           showToast('猜对啦！+10分，正在切换画手...');
+        } else {
+           var ns2 = Object.assign({}, st);
+           ns2.messages = (ns2.messages||[]).concat([{ text: currentUser.nickname + '：' + text }]);
+           updateGame(Object.assign({}, game, {state: ns2}));
+           document.getElementById('drawGuessInput').value = '';
+        }
       },
       clear: function() {
         var game = state.room.current_game;
@@ -227,22 +280,45 @@
       }
     },
 
-    // 3. 谁是卧底
     spy: {
       render: function(game, el) {
         var st = game.state || {}, players = game.players || [];
         var myWord = (st.words && st.words[currentUser.id]) || '?';
-        var html = '<div class="spy-wrap"><div class="spy-role-card"><div>你的词语</div><div class="spy-role-word">' + escapeHtml(myWord) + '</div></div><div class="spy-players">';
+        var phase = st.phase || 'describe';
+        
+        var html = '<div class="spy-wrap"><div class="spy-role-card"><div>' + (phase === 'vote' ? '投票阶段' : '你的词语') + '</div><div class="spy-role-word">' + (phase === 'vote' ? '请找出卧底' : escapeHtml(myWord)) + '</div></div><div class="spy-players">';
+        
         players.forEach(function(p) {
           var isOffline = isPlayerOffline(p.user_id);
+          var isDead = st.dead && st.dead.indexOf(p.user_id) > -1;
           var desc = (st.descriptions||[]).find(function(d){ return d.user_id === p.user_id; });
-          html += '<div class="spy-player ' + (isOffline ? 'offline' : '') + '" style="' + (isOffline ? 'opacity:0.4;filter:grayscale(1);' : '') + '"><div class="gpm-avatar">' + escapeHtml(p.nickname.charAt(0)) + '</div><div class="name">' + escapeHtml(p.nickname) + (isOffline?' (离线)':'') + '</div>' + (desc ? '<span style="font-size:0.7em;">'+escapeHtml(desc.text)+'</span>' : '') + '</div>';
+          var votes = (st.votes||[]).filter(function(v){ return v.target_id === p.user_id; }).length;
+          var isMe = p.user_id === currentUser.id;
+          
+          var actionBtn = '';
+          if (phase === 'vote' && !isMe && !isDead && !isOffline) {
+              actionBtn = '<button class="btn-sm btn-ban" data-uid="'+p.user_id+'">投票</button>';
+          }
+          if (isDead) {
+              actionBtn = '<span style="color:var(--danger);font-size:0.8em;">已淘汰</span>';
+          }
+          
+          html += '<div class="spy-player ' + (isOffline||isDead ? 'offline' : '') + '" style="' + (isOffline||isDead ? 'opacity:0.4;filter:grayscale(1);' : '') + '"><div class="gpm-avatar">' + escapeHtml(p.nickname.charAt(0)) + '</div><div class="name">' + escapeHtml(p.nickname) + (isDead?' (出局)':'') + (isOffline?' (离线)':'') + (votes>0&&!isDead?' ('+votes+'票)':'') + '</div>' + (desc ? '<span style="font-size:0.7em;margin-right:8px;">'+escapeHtml(desc.text)+'</span>' : '') + actionBtn + '</div>';
         });
         html += '</div>';
+        
         var myDesc = (st.descriptions||[]).find(function(d){ return d.user_id === currentUser.id; });
-        if(!myDesc && !isPlayerOffline(currentUser.id)) {
+        var amIDead = st.dead && st.dead.indexOf(currentUser.id) > -1;
+        if(phase === 'describe' && !myDesc && !amIDead && !isPlayerOffline(currentUser.id)) {
           html += '<div class="spy-desc-input"><input id="spyDescInput" placeholder="描述你的词语..."><button id="btnSpyDesc">发送</button></div>';
+        } else if (phase === 'vote' && !amIDead) {
+          html += '<div style="text-align:center;font-size:0.8em;color:var(--text-muted);margin-top:10px;">请点击上方玩家头像旁的按钮进行投票</div>';
         }
+        
+        if (phase === 'vote') {
+           html += '<button class="btn btn-primary" style="margin-top:10px;width:100%;" id="btnSpyFinishVote">统计投票结果</button>';
+        }
+        
         html += '</div>'; el.innerHTML = html;
         
         var descBtn = document.getElementById('btnSpyDesc');
@@ -251,17 +327,69 @@
            descBtn.onclick = function() { window.RoomGames.spy.desc(); };
            descInput.onkeydown = function(e) { if(e.key === 'Enter') window.RoomGames.spy.desc(); };
         }
+
+        if (phase === 'vote') {
+           el.querySelectorAll('.spy-player button[data-uid]').forEach(function(btn) {
+              btn.onclick = function() {
+                 var target = this.dataset.uid;
+                 var game = state.room.current_game;
+                 if((game.state.votes||[]).some(v=>v.user_id===currentUser.id)) return showToast('你已投过票');
+                 var votes = (game.state.votes||[]).concat([{ user_id: currentUser.id, target_id: target }]);
+                 updateGame(Object.assign({}, game, {state: Object.assign({}, game.state, {votes: votes})}));
+                 showToast('投票成功');
+              };
+           });
+        }
+        
+        var finishVoteBtn = document.getElementById('btnSpyFinishVote');
+        if(finishVoteBtn) {
+           finishVoteBtn.onclick = function() {
+              var game = state.room.current_game;
+              var votes = game.state.votes || [];
+              if(votes.length === 0) return showToast('还没有人投票');
+              var counts = {};
+              votes.forEach(function(v){ counts[v.target_id] = (counts[v.target_id]||0)+1; });
+              var maxVotes = 0, deadId = null;
+              Object.keys(counts).forEach(function(k){
+                 if(counts[k] > maxVotes) { maxVotes = counts[k]; deadId = k; }
+              });
+              if(!deadId) return;
+              var dead = (game.state.dead||[]).concat([deadId]);
+              var spyIds = game.state.spy_ids || [];
+              var deadPlayer = game.players.find(function(p){return p.user_id === deadId;});
+              var msg = (deadPlayer?deadPlayer.nickname:'某人') + ' 被淘汰';
+              
+              var aliveCivilians = game.players.filter(function(p){ return dead.indexOf(p.user_id) === -1 && spyIds.indexOf(p.user_id) === -1; }).length;
+              var aliveSpies = spyIds.filter(function(id){ return dead.indexOf(id) === -1; }).length;
+              
+              var nextPhase = 'describe';
+              var status = 'playing';
+              var reason = '';
+              if(aliveSpies === 0) { status = 'finished'; reason = '平民获胜'; }
+              else if(aliveSpies >= aliveCivilians) { status = 'finished'; reason = '卧底获胜'; }
+              
+              var ns = Object.assign({}, game.state, { dead: dead, votes: [], descriptions: [], phase: nextPhase });
+              if(status === 'finished') {
+                 ns.ended_reason = reason;
+                 showToast(reason);
+              } else {
+                 showToast(msg);
+              }
+              updateGame(Object.assign({}, game, { state: ns, status: status }));
+           };
+        }
       },
       desc: function() {
         var text = document.getElementById('spyDescInput').value.trim();
         if(!text) return;
         var game = state.room.current_game;
         var descs = (game.state.descriptions||[]).concat([{ user_id: currentUser.id, nickname: currentUser.nickname, text: text }]);
-        updateGame(Object.assign({}, game, {state: Object.assign({}, game.state, {descriptions: descs})}));
+        var alivePlayers = game.players.filter(function(p){ return (game.state.dead||[]).indexOf(p.user_id) === -1; });
+        var nextPhase = (descs.length === alivePlayers.length) ? 'vote' : 'describe';
+        updateGame(Object.assign({}, game, {state: Object.assign({}, game.state, {descriptions: descs, phase: nextPhase})}));
       }
     },
 
-    // 4. 狼人杀
     werewolf: {
       render: function(game, el) {
         var st = game.state || {}, players = game.players || [];
@@ -285,7 +413,6 @@
       }
     },
 
-    // 5. 斗地主 (支持发牌、基础的出牌提示与选牌)
     doudizhu: {
       render: function(game, el) {
         var st = game.state || {}, players = game.players || [];
@@ -347,7 +474,6 @@
         updateGame(Object.assign({}, game, {state: Object.assign({}, game.state, {currentTurn: order[(myIdx+1)%3]})}));
       },
       play: function(cards) {
-        // 极简出牌逻辑：直接移除手牌并轮转（真实规则可后续扩展）
         var game = state.room.current_game;
         var hands = Object.assign({}, game.state.hands);
         hands[currentUser.id] = hands[currentUser.id].filter(function(c){ return cards.indexOf(c) === -1; });
@@ -357,19 +483,30 @@
         
         updateGame(Object.assign({}, game, { state: ns }));
         if(hands[currentUser.id].length === 0) {
-           setTimeout(function(){ showToast('你出完了所有的牌，获胜！'); }, 300);
+           setTimeout(function(){ 
+               showToast('你出完了所有的牌，获胜！'); 
+               grantCoinReward(10, '斗地主获胜');
+           }, 300);
         }
       }
     },
 
-    // 初始化游戏状态
     initState: function(type, players) {
       if(type === 'gomoku') return { board: Array(15).fill(null).map(function(){return Array(15).fill(null);}), turn: 'black', lastMove: null, winner: null };
-      if(type === 'draw') return { order: players.map(function(p){return p.user_id;}), drawer_index: 0, word: '苹果', strokes: [], correct: [], messages: [] };
-      if(type === 'spy') return { words: {}, spy_ids: [], phase: 'describe', descriptions: [] };
+      if(type === 'draw') {
+         var randWord = DRAW_WORDS[Math.floor(Math.random() * DRAW_WORDS.length)];
+         return { order: players.map(function(p){return p.user_id;}), drawer_index: 0, word: randWord, strokes: [], correct: [], messages: [], scores: {}, end_time: Date.now() + 180000 };
+      }
+      if(type === 'spy') {
+         var spyIds = [players[Math.floor(Math.random() * players.length)].user_id];
+         var words = {};
+         players.forEach(function(p) {
+            words[p.user_id] = spyIds.indexOf(p.user_id) > -1 ? '卧底词' : '平民词';
+         });
+         return { words: words, spy_ids: spyIds, phase: 'describe', descriptions: [], votes: [], dead: [] };
+      }
       if(type === 'werewolf') return { roles: {}, phase: 'night', alive: players.map(function(p){return p.user_id;}) };
       if(type === 'doudizhu') {
-         // 简易发牌
          var deck = []; for(var i=0; i<54; i++) deck.push(i);
          deck.sort(function(){ return Math.random() - 0.5; });
          var hands = {};
@@ -378,6 +515,18 @@
       }
       return {};
     },
-    tick: function(game) { }
+    
+    tick: function(game) {
+      if(!game || !game.state) return;
+      if(game.type === 'draw' && game.status === 'playing') {
+        var st = game.state;
+        if(st.end_time && Date.now() > st.end_time) {
+           var nextIndex = (st.drawer_index + 1) % st.order.length;
+           var newWord = DRAW_WORDS[Math.floor(Math.random() * DRAW_WORDS.length)];
+           var ns = Object.assign({}, st, { drawer_index: nextIndex, word: newWord, strokes: [], messages: [], end_time: Date.now() + 180000 });
+           updateGame(Object.assign({}, game, { state: ns }));
+        }
+      }
+    }
   };
 })();

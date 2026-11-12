@@ -137,9 +137,9 @@
   }
 
   async function refreshAll(){
-  if(window.showLoading) window.showLoading();
-  try { await loadBalance(); await loadTx(); } finally { if(window.hideLoading) window.hideLoading(); }
-}
+    if(window.showLoading) window.showLoading();
+    try { await loadBalance(); await loadTx(); } finally { if(window.hideLoading) window.hideLoading(); }
+  }
 
   document.getElementById('refreshBtn').onclick = function(){ 
     var t = document.getElementById('toast');

@@ -124,41 +124,39 @@ window.hidePageLoading = function () {
 // ============================================================
 (function() {
   var css = document.createElement('style');
-  css.innerHTML = `
-    #coffeeLoadingMask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 99999; background: var(--bg); flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.4s ease; }
-    #coffeeLoadingMask { display: flex; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
-    #coffeeLoadingMask.show { opacity: 1; pointer-events: auto; }
-    .coffee-loader { width: 100px; height: 80px; position: relative; display: flex; justify-items: center; align-items: center; margin-top: 20px; }
-    .coffee-loader .cup { position: absolute; width: 25px; height: 18px; background-color: #fff; border: 1px solid #D1D5DB; z-index: 1; border-radius: 2px 2px 10px 10px; animation: expansion 6s infinite ease-in-out; transform-origin: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    .cup::after { content: ""; position: absolute; top: -2px; width: calc(100% - 2px); height: 2px; background: #fed59fca; border: 1px solid #D1D5DB; border-radius: 50%; }
-    .cup::before { content: ""; position: absolute; top: 15px; width: calc(100% - 2px); height: 4px; background: transparent; border: 1px solid #D1D5DB; border-top: none; border-radius: 50%; z-index: -1; }
-    .coffee-loader .cup .cup-handle { position: absolute; width: 5px; height: 10px; background-color: #fff; border: 1px solid #D1D5DB; right: -5px; top: 2px; border-radius: 2px 10px 20px 2px; }
-    .coffee-loader .cup .smoke { position: absolute; bottom: 100%; left: 50%; width: 15px; height: 25px; background: rgba(156, 163, 175, 0.5); border-radius: 50%; transform: translateX(-50%); animation: rise 6s infinite ease-in-out; filter: blur(8px); }
-    .coffee-loader .cup .smoke.one { animation-delay: 0s; }
-    .coffee-loader .cup .smoke.two { animation-delay: 1s; }
-    .coffee-loader .cup .smoke.three { animation-delay: 2s; }
-    .coffee-loader .load { position: absolute; font-size: 10px; opacity: 0.7; top: 45%; left: 50%; transform: translateX(-50%); z-index: -1; color: #9CA3AF; letter-spacing: 2px; }
-    @keyframes expansion { 0% { width: 25px; transform: translateX(0); } 40% { width: 100%; transform: translateX(0); } 80% { width: 25px; transform: translateX(64px); } 90% { width: 100%; transform: translateX(0); } 100% { width: 25px; transform: translateX(0); } }
-    @keyframes rise { 0% { transform: translate(-50%, 0) scale(0.4); opacity: 0; } 30% { opacity: 0.6; } 60% { opacity: 0.4; } 100% { transform: translate(-50%, -120px) scale(1); opacity: 0; } }
-  `;
+  css.innerHTML = 
+    '#coffeeLoadingMask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 99999; background: var(--bg); flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.4s ease; }' +
+    '#coffeeLoadingMask { display: flex; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }' +
+    '#coffeeLoadingMask.show { opacity: 1; pointer-events: auto; }' +
+    '.coffee-loader { width: 100px; height: 80px; position: relative; display: flex; justify-items: center; align-items: center; margin-top: 20px; }' +
+    '.coffee-loader .cup { position: absolute; width: 25px; height: 18px; background-color: #fff; border: 1px solid #D1D5DB; z-index: 1; border-radius: 2px 2px 10px 10px; animation: expansion 6s infinite ease-in-out; transform-origin: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }' +
+    '.cup::after { content: ""; position: absolute; top: -2px; width: calc(100% - 2px); height: 2px; background: #fed59fca; border: 1px solid #D1D5DB; border-radius: 50%; }' +
+    '.cup::before { content: ""; position: absolute; top: 15px; width: calc(100% - 2px); height: 4px; background: transparent; border: 1px solid #D1D5DB; border-top: none; border-radius: 50%; z-index: -1; }' +
+    '.coffee-loader .cup .cup-handle { position: absolute; width: 5px; height: 10px; background-color: #fff; border: 1px solid #D1D5DB; right: -5px; top: 2px; border-radius: 2px 10px 20px 2px; }' +
+    '.coffee-loader .cup .smoke { position: absolute; bottom: 100%; left: 50%; width: 15px; height: 25px; background: rgba(156, 163, 175, 0.5); border-radius: 50%; transform: translateX(-50%); animation: rise 6s infinite ease-in-out; filter: blur(8px); }' +
+    '.coffee-loader .cup .smoke.one { animation-delay: 0s; }' +
+    '.coffee-loader .cup .smoke.two { animation-delay: 1s; }' +
+    '.coffee-loader .cup .smoke.three { animation-delay: 2s; }' +
+    '.coffee-loader .load { position: absolute; font-size: 10px; opacity: 0.7; top: 45%; left: 50%; transform: translateX(-50%); z-index: -1; color: #9CA3AF; letter-spacing: 2px; }' +
+    '@keyframes expansion { 0% { width: 25px; transform: translateX(0); } 40% { width: 100%; transform: translateX(0); } 80% { width: 25px; transform: translateX(64px); } 90% { width: 100%; transform: translateX(0); } 100% { width: 25px; transform: translateX(0); } }' +
+    '@keyframes rise { 0% { transform: translate(-50%, 0) scale(0.4); opacity: 0; } 30% { opacity: 0.6; } 60% { opacity: 0.4; } 100% { transform: translate(-50%, -120px) scale(1); opacity: 0; } }';
   document.head.appendChild(css);
 
   function createMask() {
     if (document.getElementById('coffeeLoadingMask')) return;
     var div = document.createElement('div');
     div.id = 'coffeeLoadingMask';
-    div.innerHTML = `
-      <div class="coffee-loader">
-        <div class="cup">
-          <div class="cup-handle"></div>
-          <div class="smoke one"></div>
-          <div class="smoke two"></div>
-          <div class="smoke three"></div>
-        </div>
-        <div class="load">..........................</div>
-      </div>
-      <div style="margin-top: 24px; font-weight: 600; color: #4B5563; font-size: 0.9em; letter-spacing: 4px;">加 载 中</div>
-    `;
+    div.innerHTML = 
+      '<div class="coffee-loader">' +
+        '<div class="cup">' +
+          '<div class="cup-handle"></div>' +
+          '<div class="smoke one"></div>' +
+          '<div class="smoke two"></div>' +
+          '<div class="smoke three"></div>' +
+        '</div>' +
+        '<div class="load">..........................</div>' +
+      '</div>' +
+      '<div style="margin-top: 24px; font-weight: 600; color: #4B5563; font-size: 0.9em; letter-spacing: 4px;">加 载 中</div>';
     if (document.body) {
       document.body.appendChild(div);
     } else {

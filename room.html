@@ -75,26 +75,21 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .fs-btn:hover{background:rgba(0,0,0,.08);color:var(--text)}
 .fs-btn svg{width:18px;height:18px}
 .game-content{padding:10px;min-height:180px;max-height:60vh;overflow-y:auto;position:relative;flex:1;background:#fff}
-
 .game-lobby{display:flex;flex-direction:column;align-items:center;gap:14px;padding:40px 20px;text-align:center;background:#fff;color:var(--text) !important}
 .lobby-icon{width:80px;height:80px;display:grid;place-items:center;color:var(--primary);background:var(--primary-bg);border-radius:24px;margin-bottom:10px;box-shadow:0 8px 16px rgba(46,125,50,.15)}
 .lobby-icon svg{width:44px;height:44px}
 .lobby-title{font-size:1.4em;font-weight:900;color:var(--text) !important;letter-spacing:1px}
 .lobby-desc{font-size:.85em;color:var(--text-muted) !important;max-width:320px;line-height:1.6;font-weight:500}
 .lobby-players{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:6px 0;max-width:100%}
-
-/* 🚨 恢复：头像在左侧，名字在右侧 🚨 */
 .lobby-player{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.05);border-radius:99px;padding:4px 14px 4px 4px;font-size:.85em;font-weight:700;color:var(--text) !important;}
 .lobby-player .gpm-avatar{width:24px;height:24px;font-size:11px;}
 .lobby-player.host{border:1.5px solid var(--primary);background:var(--primary-bg);color:var(--brand-dark) !important}
-
 .lobby-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
 .lobby-btn{padding:12px 32px;border-radius:99px;border:none;font-family:inherit;font-weight:700;font-size:.95em;cursor:pointer;transition:.2s;box-shadow:0 4px 12px rgba(0,0,0,.1)}
 .lobby-btn.join{background:var(--primary);color:#fff}
 .lobby-btn.start{background:linear-gradient(135deg,#3B82F6,#2563EB);color:#fff}
 .lobby-btn:disabled{opacity:.5;pointer-events:none;animation:none;box-shadow:none}
 .lobby-hint{font-size:.82em;color:var(--text-light) !important;margin-top:8px;font-weight:500}
-
 .room-messages{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;position:relative;z-index:1;min-height:0}
 .rm-msg{display:flex;gap:9px;flex-shrink:0;max-width:92%}
 .rm-msg.self{align-self:flex-end;flex-direction:row-reverse}
@@ -102,7 +97,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .rm-bubble{background:rgba(255,255,255,.95);border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:7px 11px;min-width:0;box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .rm-name{font-size:.66em;color:#666 !important;font-weight:700;margin-bottom:2px}
 .rm-text{font-size:.85em;line-height:1.5;word-break:break-word;color:#1a1a1a !important;font-weight:500}
-
 .room-input-area{flex-shrink:0;display:flex;gap:8px;align-items:center;padding:10px 14px calc(10px + var(--safe-b));background:rgba(255,255,255,.9);border-top:1px solid var(--border);backdrop-filter:blur(8px);z-index:2}
 .room-input-area input{flex:1;padding:10px 14px;border-radius:99px;border:2px solid var(--border);background:var(--bg-input);font-family:inherit;font-size:.85em;outline:none;min-width:0;color:var(--text)}
 .room-input-area button{background:var(--primary);color:#fff;border:none;padding:9px 16px;border-radius:99px;font-weight:700;font-size:.8em;cursor:pointer;font-family:inherit}
@@ -286,12 +280,15 @@ document.getElementById('detailBackBtn').onclick=async function(){
   if(state.room&&state.room.current_game){
     try{ await checkAndForceEndGame(currentUser.id, true); }catch(e){}
   }
-  leaveRoomLocal(); history.replaceState({},'',location.pathname); showList(); loadRooms();
+  await leaveRoomLocal(); 
+  history.replaceState({},'',location.pathname); showList(); loadRooms();
 };
 
-window.addEventListener('beforeunload', function(e) {
-  if(state.room && state.room.current_game) {
-    try{ checkAndForceEndGame(currentUser.id, true); }catch(e){}
+window.addEventListener('pagehide', function(e) {
+  if(state.room) {
+    if(state.room.current_game) {
+      try{ checkAndForceEndGame(currentUser.id, true); }catch(e){}
+    }
     leaveRoomLocal();
   }
 });
@@ -310,9 +307,31 @@ function startPolling() {
           renderMic();
           renderGame();
         }
+
+        if (state.onlineMembers.length > 0) {
+          var sp = state.room.mic_speaking || [];
+          var hasGhost = sp.some(function(m){ return state.onlineMembers.indexOf(m.user_id) === -1; });
+          if (hasGhost) {
+            var newSp = sp.filter(function(m){ return state.onlineMembers.indexOf(m.user_id) > -1; });
+            await window.sb.from('rooms').update({ mic_speaking: newSp }).eq('id', state.room.id);
+            state.room.mic_speaking = newSp;
+            renderMic();
+          }
+        }
+
+        checkGameHostStatus();
+      }
+      
+      var mRes = await window.sb.from('room_messages').select('*').eq('room_id', state.room.id).order('created_at',{ascending:false}).limit(200);
+      if(!mRes.error) {
+        var newMsgs = (mRes.data||[]).slice().reverse();
+        if (newMsgs.length !== state.messages.length || (newMsgs.length > 0 && JSON.stringify(newMsgs[newMsgs.length-1]) !== JSON.stringify(state.messages[state.messages.length-1]))) {
+          state.messages = newMsgs; 
+          renderMessages();
+        }
       }
     } catch(e){}
-  }, 2000);
+  }, 800);
 }
 
 async function loadRooms(){
@@ -376,19 +395,29 @@ async function enterRoom(roomId,openSettings){
     renderMic(); renderGame(); await loadMessages(); subscribe(); initRoomMembers(); startGameTick(); startPolling();
   }catch(e){showToast('进入房间失败：'+e.message)}
 }
-function leaveRoomLocal(){
-  if(state.room&&currentUser){try{
-    var sp=(state.room.mic_speaking||[]).filter(function(m){return m.user_id!==currentUser.id});
-    var rq=(state.room.mic_requests||[]).filter(function(m){return m.user_id!==currentUser.id});
-    window.sb.from('rooms').update({mic_speaking:sp,mic_requests:rq}).eq('id',state.room.id);
-  }catch(e){}}
+
+async function leaveRoomLocal(){
+  if(state.room&&currentUser){
+    try{
+      var sp=(state.room.mic_speaking||[]).filter(function(m){return m.user_id!==currentUser.id});
+      var rq=(state.room.mic_requests||[]).filter(function(m){return m.user_id!==currentUser.id});
+      await window.sb.from('rooms').update({mic_speaking:sp,mic_requests:rq}).eq('id',state.room.id);
+    }catch(e){}
+  }
+  
+  if(state.memberChannel){
+    try { await state.memberChannel.unsubscribe(); } catch(e){}
+    window.sb.removeChannel(state.memberChannel); 
+    state.memberChannel=null;
+  }
   if(state.roomChannel){window.sb.removeChannel(state.roomChannel);state.roomChannel=null}
   if(state.msgChannel){window.sb.removeChannel(state.msgChannel);state.msgChannel=null}
-  if(state.memberChannel){window.sb.removeChannel(state.memberChannel);state.memberChannel=null}
+  
   if(gameTickInterval){clearInterval(gameTickInterval);gameTickInterval=null}
   if(pollTimer){clearInterval(pollTimer);pollTimer=null}
   state.room=null;state.messages=[];state.spectating=false;state.onlineMembers=[];
 }
+
 function updateHeaderBtns(){var setBtn=document.getElementById('roomSettingsBtn');if(setBtn)setBtn.style.display=isAdmin?'inline-flex':'none'}
 async function freshRoom(){var r=await window.sb.from('rooms').select('*').eq('id',state.room.id).single();if(r.error)throw r.error;return r.data}
 async function patchRoom(patch){var res=await window.sb.from('rooms').update(patch).eq('id',state.room.id).select().single();if(res.error)throw res.error;state.room=res.data;document.getElementById('roomTitle').textContent=state.room.name;renderMic();renderGame();return state.room}
@@ -409,22 +438,80 @@ function initRoomMembers(){
     handlePresenceChange(onlineIds);
     state.onlineMembers = onlineIds;
     renderGame();
+    renderMic();
+    checkGameHostStatus();
   });
   state.memberChannel.subscribe(function(status){if(status==='SUBSCRIBED'){state.memberChannel.track({user_id:currentUser.id,nickname:currentUser.nickname,avatar_url:currentUser.avatar_url||''})}});
 }
 
-function handlePresenceChange(onlineIds) {
+async function handlePresenceChange(onlineIds) {
+  if(!state.room) return;
+  
+  var sp = state.room.mic_speaking || [];
+  var rq = state.room.mic_requests || [];
+  var needUpdate = false;
+  
+  var newSp = sp.filter(function(m) {
+    if (onlineIds.indexOf(m.user_id) === -1) { needUpdate = true; return false; }
+    return true;
+  });
+  var newRq = rq.filter(function(m) {
+    if (onlineIds.indexOf(m.user_id) === -1) { needUpdate = true; return false; }
+    return true;
+  });
+  
+  if (needUpdate) {
+    try {
+      await window.sb.from('rooms').update({ mic_speaking: newSp, mic_requests: newRq }).eq('id', state.room.id);
+      state.room.mic_speaking = newSp;
+      state.room.mic_requests = newRq;
+      renderMic();
+    } catch(e) {}
+  }
+
+  if (state.room.current_game) {
+    var game = state.room.current_game;
+    if (game.status === 'playing') {
+      var players = game.players || [];
+      var droppedPlayers = players.filter(p => onlineIds.indexOf(p.user_id) === -1);
+      if (droppedPlayers.length > 0) {
+        droppedPlayers.forEach(dp => {
+          checkAndForceEndGame(dp.user_id, false);
+        });
+      }
+    }
+  }
+}
+
+async function checkGameHostStatus() {
   if(!state.room || !state.room.current_game) return;
   var game = state.room.current_game;
-  if(game.status !== 'playing') return;
+  var onlineIds = state.onlineMembers;
+  if (onlineIds.length === 0) return;
 
-  var players = game.players || [];
-  var droppedPlayers = players.filter(p => onlineIds.indexOf(p.user_id) === -1);
-  
-  if (droppedPlayers.length > 0) {
-    droppedPlayers.forEach(dp => {
-      checkAndForceEndGame(dp.user_id, false);
-    });
+  if (game.host_id && onlineIds.indexOf(game.host_id) === -1) {
+    if (game.status === 'playing') {
+      await checkAndForceEndGame(game.host_id, false);
+    } else if (game.status === 'lobby') {
+      var onlinePlayer = (game.players || []).find(function(p){ return onlineIds.indexOf(p.user_id) !== -1; });
+      if (onlinePlayer) {
+        var patch = Object.assign({}, game, { host_id: onlinePlayer.user_id });
+        var res = await window.sb.from('rooms').update({current_game: patch}).eq('id', state.room.id).select().single();
+        if (!res.error) {
+          state.room = res.data;
+          showToast('原房主已离线，已自动移交房主给 ' + onlinePlayer.nickname);
+          renderGame();
+        }
+      } else {
+        var res2 = await window.sb.from('rooms').update({current_game: null}).eq('id', state.room.id).select().single();
+        if (!res2.error) {
+          state.room = res2.data;
+          showToast('房主已离线且无其他玩家，游戏已关闭');
+          renderMic();
+          renderGame();
+        }
+      }
+    }
   }
 }
 
@@ -467,7 +554,11 @@ document.getElementById('closeMemberDrawer').onclick=function(){document.getElem
 function renderMic(){
   var el=document.getElementById('micArea');var r=state.room;if(!r){el.innerHTML='';return}
   if(r.current_game){el.innerHTML='';return}
-  var speaking=r.mic_speaking||[];
+  
+  var speaking = (r.mic_speaking||[]).filter(function(m) {
+    return state.onlineMembers.length === 0 || state.onlineMembers.indexOf(m.user_id) > -1;
+  });
+  
   var iAmOn=speaking.some(function(m){return m.user_id===currentUser.id});
   var h='<div class="mic-panel"><div class="mic-head"><span class="mic-title">麦位 '+speaking.length+'/4</span></div><div class="mic-seats">';
   for(var i=0;i<4;i++){var m=speaking[i];h+='<div class="mic-seat'+(m?' on':'')+'">';
@@ -557,14 +648,18 @@ function renderGame(){
 
   var el=document.getElementById('gameContent');
   
+  // 🚨 修改：结算界面优化
   if(game.status==='finished') {
     el.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:20px;">'+
       '<div style="font-size:1.5em;font-weight:900;color:var(--danger);margin-bottom:10px;">游戏已结束</div>'+
       '<div style="font-size:0.9em;color:var(--text-muted);margin-bottom:20px;">'+(game.state.ended_reason||'对局已结束')+'</div>'+
-      (game.host_id===currentUser.id?'<button class="lobby-btn start" id="btnRestartGame">重新发起</button>':'<div class="lobby-hint">等待房主重新发起…</div>')+
+      (game.host_id===currentUser.id?'<button class="lobby-btn start" id="btnRestartGame">再来一局</button>':'<div class="lobby-hint">等待房主再来一局…</div>')+
       '</div>';
     var rBtn = document.getElementById('btnRestartGame');
-    if(rBtn) rBtn.onclick = function(){ selectGame(game.type); };
+    if(rBtn) rBtn.onclick = function(){ 
+        // 直接重开，不再弹窗确认
+        startGame(game.type); 
+    };
     return;
   }
 
@@ -573,7 +668,6 @@ function renderGame(){
       '<div class="lobby-players">'+players.map(function(p){
         var isOffline = state.onlineMembers.length > 0 && state.onlineMembers.indexOf(p.user_id) === -1;
         var has=p.avatar_url&&String(p.avatar_url).indexOf('http')===0;
-        // 头像在左，名字在右
         return '<div class="lobby-player '+(isOffline?'offline':'')+(p.user_id===game.host_id?' host':'')+'">'+
                  '<div class="gpm-avatar" style="'+(has?'background-image:url('+escapeHtml(p.avatar_url)+');background-size:cover;background-position:center;':'')+'">'+(has?'':escapeHtml(String(p.nickname||'U').charAt(0).toUpperCase()))+'</div>'+
                  escapeHtml(p.nickname)+
@@ -606,11 +700,22 @@ async function loadMessages(){
 function renderMessages(){
   var c=document.getElementById('roomMessages');
   if(!state.messages.length){c.innerHTML='<div class="empty-state" style="font-size:.8em;color:var(--text-muted)">还没有人说话</div>';return}
+  
   c.innerHTML=state.messages.map(function(m){
     var self=m.user_id===currentUser.id;
-    return '<div class="rm-msg'+(self?' self':'')+'"><div class="rm-avatar">'+escapeHtml(String(m.author||'U').charAt(0).toUpperCase())+'</div><div class="rm-bubble"><div class="rm-name">'+escapeHtml(m.author||'')+'</div><div class="rm-text">'+escapeHtml(m.content||'')+'</div></div></div>';
-  }).join(''); c.scrollTop=c.scrollHeight;
+    var onlineUser = state.onlineMembers.find(function(u){ return u.id === m.user_id; });
+    var avatarUrl = onlineUser && onlineUser.avatar_url ? onlineUser.avatar_url : '';
+    var has = avatarUrl && avatarUrl.indexOf('http') === 0;
+    var avatarStyle = has ? 'background-image:url('+escapeHtml(avatarUrl)+');background-size:cover;background-position:center;' : '';
+    var avatarText = has ? '' : escapeHtml(String(m.author||'U').charAt(0).toUpperCase());
+    
+    return '<div class="rm-msg'+(self?' self':'')+'">' +
+           '<div class="rm-avatar" style="'+avatarStyle+'">'+avatarText+'</div>' +
+           '<div class="rm-bubble"><div class="rm-name">'+escapeHtml(m.author||'')+'</div><div class="rm-text">'+escapeHtml(m.content||'')+'</div></div></div>';
+  }).join(''); 
+  c.scrollTop=c.scrollHeight;
 }
+
 async function sendMsg(){
   var input=document.getElementById('roomInput'),text=input.value.trim();if(!text)return;input.value='';
   await window.sb.from('room_messages').insert([{room_id:state.room.id,user_id:currentUser.id,author:currentUser.nickname,content:text}]);

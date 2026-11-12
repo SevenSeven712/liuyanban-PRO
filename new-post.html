@@ -8,9 +8,8 @@
 <title>发帖 · Seven戚</title>
 <link rel="stylesheet" href="./theme.css" />
 <script src="./vendor/supabase.js"></script>
-<script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/script>');</script>
 <style>
-.app-header .back-btn { background: none; border: none; cursor: pointer; color: var(--text); display: flex; align-items: center; padding: 4px; text-decoration: none; transition: var(--transition-smooth); border-radius: 8px; }
+.app-header .back-btn { background: none; border: none; cursor: pointer; color: var(--text); display: flex; align-items: center; padding: 4px; text-decoration: none; border-radius: 8px; }
 .app-header .back-btn:hover { background: var(--border); }
 .app-header .back-btn svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .app-header .title { font-weight: 700; font-size: 1em; }
@@ -115,15 +114,19 @@ async function loadCategories() {
         if (res.error) throw res.error;
         var categories = res.data || [];
         var select = document.getElementById('postCategorySelect');
+        
         var available = categories.filter(function(c) {
-            return c.name !== '未分类' && (isAdmin || c.is_public !== false);
+            if (c.name === '未分类') return false;
+            if (c.is_admin_only && !isAdmin) return false;
+            return true;
         });
+
         if (!available.length) {
             select.innerHTML = '<option value="null">默认分类</option>';
             return;
         }
         select.innerHTML = available.map(function(c) {
-            return '<option value="' + c.id + '">' + escapeHtml(c.name) + '</option>';
+            return '<option value="' + c.id + '">' + escapeHtml(c.name) + (c.is_admin_only ? ' (专属)' : '') + '</option>';
         }).join('');
     } catch(e) {
         document.getElementById('postCategorySelect').innerHTML = '<option value="null">加载失败</option>';
@@ -190,7 +193,13 @@ document.getElementById('submitPostBtn').onclick = async function() {
         }]);
         
         if (res.error) throw res.error;
-        showToast('帖子发布成功！');
+        
+        // 🚨 发帖成功：奖励 2 个金币
+        try {
+            await window.sb.rpc('add_user_coins', { p_amount: 2, p_reason: '发布新帖奖励' });
+        } catch(e) { console.warn('金币发放失败', e); }
+        
+        showToast('帖子发布成功！奖励 2 小七币');
         setTimeout(function() { window.location.href = './posts.html'; }, 1000);
     } catch(e) {
         if (e.message.includes('spam') || e.message.includes('banned') || e.message.includes('limit')) {
