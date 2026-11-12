@@ -313,3 +313,46 @@ setTimeout(function() {
     masks.forEach(function(m) { if(m) m.classList.remove('show'); });
   }
 }, 1500);
+
+
+// ============================================================
+// 全局自定义 UI 弹窗 (覆盖原生 alert/confirm)
+// ============================================================
+window.showCustomAlert = function(title, desc) {
+  return new Promise(function(resolve) {
+    var mask = document.createElement('div');
+    mask.style.cssText = 'position:fixed;inset:0;background:rgba(17,24,39,0.4);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;';
+    mask.innerHTML = '<div style="background:#fff;border-radius:16px;width:80%;max-width:320px;padding:24px;text-align:center;transform:scale(.9);transition:transform .2s;box-shadow:0 20px 40px rgba(0,0,0,.1);"><h3 style="margin-bottom:12px;font-size:1.1em;color:#0F172A;font-weight:700;">'+title+'</h3><p style="color:#475569;margin-bottom:24px;font-size:.9em;line-height:1.6;">'+desc+'</p><div style="display:flex;gap:12px;"><button id="ma" style="flex:1;padding:12px;border-radius:99px;border:none;background:#10B981;color:#fff;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.3);">确定</button></div></div>';
+    document.body.appendChild(mask);
+    requestAnimationFrame(function() { mask.style.opacity = '1'; mask.children[0].style.transform = 'scale(1)'; });
+    var close = function() { mask.style.opacity = '0'; mask.children[0].style.transform = 'scale(.9)'; setTimeout(function() { document.body.removeChild(mask); resolve(); }, 200); };
+    mask.querySelector('#ma').onclick = close;
+  });
+};
+
+window.showCustomConfirm = function(title, desc) {
+  return new Promise(function(resolve) {
+    var mask = document.createElement('div');
+    mask.style.cssText = 'position:fixed;inset:0;background:rgba(17,24,39,0.4);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;';
+    mask.innerHTML = '<div style="background:#fff;border-radius:16px;width:80%;max-width:320px;padding:24px;text-align:center;transform:scale(.9);transition:transform .2s;box-shadow:0 20px 40px rgba(0,0,0,.1);"><h3 style="margin-bottom:12px;font-size:1.1em;color:#0F172A;font-weight:700;">'+title+'</h3><p style="color:#475569;margin-bottom:24px;font-size:.9em;line-height:1.6;">'+desc+'</p><div style="display:flex;gap:12px;"><button id="mc" style="flex:1;padding:12px;border-radius:99px;border:none;background:#F1F5F9;color:#64748B;font-weight:600;cursor:pointer;">取消</button><button id="mo" style="flex:1;padding:12px;border-radius:99px;border:none;background:#10B981;color:#fff;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.3);">确定</button></div></div>';
+    document.body.appendChild(mask);
+    requestAnimationFrame(function() { mask.style.opacity = '1'; mask.children[0].style.transform = 'scale(1)'; });
+    var close = function(val) { mask.style.opacity = '0'; mask.children[0].style.transform = 'scale(.9)'; setTimeout(function() { document.body.removeChild(mask); resolve(val); }, 200); };
+    mask.querySelector('#mc').onclick = function() { close(false); };
+    mask.querySelector('#mo').onclick = function() { close(true); };
+  });
+};
+
+
+window.showCustomPrompt = function(title, placeholder) {
+  return new Promise(function(resolve) {
+    var mask = document.createElement('div');
+    mask.style.cssText = 'position:fixed;inset:0;background:rgba(17,24,39,0.4);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;';
+    mask.innerHTML = '<div style="background:#fff;border-radius:16px;width:80%;max-width:320px;padding:24px;text-align:center;transform:scale(.9);transition:transform .2s;box-shadow:0 20px 40px rgba(0,0,0,.1);"><h3 style="margin-bottom:12px;font-size:1.1em;color:#0F172A;font-weight:700;">'+title+'</h3><input id="pi" placeholder="'+placeholder+'" style="width:100%;padding:12px;border:1px solid #E2E8F0;border-radius:12px;margin-bottom:20px;outline:none;font-size:.9em;background:#F8FAFC;"><div style="display:flex;gap:12px;"><button id="pc" style="flex:1;padding:12px;border-radius:99px;border:none;background:#F1F5F9;color:#64748B;font-weight:600;cursor:pointer;">取消</button><button id="po" style="flex:1;padding:12px;border-radius:99px;border:none;background:#10B981;color:#fff;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.3);">确定</button></div></div>';
+    document.body.appendChild(mask);
+    requestAnimationFrame(function() { mask.style.opacity = '1'; mask.children[0].style.transform = 'scale(1)'; mask.querySelector('#pi').focus(); });
+    var close = function(val) { mask.style.opacity = '0'; mask.children[0].style.transform = 'scale(.9)'; setTimeout(function() { document.body.removeChild(mask); resolve(val); }, 200); };
+    mask.querySelector('#pc').onclick = function() { close(null); };
+    mask.querySelector('#po').onclick = function() { close(mask.querySelector('#pi').value); };
+  });
+};

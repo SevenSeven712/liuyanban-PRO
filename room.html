@@ -325,9 +325,35 @@ function renderGrid(){
 }
 document.getElementById('createRoomBtn').onclick=async function(){
   if(!isAdmin)return;
-  var name=prompt('请输入房间名称：');if(name===null)return;name=name.trim();
-  if(!name){showToast('名称不能为空');return}
-  try{await window.sb.from('rooms').insert([{name:name,creator_id:currentUser.id,co_admin_ids:[],co_admin_permissions:{},muted_user_ids:[],mic_enabled:true,mic_mode:'free',mic_speaking:[],mic_requests:[],game_disabled:false}]).select().single();showToast('房间已创建');await loadRooms()}catch(e){showToast('创建失败：'+e.message)}
+  var name = await window.showCustomPrompt('创建新房间', '请输入房间名称...');
+  if(name===null)return;
+  name = name.trim();
+  if(!name){ window.showCustomAlert('提示', '房间名称不能为空'); return; }
+  
+  if(window.showLoading) window.showLoading();
+  try{
+    var res = await window.sb.from('rooms').insert([{
+      name: name,
+      creator_id: currentUser.id,
+      co_admin_ids: [],
+      co_admin_permissions: {},
+      muted_user_ids: [],
+      mic_enabled: true,
+      mic_mode: 'free',
+      mic_speaking: [],
+      mic_requests: [],
+      game_disabled: false
+    }]).select().single();
+    
+    if(res.error) throw res.error;
+    
+    await window.showCustomAlert('成功', '房间「'+name+'」已创建！');
+    await loadRooms();
+  }catch(e){
+    window.showCustomAlert('创建失败', e.message);
+  }finally{
+    if(window.hideLoading) window.hideLoading();
+  }
 };
 
 // === 房间进出 ===

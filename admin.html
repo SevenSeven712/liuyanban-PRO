@@ -40,7 +40,6 @@
 .btn-unban{background:var(--brand-bg);color:var(--brand-dark);}
 .banned-tag{background:var(--danger-bg);color:var(--danger);font-size:0.65em;padding:2px 6px;border-radius:4px;}
 
-/* 骨架屏 */
 .skeleton-item{display:flex;gap:12px;padding:16px;border-bottom:1px solid var(--border-subtle);}
 .skeleton-avatar{width:40px;height:40px;border-radius:50%;}
 .skeleton-line{height:16px;background:var(--border);border-radius:4px;margin-bottom:6px;animation:shimmer 1.5s infinite linear;background-image: linear-gradient(90deg, #E5E7EB 0px, #F3F4F6 40px, #E5E7EB 80px);background-size:200% 100%;}
@@ -70,11 +69,10 @@
     <div class="admin-tabs">
       <button class="admin-tab active" data-tab="users" onclick="switchTab('users')">用户管理</button>
       <button class="admin-tab" data-tab="reports" onclick="switchTab('reports')">举报处理</button>
+      <button class="admin-tab" data-tab="categories" onclick="switchTab('categories')">分类管理</button>
     </div>
 
-    <div id="listContainer" class="list-container">
-      <!-- 数据列表 -->
-    </div>
+    <div id="listContainer" class="list-container"></div>
   </div>
 </div>
 
@@ -86,13 +84,14 @@ var currentTab = 'users';
 
 function $(id) { return document.getElementById(id); }
 function escapeHtml(s) { if (!s) return ''; return String(s).replace(/[&<>"']/g, function(c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-function showToast(msg) { alert(msg); }
+async function showToast(msg) { await window.showCustomAlert('提示', msg); }
 
 function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.admin-tab').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
   if (tab === 'users') loadUsers();
   else if (tab === 'reports') loadReports();
+  else if (tab === 'categories') loadCategories();
 }
 window.switchTab = switchTab;
 
@@ -102,7 +101,6 @@ async function loadUsers() {
   container.innerHTML = '<div class="skeleton-item"><div class="skeleton skeleton-avatar"></div><div style="flex:1"><div class="skeleton skeleton-line" style="width:40%"></div><div class="skeleton skeleton-line" style="width:60%"></div></div></div>'.repeat(3);
 
   try {
-    // 调用你在数据库里写好的管理接口
     var r = await window.sb.rpc('admin_list_users');
     if (r.error) throw r.error;
     var users = r.data || [];
@@ -147,9 +145,9 @@ async function loadUsers() {
 }
 
 async function banUser(id) {
-  if (!confirm('确定要封禁该用户吗？')) return;
+  if (!(await window.showCustomConfirm('封禁用户', '确定要封禁该用户吗？'))) return;
   try {
-    var r = await window.sb.rpc('admin_ban_user', { p_user_id: id, p_days: 36500, p_reason: '违反社区规定' }); // 封100年
+    var r = await window.sb.rpc('admin_ban_user', { p_user_id: id, p_days: 36500, p_reason: '违反社区规定' });
     if (r.error) throw r.error;
     showToast('已封禁');
     loadUsers();
@@ -158,7 +156,7 @@ async function banUser(id) {
 window.banUser = banUser;
 
 async function unbanUser(id) {
-  if (!confirm('确定要解封该用户吗？')) return;
+  if (!(await window.showCustomConfirm('解封用户', '确定要解封该用户吗？'))) return;
   try {
     var r = await window.sb.rpc('admin_unban_user', { p_user_id: id });
     if (r.error) throw r.error;
@@ -176,7 +174,6 @@ async function loadReports() {
   $('bannedUsers').textContent = '-';
 
   try {
-    // 从 messages 表中查找所有以【系统举报】开头的留言
     var r = await window.sb.from('messages').select('*').like('text', '【系统举报】%').order('created_at', { ascending: false });
     if (r.error) throw r.error;
     var reports = r.data || [];
@@ -189,7 +186,6 @@ async function loadReports() {
     var html = '';
     reports.forEach(function(rep) {
       var time = new Date(rep.created_at).toLocaleString('zh-CN');
-      // 处理多行文本展示
       var safeText = escapeHtml(rep.text).replace(/\n/g, '<br>');
       
       html += '<div class="list-item" style="align-items:flex-start; flex-direction:column; gap:10px;">';
@@ -210,18 +206,71 @@ async function loadReports() {
 }
 
 window.deleteReport = async function(id) {
-  if (!confirm('确认已处理该举报并删除记录？')) return;
+  if (!(await window.showCustomConfirm('删除举报', '确认已处理该举报并删除记录？'))) return;
   try {
     await window.sb.from('messages').delete().eq('id', id);
     loadReports();
   } catch(e) {
-    alert('删除失败: ' + e.message);
+    showToast('删除失败: ' + e.message);
   }
+};
+
+async function loadCategories() {
+  var container = $('listContainer');
+  container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);">加载中...</div>';
+  $('totalUsers').textContent = '-';
+  $('bannedUsers').textContent = '-';
+
+  try {
+    var r = await window.sb.from('categories').select('*').order('sort_order');
+    if (r.error) throw r.error;
+    var cats = r.data || [];
+    
+    var html = '<div style="padding:16px;">' +
+      '<div style="display:flex;gap:8px;margin-bottom:16px;">' +
+      '<input type="text" id="newCatName" placeholder="输入新分类名称" style="flex:1;padding:10px;border-radius:8px;border:1px solid #ccc;outline:none;">' +
+      '<button onclick="addCategory()" style="background:var(--brand);color:#fff;border:none;padding:10px 16px;border-radius:8px;font-weight:600;cursor:pointer;">添加</button>' +
+      '</div>';
+      
+    if (!cats.length) {
+      html += '<div style="text-align:center;padding:20px;color:var(--text-muted);">暂无分类</div>';
+    } else {
+      html += '<div class="list-container" style="border-radius:8px;border:1px solid var(--border);overflow:hidden;">';
+      cats.forEach(function(c) {
+        html += '<div class="list-item" style="border-bottom:1px solid var(--border-subtle);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">' +
+          '<div class="info"><div class="name" style="font-weight:600;">' + escapeHtml(c.name) + '</div><div class="meta" style="font-size:0.75em;color:var(--text-muted);">排序: ' + c.sort_order + '</div></div>' +
+          '<button class="btn-sm btn-ban" onclick="deleteCategory(' + c.id + ')">删除</button>' +
+          '</div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+    container.innerHTML = html;
+  } catch(e) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger);">加载失败：' + e.message + '</div>';
+  }
+}
+
+window.addCategory = async function() {
+  var name = document.getElementById('newCatName').value.trim();
+  if(!name) return showToast('请输入分类名称');
+  try {
+    await window.sb.from('categories').insert([{ name: name, sort_order: 99, is_public: true }]);
+    loadCategories();
+  } catch(e) { showToast('添加失败：' + e.message); }
+};
+
+window.deleteCategory = async function(id) {
+  if (!(await window.showCustomConfirm('删除分类', '确定删除该分类吗？该分类下的帖子将变为未分类。'))) return;
+  try {
+    await window.sb.from('categories').delete().eq('id', id);
+    loadCategories();
+  } catch(e) { showToast('删除失败：' + e.message); }
 };
 
 // 初始化
 loadUsers();
-  setTimeout(() => { if(window.hideLoading) window.hideLoading(); }, 5000);
+setTimeout(() => { if(window.hideLoading) window.hideLoading(); }, 2000);
 </script>
 </body>
 </html>

@@ -274,7 +274,7 @@ var myPosts = [];
 
 function $(id){ return document.getElementById(id); }
 function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
-function showToast(msg){ alert(msg); }
+function showToast(msg){ window.showCustomAlert('提示', msg); }
 
 async function loadUser(){
   var t = new URLSearchParams(location.search);
@@ -532,17 +532,17 @@ function initSoundToggle() {
 async function submitFeedback() {
   var content = $('fbContent').value.trim();
   var contact = $('fbContact').value.trim();
-  if (!content) return alert('请填写问题描述');
+  if (!content) return window.showCustomAlert('提示', '请填写问题描述');
   try {
     await window.sb.from('feedback').insert([{ user_id: currentUser.id, content: content, contact: contact, status: 'pending' }]);
-    alert('反馈已提交，感谢您！');
+    window.showCustomAlert('提示', '反馈已提交，感谢您！');
     switchView('home');
-  } catch (e) { alert('提交失败：' + e.message); }
+  } catch (e) { window.showCustomAlert('错误', '提交失败：' + e.message); }
 }
 window.submitFeedback = submitFeedback;
 
 async function doLogout() {
-  if (confirm('确定要退出登录吗？')) {
+  if (await window.showCustomConfirm('退出登录', '确定要退出登录吗？')) {
     localStorage.removeItem('sq_user_session');
     location.href = './index.html';
   }
@@ -575,7 +575,7 @@ window.handleAvatarChange = handleAvatarChange;
 async function saveProfile() {
   var nick = $('editNickname').value.trim();
   var bio = $('editBio').value.trim();
-  if (!nick) return alert('昵称不能为空');
+  if (!nick) return window.showCustomAlert('提示', '昵称不能为空');
   
   var btn = event.target;
   btn.disabled = true; btn.textContent = '保存中...';
@@ -600,7 +600,7 @@ async function saveProfile() {
     
     if (r.error) throw r.error;
     
-    alert('修改成功');
+    window.showCustomAlert('提示', '修改成功');
     currentUser.nickname = nick;
     currentUser.bio = bio;
     currentUser.avatar_url = avatarUrl;
@@ -610,7 +610,7 @@ async function saveProfile() {
     switchView('home');
     
   } catch (e) {
-    alert('保存失败：' + e.message);
+    window.showCustomAlert('错误', '保存失败：' + e.message);
   } finally {
     btn.disabled = false; btn.textContent = '保存修改';
   }

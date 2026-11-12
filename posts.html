@@ -248,40 +248,60 @@ function renderPosts() {
             var reason = await window.showCustomPrompt('举报帖子', '请输入举报原因（如：色情低俗）');
             if (reason) {
                 await window.sb.from('reports').insert([{ reporter_id: currentUser.id, reporter_name: currentUser.nickname, type: 'post', content_snapshot: this.dataset.snapshot, remark: reason, status: 'pending' }]);
-                alert('举报已提交');
+                window.showCustomAlert('举报成功', '举报已提交给管理员，感谢反馈！');
             }
         };
     });
 }
 
 async function loadAll() {
-    setTimeout(function() { if (window.hidePageLoading) window.hidePageLoading(); }, 1500);
+    // 强制 2 秒后关闭全屏遮罩，防止卡住
+    setTimeout(function() { if (window.hidePageLoading) window.hidePageLoading(); }, 2000);
     try {
-        document.getElementById('postList').innerHTML = `<div class="skeleton-card"><div class="skeleton skeleton-line" style="width:60%;"></div></div>`;
+        // 使用标准骨架屏
+        document.getElementById('postList').innerHTML = `
+          <div class="skeleton-card">
+            <div class="skeleton-header"><div class="skeleton skeleton-avatar"></div><div class="skeleton skeleton-title"></div></div>
+            <div class="skeleton skeleton-line" style="width:80%;margin-top:8px;"></div>
+            <div class="skeleton skeleton-line short"></div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton-header"><div class="skeleton skeleton-avatar"></div><div class="skeleton skeleton-title"></div></div>
+            <div class="skeleton skeleton-line short" style="margin-top:8px;"></div>
+          </div>
+        `;
         
+        // 1. 拉取分类 (容错处理)
         var r1 = await window.sb.from('categories').select('*').order('sort_order');
-        if (r1.error) throw new Error("分类加载失败: " + r1.error.message);
         categories = r1.data || [];
-        
+
+        // 2. 拉取帖子
         var r2 = await window.sb.from('posts').select('*').order('created_at', { ascending: false });
-        if (r2.error) throw new Error("帖子加载失败: " + r2.error.message);
         posts = r2.data || [];
         
-        var map = await fetchProfilesMap(true);
-        posts.forEach(function(p) { p.users = (p.user_id && map[p.user_id]) ? map[p.user_id] : null; });
+        // 3. 拉取用户资料 (容错处理，防止卡死)
+        try {
+            var map = await fetchProfilesMap(true);
+            posts.forEach(function(p) { p.users = (p.user_id && map[p.user_id]) ? map[p.user_id] : null; });
+        } catch(e) { console.warn('头像获取失败，跳过'); }
+
+        // 4. 拉取评论数 (容错处理)
+        try {
+            var cRes = await window.sb.from('post_comments').select('post_id');
+            commentCountMap = {};
+            if (!cRes.error) {
+                (cRes.data || []).forEach(function(c) { commentCountMap[c.post_id] = (commentCountMap[c.post_id] || 0) + 1; });
+            }
+        } catch(e) { console.warn('评论数获取失败，跳过'); }
         
-        var cRes = await window.sb.from('post_comments').select('post_id');
-        commentCountMap = {};
-        if (!cRes.error) {
-            (cRes.data || []).forEach(function(c) { commentCountMap[c.post_id] = (commentCountMap[c.post_id] || 0) + 1; });
-        }
-        
+        // 5. 渲染页面
         renderCategoryFilter();
         renderPosts();
+        
     } catch (e) { 
         console.error("loadAll error:", e);
         var el = document.getElementById('postList');
-        if (el) el.innerHTML = '<div class="empty-state">加载失败：' + escapeHtml(e.message || String(e)) + '</div>'; 
+        if (el) el.innerHTML = '<div class="empty-state">数据加载异常，请刷新重试。</div>'; 
     } finally {
         if (window.hidePageLoading) window.hidePageLoading();
     }
@@ -424,7 +444,7 @@ document.getElementById('detailSendCommentBtn').onclick = async function() {
         cancelReplyMode();
         await loadComments(currentDetailPost.id);
     } catch(e) {
-        alert('评论失败：' + (e.message || '网络错误'));
+        window.showCustomAlert('评论失败', e.message || '网络错误');
     } finally {
         this.disabled = false;
     }
@@ -440,7 +460,7 @@ window.deleteComment = async function(id) {
             commentCountMap[currentDetailPost.id]--;
             renderPosts();
         }
-    } catch(e) { alert('删除失败'); }
+    } catch(e) { window.showCustomAlert('错误', '删除失败'); }
 };
 
 document.getElementById('closeDetail').onclick = function() {

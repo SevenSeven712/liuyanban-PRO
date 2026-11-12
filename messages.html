@@ -280,7 +280,7 @@ async function renderComments() {
 }
 
 window.deleteComment = async function(id) {
-    if(!confirm('确定删除此评论？')) return;
+    if(!(await window.showCustomConfirm('删除评论', '确定删除此评论？'))) return;
     try { await window.sb.from('messages').delete().eq('id', id); renderComments(); } catch(e) { showToast('删除失败'); }
 };
 window.deleteMsgComment = async function(id) {
