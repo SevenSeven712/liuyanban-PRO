@@ -9,7 +9,6 @@
 <title>Seven戚 · 用户主页</title>
 <link rel="stylesheet" href="./theme.css" />
 <script src="./vendor/supabase.js"></script>
-<script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/script>');</script>
 <style>
 .loading-state{text-align:center;padding:40px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;}
 .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
@@ -273,7 +272,6 @@ var iFollowed = false;
 var myPosts = [];
 
 function $(id){ return document.getElementById(id); }
-function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function showToast(msg){ window.showCustomAlert('提示', msg); }
 
 async function loadUser(){
@@ -311,7 +309,6 @@ async function render() {
   try {
     var isViewingSelf = !new URLSearchParams(location.search).get('id') || new URLSearchParams(location.search).get('id') === currentUser.id;
     
-    // ★ 缓存直出：如果是自己主页，先立刻用缓存渲染头部
     if (isViewingSelf) {
       var cached = getSessionUser();
       if (cached && cached.nickname) {
@@ -326,16 +323,12 @@ async function render() {
       return;
     }
     
-    // ★ 请求并行：同时拉取关注状态、帖子、粉丝数、未读消息
     var [_, _, counts, unreadCount] = await Promise.all([
       loadFollow(),
       loadPosts(),
       loadCounts(),
       (async function(){
-        try {
-          var res = await window.sb.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', currentUser.id).eq('is_read', false);
-          return res.count || 0;
-        } catch(e) { return 0; }
+        try { var res = await window.sb.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', currentUser.id).eq('is_read', false); return res.count || 0; } catch(e) { return 0; }
       })()
     ]);
 
@@ -346,9 +339,7 @@ async function render() {
     hero += '<div class="hero-info">';
     
     var tagHtml = '';
-    if (viewingUser.is_admin) {
-       tagHtml = ' <span class="admin-badge">官方管理员</span>';
-    }
+    if (viewingUser.is_admin) { tagHtml = ' <span class="admin-badge">官方管理员</span>'; }
     
     hero += '<div class="hero-name">' + escapeHtml(viewingUser.nickname || '用户') + tagHtml + '</div>';
     hero += '<div class="hero-stats"><div class="hero-stat"><span class="num">' + myPosts.length + '</span><span class="lbl">帖子</span></div><div class="hero-stat"><span class="num">' + counts.fans + '</span><span class="lbl">粉丝</span></div><div class="hero-stat"><span class="num">' + counts.following + '</span><span class="lbl">关注</span></div></div>';
@@ -373,11 +364,9 @@ async function render() {
         '<div class="nav-cell" onclick="switchView(\'about\')"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div><div class="tx">关于我们</div></div>' +
         '<div class="nav-cell" onclick="switchView(\'feedback\')"><div class="ic"><svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="tx">反馈 Bug</div></div>';
         
-      // ★ 管理员专属后台入口
       if (currentUser.is_admin === true || viewingUser.is_admin === true) {
         navHtml += '<div class="nav-cell admin-cell" onclick="location.href=\'./admin.html\'"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="tx">后台管理</div></div>';
       }
-
       navHtml += '</div>';
     }
 
@@ -428,9 +417,8 @@ function switchView(viewName) {
     $(id).classList.toggle('active', id === viewName + 'View');
   });
 
-  if (isHome) {
-    renderHeader(true);
-  } else {
+  if (isHome) { renderHeader(true); } 
+  else {
     if (viewName === 'messages') loadNotifications();
     else if (viewName === 'settings') initSoundToggle();
     else if (viewName === 'edit') loadEditProfile();
@@ -456,26 +444,19 @@ var rawNotifications = [];
 
 function switchMsgTab(type) {
   msgTabCurrent = type;
-  document.querySelectorAll('.msg-tab').forEach(function(btn) {
-    btn.classList.toggle('active', btn.dataset.type === type);
-  });
+  document.querySelectorAll('.msg-tab').forEach(function(btn) { btn.classList.toggle('active', btn.dataset.type === type); });
   renderNotifications();
 }
 window.switchMsgTab = switchMsgTab;
 
 async function loadNotifications() {
-  var listEl = $('notificationList');
-  
-  listEl.innerHTML = '<div class="empty">加载中...</div>';
-
+  var listEl = $('notificationList'); listEl.innerHTML = '<div class="empty">加载中...</div>';
   try {
     var r = await window.sb.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(50);
     if (r.error) throw r.error;
     rawNotifications = r.data || [];
     renderNotifications();
-  } catch(e) {
-    listEl.innerHTML = '<div class="ntf-empty"><div class="text">加载失败，请稍后再试</div></div>';
-  }
+  } catch(e) { listEl.innerHTML = '<div class="ntf-empty"><div class="text">加载失败，请稍后再试</div></div>'; }
 }
 
 function renderNotifications() {
@@ -513,10 +494,7 @@ function renderNotifications() {
 }
 
 async function markAllRead() {
-  try {
-    await window.sb.from('notifications').update({ is_read: true }).eq('user_id', currentUser.id).eq('is_read', false);
-    loadNotifications();
-  } catch(e) {}
+  try { await window.sb.from('notifications').update({ is_read: true }).eq('user_id', currentUser.id).eq('is_read', false); loadNotifications(); } catch(e) {}
 }
 window.markAllRead = markAllRead;
 
@@ -530,13 +508,11 @@ function initSoundToggle() {
 }
 
 async function submitFeedback() {
-  var content = $('fbContent').value.trim();
-  var contact = $('fbContact').value.trim();
+  var content = $('fbContent').value.trim(); var contact = $('fbContact').value.trim();
   if (!content) return window.showCustomAlert('提示', '请填写问题描述');
   try {
     await window.sb.from('feedback').insert([{ user_id: currentUser.id, content: content, contact: contact, status: 'pending' }]);
-    window.showCustomAlert('提示', '反馈已提交，感谢您！');
-    switchView('home');
+    window.showCustomAlert('提示', '反馈已提交，感谢您！'); switchView('home');
   } catch (e) { window.showCustomAlert('错误', '提交失败：' + e.message); }
 }
 window.submitFeedback = submitFeedback;
@@ -544,10 +520,7 @@ window.submitFeedback = submitFeedback;
 async function doLogout() {
   if (await window.showCustomConfirm('退出登录', '确定要退出登录吗？')) {
     if(window.showLoading) window.showLoading();
-    try {
-      // 清理 Supabase 底层的 Cookie 和 Token
-      await window.sb.auth.signOut();
-    } catch(e) {}
+    try { await window.sb.auth.signOut(); } catch(e) {}
     localStorage.removeItem('sq_user_session');
     location.href = './index.html';
   }
@@ -569,56 +542,32 @@ function handleAvatarChange(input) {
   if (input.files && input.files[0]) {
     selectedAvatarFile = input.files[0];
     var reader = new FileReader();
-    reader.onload = function(e) {
-      $('editAvatarPreview').src = e.target.result;
-    };
+    reader.onload = function(e) { $('editAvatarPreview').src = e.target.result; };
     reader.readAsDataURL(selectedAvatarFile);
   }
 }
 window.handleAvatarChange = handleAvatarChange;
 
 async function saveProfile() {
-  var nick = $('editNickname').value.trim();
-  var bio = $('editBio').value.trim();
+  var nick = $('editNickname').value.trim(); var bio = $('editBio').value.trim();
   if (!nick) return window.showCustomAlert('提示', '昵称不能为空');
-  
-  var btn = event.target;
-  btn.disabled = true; btn.textContent = '保存中...';
-
+  var btn = event.target; btn.disabled = true; btn.textContent = '保存中...';
   try {
     var avatarUrl = currentUser.avatar_url;
-    
     if (selectedAvatarFile) {
       var ext = selectedAvatarFile.name.split('.').pop() || 'png';
       var path = currentUser.id + '/' + Date.now() + '.' + ext;
       var up = await window.sb.storage.from('avatars').upload(path, selectedAvatarFile);
       if (up.error) throw new Error('头像上传失败：' + up.error.message);
-      var pub = window.sb.storage.from('avatars').getPublicUrl(path);
-      avatarUrl = pub.data.publicUrl;
+      avatarUrl = window.sb.storage.from('avatars').getPublicUrl(path).data.publicUrl;
     }
-
-    var r = await window.sb.rpc('update_my_profile', {
-      p_nickname: nick,
-      p_bio: bio,
-      p_avatar_url: avatarUrl
-    });
-    
+    var r = await window.sb.rpc('update_my_profile', { p_nickname: nick, p_bio: bio, p_avatar_url: avatarUrl });
     if (r.error) throw r.error;
-    
     window.showCustomAlert('提示', '修改成功');
-    currentUser.nickname = nick;
-    currentUser.bio = bio;
-    currentUser.avatar_url = avatarUrl;
+    currentUser.nickname = nick; currentUser.bio = bio; currentUser.avatar_url = avatarUrl;
     setSessionUser(currentUser);
-    
-    await render();
-    switchView('home');
-    
-  } catch (e) {
-    window.showCustomAlert('错误', '保存失败：' + e.message);
-  } finally {
-    btn.disabled = false; btn.textContent = '保存修改';
-  }
+    await render(); switchView('home');
+  } catch (e) { window.showCustomAlert('错误', '保存失败：' + e.message); } finally { btn.disabled = false; btn.textContent = '保存修改'; }
 }
 window.saveProfile = saveProfile;
 
@@ -627,12 +576,10 @@ async function toggleFollow(){
   try{
     if (iFollowed) {
       await window.sb.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', viewingUser.id);
-      iFollowed = false;
-      showToast('已取消关注');
+      iFollowed = false; showToast('已取消关注');
     } else {
       await window.sb.from('follows').insert([{ follower_id: currentUser.id, following_id: viewingUser.id }]);
-      iFollowed = true;
-      showToast('已关注');
+      iFollowed = true; showToast('已关注');
     }
     await render();
   }catch(e){ showToast('操作失败：' + e.message); }
@@ -643,7 +590,6 @@ window.toggleFollow = toggleFollow;
   renderHeader(true);
   renderFooter('profile');
   await render();
-  
 })();
 </script>
 </body>

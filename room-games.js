@@ -71,13 +71,10 @@
   }
 
   async function grantCoinReward(amount, reason) {
-    if (typeof currentUser === 'undefined' || !currentUser || !currentUser.id) return;
-    try {
-       var r = await window.sb.rpc('add_user_coins', { p_amount: amount, p_reason: reason });
-       if(r.data && r.data.ok) {
-          if(window.showCustomToast) window.showCustomToast('🎉 游戏胜利，获得 ' + amount + ' 小七币！');
-       }
-    } catch(e) { console.warn('发放奖励失败', e); }
+    // ★ 安全修复：前端不再直接调用 RPC 增加金币！
+    // 真正的金币发放必须在 Supabase 的数据库触发器或安全 RPC 中完成，
+    // 否则黑客可以直接伪造胜利数据刷币。
+    if(window.showCustomToast) window.showCustomToast('🎉 游戏结束，奖励结算中...');
   }
 
   window.RoomGames = {
@@ -255,7 +252,6 @@
            ns.scores[currentUser.id] = (ns.scores[currentUser.id] || 0) + 10;
            ns.messages = (ns.messages||[]).concat([{ text: currentUser.nickname + ' 猜对啦！' }]);
            
-           // 🚨 猜对后自动切换画手
            var nextIndex = (st.drawer_index + 1) % st.order.length;
            var newWord = DRAW_WORDS[Math.floor(Math.random() * DRAW_WORDS.length)];
            ns.drawer_index = nextIndex;

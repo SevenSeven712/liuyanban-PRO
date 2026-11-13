@@ -9,7 +9,6 @@
 <link rel="stylesheet" href="./theme.css" />
 <link rel="stylesheet" href="bubbles.css" />
 <script src="./vendor/supabase.js"></script>
-<script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/script>');</script>
 <script src="common.js"></script>
 <style>
 .app-header .back{background:none;border:none;cursor:pointer;color:var(--text);display:flex;padding:4px;border-radius:8px;transition:var(--transition-smooth);}
@@ -74,9 +73,6 @@
 .modal-box .mb-cancel{background:var(--bg);color:var(--text-muted);}
 .modal-box .mb-ok{background:var(--brand);color:#fff;box-shadow:0 4px 12px rgba(132,204,22,0.3);}
 .modal-box .mb-ok:disabled{opacity:.5;pointer-events:none;box-shadow:none;}
-
-#toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:12px 24px;border-radius:var(--radius-pill);font-size:.85em;font-weight:500;opacity:0;transition:var(--transition-smooth);z-index:3000;pointer-events:none;box-shadow:var(--shadow-md);}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
@@ -113,7 +109,6 @@
   </div>
 </div>
 
-<div id="toast"></div>
 <script>
 var SKINS = ["原版","经典圆角","暗夜霓虹","渐变紫","粉嫩","毛玻璃","新拟态","星空","烫金黑","手写便签","立体凸起","极光","莫兰迪","赛博绿","果冻","渐变描边","亚克力","暗金","泡泡渐变","樱桃红","黑白","微信绿","磨砂蓝","梦幻紫粉","霓虹白底","✨流光边框","✨呼吸发光","✨渐变流动","✨微微浮动","✨闪光掠过","✨果冻弹跳","✨星星闪烁","✨液态流动","✨霓虹脉冲","✨打字光标","🐱猫爪","🌸樱花","⭐星星","🐰兔耳","💗爱心","☁️云朵","🍀四叶草","🌙月亮","🎀蝴蝶结","🌈彩虹云"];
 
@@ -128,17 +123,8 @@ var buyMode = 'buy';
 var buySkinId = 0;
 
 function getSessionUser(){ var s=localStorage.getItem('sq_user_session'); if(s){try{return JSON.parse(s)}catch(e){}} return null; }
-
-function showToast(msg) {
-  var t = document.getElementById('toast');
-  if(!t) return; t.textContent = msg; t.classList.add('show');
-  clearTimeout(window.toastTimer); window.toastTimer = setTimeout(function() { t.classList.remove('show'); }, 3000);
-}
-
-function fmtExpire(ms){
-  var d = new Date(ms);
-  return (d.getMonth()+1)+'月'+d.getDate()+'日';
-}
+function showToast(msg) { window.showCustomToast(msg); }
+function fmtExpire(ms){ var d = new Date(ms); return (d.getMonth()+1)+'月'+d.getDate()+'日'; }
 
 async function init(){
   currentUser = getSessionUser();
@@ -319,6 +305,7 @@ document.getElementById('buyOk').addEventListener('click', async function(){
   if(buyingSkin === null){ closeBuy(); return; }
   this.disabled = true; this.textContent = '处理中…';
   try{
+    // ★ 核心安全：通过 RPC 购买，防并发扣费漏洞
     var r = await window.sb.rpc('buy_skin', { p_skin_id: i });
     if(r.error) throw r.error;
     var res = r.data || {};

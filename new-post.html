@@ -36,9 +36,6 @@
 .actions .btn-primary { background: var(--brand); color: #fff; box-shadow: 0 4px 12px rgba(132,204,22,0.25); }
 .actions .btn-primary:disabled { opacity: 0.5; pointer-events: none; box-shadow: none; }
 .actions .btn-secondary { background: var(--bg); color: var(--text-muted); }
-
-#toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text); color: #fff; padding: 12px 24px; border-radius: var(--radius-pill); font-weight: 500; font-size: 0.85em; opacity: 0; transition: var(--transition-smooth); z-index: 99999; pointer-events: none; box-shadow: var(--shadow-md); }
-#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
@@ -86,27 +83,13 @@
   </div>
 </div>
 
-<div id="toast"></div>
-
 <script src="./common.js"></script>
 <script>
 var currentUser = getSessionUser();
 if (!currentUser || !currentUser.id) { window.location.href = './index.html'; }
-var isAdmin = (currentUser.is_admin === true);
 
-function showToast(msg) {
-    var toast = document.getElementById('toast');
-    if(!toast) return;
-    toast.textContent = msg;
-    toast.classList.add('show');
-    clearTimeout(window.toastTimer);
-    window.toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 3000);
-}
-
-function execCommand(cmd) {
-    document.execCommand(cmd, false, null);
-    document.getElementById('richEditor').focus();
-}
+function showToast(msg) { window.showCustomToast(msg); }
+function execCommand(cmd) { document.execCommand(cmd, false, null); document.getElementById('richEditor').focus(); }
 
 async function loadCategories() {
     try {
@@ -114,51 +97,26 @@ async function loadCategories() {
         if (res.error) throw res.error;
         var categories = res.data || [];
         var select = document.getElementById('postCategorySelect');
-        
-        var available = categories.filter(function(c) {
-            if (c.name === '未分类') return false;
-            if (c.is_admin_only && !isAdmin) return false;
-            return true;
-        });
-
-        if (!available.length) {
-            select.innerHTML = '<option value="null">默认分类</option>';
-            return;
-        }
-        select.innerHTML = available.map(function(c) {
-            return '<option value="' + c.id + '">' + escapeHtml(c.name) + (c.is_admin_only ? ' (专属)' : '') + '</option>';
-        }).join('');
-    } catch(e) {
-        document.getElementById('postCategorySelect').innerHTML = '<option value="null">加载失败</option>';
-    }
+        var available = categories.filter(function(c) { return c.name !== '未分类' && (!c.is_admin_only || currentUser.is_admin); });
+        if (!available.length) { select.innerHTML = '<option value="null">默认分类</option>'; return; }
+        select.innerHTML = available.map(function(c) { return '<option value="' + c.id + '">' + escapeHtml(c.name) + (c.is_admin_only ? ' (专属)' : '') + '</option>'; }).join('');
+    } catch(e) { document.getElementById('postCategorySelect').innerHTML = '<option value="null">加载失败</option>'; }
 }
 
 async function uploadImage(file) {
-    if (file.size > 5 * 1024 * 1024) {
-        throw new Error('图片大小不能超过 5MB');
-    }
+    if (file.size > 5 * 1024 * 1024) throw new Error('图片大小不能超过 5MB');
     var ext = file.name.split('.').pop() || 'png';
     var path = currentUser.id + '/' + Date.now() + '.' + ext;
     var up = await window.sb.storage.from('posts').upload(path, file);
     if (up.error) throw up.error;
-    var pub = window.sb.storage.from('posts').getPublicUrl(path);
-    return pub.data.publicUrl;
+    return window.sb.storage.from('posts').getPublicUrl(path).data.publicUrl;
 }
 
 function insertImage() {
-    var input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
+    var input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*';
     input.onchange = async function(e) {
-        var file = e.target.files[0];
-        if (!file) return;
-        try {
-            showToast('图片上传中...');
-            var url = await uploadImage(file);
-            document.execCommand('insertImage', false, url);
-        } catch(err) {
-            showToast('上传失败：' + err.message);
-        }
+        var file = e.target.files[0]; if (!file) return;
+        try { showToast('图片上传中...'); var url = await uploadImage(file); document.execCommand('insertImage', false, url); } catch(err) { showToast('上传失败：' + err.message); }
     };
     input.click();
 }
@@ -169,49 +127,21 @@ document.getElementById('submitPostBtn').onclick = async function() {
     var category_id = (categoryVal && categoryVal !== 'null') ? parseInt(categoryVal, 10) : null;
     var content = document.getElementById('richEditor').innerHTML.trim();
     
-    if (!content || content === '<br>' || content === '<div><br></div>') {
-        return showToast('请输入正文内容');
-    }
-    if (currentUser.banned_until && new Date(currentUser.banned_until) > new Date()) {
-        return showToast('账号已被封禁，无法发布');
-    }
+    if (!content || content === '<br>' || content === '<div><br></div>') return showToast('请输入正文内容');
 
-    var btn = this;
-    btn.disabled = true;
-    btn.textContent = '发布中...';
-
+    var btn = this; btn.disabled = true; btn.textContent = '发布中...';
     try {
-        var isOfficial = isAdmin;
-        var res = await window.sb.from('posts').insert([{
-            title: title,
-            content: content,
-            category_id: category_id,
-            author: currentUser.nickname,
-            user_id: currentUser.id,
-            is_official: isOfficial,
-            is_pinned: false
-        }]);
-        
-        if (res.error) throw res.error;
-        
-        // 🚨 发帖成功：奖励 2 个金币
-        try {
-            await window.sb.rpc('add_user_coins', { p_amount: 2, p_reason: '发布新帖奖励' });
-        } catch(e) { console.warn('金币发放失败', e); }
-        
+        // 走安全 RPC 发帖
+        var r = await window.sb.rpc('create_post', { p_title: title, p_content: content, p_category_id: category_id });
+        if (r.error) throw r.error;
+        if (!r.data.success) throw new Error(r.data.message);
         showToast('帖子发布成功！奖励 2 小七币');
         setTimeout(function() { window.location.href = './posts.html'; }, 1000);
     } catch(e) {
-        if (e.message.includes('spam') || e.message.includes('banned') || e.message.includes('limit')) {
-            showToast('发布过于频繁，可能触发防刷机制，账号已被限制。');
-        } else {
-            showToast('发布失败：' + e.message);
-        }
-        btn.disabled = false;
-        btn.textContent = '发布';
+        showToast('发布失败：' + e.message);
+        btn.disabled = false; btn.textContent = '发布';
     }
 };
-
 loadCategories();
 </script>
 </body>

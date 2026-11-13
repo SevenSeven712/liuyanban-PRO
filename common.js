@@ -25,24 +25,6 @@ function setSessionUser(user) {
 // ============================================================
 // 工具函数
 // ============================================================
-function showToast(msg) {
-    var toast = document.getElementById('toast');
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'toast';
-        toast.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(80px);background:#0F172A;color:#fff;padding:.7em 1.5em;border-radius:2em;font-weight:600;font-size:.85em;opacity:0;transition:all .4s ease;z-index:9999;pointer-events:none;white-space:nowrap;';
-        document.body.appendChild(toast);
-    }
-    toast.textContent = msg;
-    toast.style.opacity = '1';
-    toast.style.transform = 'translateX(-50%) translateY(0)';
-    clearTimeout(window.toastTimer);
-    window.toastTimer = setTimeout(function () {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(-50%) translateY(80px)';
-    }, 3000);
-}
-
 function escapeHtml(s) {
     if (!s) return '';
     return String(s).replace(/[&<>"']/g, function (c) {
@@ -56,6 +38,46 @@ function getUserAvatar(user) {
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="#2e7d32" rx="50"/><text x="50" y="58" font-size="40" text-anchor="middle" fill="white" font-family="sans-serif">' + name.charAt(0).toUpperCase() + '</text></svg>';
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
+
+// 统一的全站 Toast
+if (!window.showCustomToast) {
+    window.showCustomToast = function(msg) {
+        var t = document.getElementById('customToast') || document.getElementById('toast');
+        if (!t) {
+            t = document.createElement('div');
+            t.id = 'customToast';
+            t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#0F172A;color:#fff;padding:12px 24px;border-radius:99px;font-size:.85em;font-weight:500;opacity:0;transition:all .3s;z-index:99999;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,0.2);';
+            document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        t.style.opacity = '1';
+        t.style.transform = 'translateX(-50%) translateY(0)';
+        clearTimeout(window.__toastTimer);
+        window.__toastTimer = setTimeout(function() {
+            t.style.opacity = '0';
+            t.style.transform = 'translateX(-50%) translateY(20px)';
+        }, 2500);
+    };
+}
+
+// 全屏封禁遮罩
+window.showBanOverlay = function(msg) {
+    var ov = document.getElementById('banOverlay');
+    if(!ov) {
+        ov = document.createElement('div');
+        ov.id = 'banOverlay';
+        ov.style.cssText = 'position:fixed;inset:0;background:#0F172A;color:#fff;z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;';
+        document.body.appendChild(ov);
+    }
+    ov.innerHTML = '<h1 style="color:#EF4444;font-size:3em;margin-bottom:20px;font-weight:900;">账号已被封禁</h1>' +
+                   '<p style="font-size:1.2em;margin-bottom:30px;color:#94A3B8;">' + msg + '</p>' +
+                   '<p style="font-size:.9em;color:#64748B;">3 秒后自动强制退出...</p>';
+    
+    setTimeout(function() {
+        localStorage.removeItem('sq_user_session');
+        window.location.href = './index.html';
+    }, 3000);
+};
 
 // ============================================================
 // 渲染头部与底部
@@ -113,14 +135,53 @@ function renderFooter(activeTab) {
     if (footerContainer) footerContainer.innerHTML = footerHtml;
 }
 
+// 加载遮罩防卡死
 window.hidePageLoading = function () {
     var m = document.getElementById('pageLoadingMask');
     if (m) m.remove();
     if (window.hideLoading) window.hideLoading();
 };
 
+window.showCustomAlert = function(title, desc) {
+  return new Promise(function(resolve) {
+    var mask = document.createElement('div');
+    mask.style.cssText = 'position:fixed;inset:0;background:rgba(17,24,39,0.4);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;';
+    mask.innerHTML = '<div style="background:#fff;border-radius:16px;width:80%;max-width:320px;padding:24px;text-align:center;transform:scale(.9);transition:transform .2s;box-shadow:0 20px 40px rgba(0,0,0,.1);"><h3 style="margin-bottom:12px;font-size:1.1em;color:#0F172A;font-weight:700;">'+title+'</h3><p style="color:#475569;margin-bottom:24px;font-size:.9em;line-height:1.6;">'+desc+'</p><div style="display:flex;gap:12px;"><button id="ma" style="flex:1;padding:12px;border-radius:99px;border:none;background:#10B981;color:#fff;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.3);">确定</button></div></div>';
+    document.body.appendChild(mask);
+    requestAnimationFrame(function() { mask.style.opacity = '1'; mask.children[0].style.transform = 'scale(1)'; });
+    var close = function() { mask.style.opacity = '0'; mask.children[0].style.transform = 'scale(.9)'; setTimeout(function() { document.body.removeChild(mask); resolve(); }, 200); };
+    mask.querySelector('#ma').onclick = close;
+  });
+};
+
+window.showCustomConfirm = function(title, desc) {
+  return new Promise(function(resolve) {
+    var mask = document.createElement('div');
+    mask.style.cssText = 'position:fixed;inset:0;background:rgba(17,24,39,0.4);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;';
+    mask.innerHTML = '<div style="background:#fff;border-radius:16px;width:80%;max-width:320px;padding:24px;text-align:center;transform:scale(.9);transition:transform .2s;box-shadow:0 20px 40px rgba(0,0,0,.1);"><h3 style="margin-bottom:12px;font-size:1.1em;color:#0F172A;font-weight:700;">'+title+'</h3><p style="color:#475569;margin-bottom:24px;font-size:.9em;line-height:1.6;">'+desc+'</p><div style="display:flex;gap:12px;"><button id="mc" style="flex:1;padding:12px;border-radius:99px;border:none;background:#F1F5F9;color:#64748B;font-weight:600;cursor:pointer;">取消</button><button id="mo" style="flex:1;padding:12px;border-radius:99px;border:none;background:#10B981;color:#fff;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.3);">确定</button></div></div>';
+    document.body.appendChild(mask);
+    requestAnimationFrame(function() { mask.style.opacity = '1'; mask.children[0].style.transform = 'scale(1)'; });
+    var close = function(val) { mask.style.opacity = '0'; mask.children[0].style.transform = 'scale(.9)'; setTimeout(function() { document.body.removeChild(mask); resolve(val); }, 200); };
+    mask.querySelector('#mc').onclick = function() { close(false); };
+    mask.querySelector('#mo').onclick = function() { close(true); };
+  });
+};
+
+window.showCustomPrompt = function(title, placeholder) {
+  return new Promise(function(resolve) {
+    var mask = document.createElement('div');
+    mask.style.cssText = 'position:fixed;inset:0;background:rgba(17,24,39,0.4);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;';
+    mask.innerHTML = '<div style="background:#fff;border-radius:16px;width:80%;max-width:320px;padding:24px;text-align:center;transform:scale(.9);transition:transform .2s;box-shadow:0 20px 40px rgba(0,0,0,.1);"><h3 style="margin-bottom:12px;font-size:1.1em;color:#0F172A;font-weight:700;">'+title+'</h3><input id="pi" placeholder="'+placeholder+'" style="width:100%;padding:12px;border:1px solid #E2E8F0;border-radius:12px;margin-bottom:20px;outline:none;font-size:.9em;background:#F8FAFC;"><div style="display:flex;gap:12px;"><button id="pc" style="flex:1;padding:12px;border-radius:99px;border:none;background:#F1F5F9;color:#64748B;font-weight:600;cursor:pointer;">取消</button><button id="po" style="flex:1;padding:12px;border-radius:99px;border:none;background:#10B981;color:#fff;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.3);">确定</button></div></div>';
+    document.body.appendChild(mask);
+    requestAnimationFrame(function() { mask.style.opacity = '1'; mask.children[0].style.transform = 'scale(1)'; mask.querySelector('#pi').focus(); });
+    var close = function(val) { mask.style.opacity = '0'; mask.children[0].style.transform = 'scale(.9)'; setTimeout(function() { document.body.removeChild(mask); resolve(val); }, 200); };
+    mask.querySelector('#pc').onclick = function() { close(null); };
+    mask.querySelector('#po').onclick = function() { close(mask.querySelector('#pi').value); };
+  });
+};
+
 // ============================================================
-// 全局咖啡 Loading 动画
+// 全局咖啡 Loading 动画 (由用户保留的炫酷特效)
 // ============================================================
 (function() {
   var css = document.createElement('style');
@@ -180,7 +241,6 @@ window.hidePageLoading = function () {
     } else {
       el.style.bottom = '0';
     }
-    
     el.classList.add('show'); 
   };
   
@@ -194,6 +254,7 @@ window.hidePageLoading = function () {
     }
   };
 
+  // 自动展示逻辑（如果不在 index.html）
   if (!window.location.pathname.includes('index.html')) {
     var isCached = sessionStorage.getItem('sq_page_cached_' + window.location.pathname);
     if (!isCached) {
@@ -210,98 +271,3 @@ window.hidePageLoading = function () {
     }
   }
 })();
-
-// ============================================================
-// 全局页面丝滑切换过渡动画
-// ============================================================
-(function() {
-  window.smoothNavigate = function(targetUrl) {
-    if (!targetUrl || targetUrl.startsWith('#') || targetUrl.startsWith('javascript')) return;
-    var app = document.getElementById('mainApp');
-    if (app) app.classList.add('page-exit');
-    setTimeout(function() {
-      if (window.showLoading) window.showLoading();
-      setTimeout(function() { window.location.href = targetUrl; }, 200);
-    }, 250);
-  };
-
-  document.addEventListener('click', function(e) {
-    var link = e.target.closest('a');
-    if (link) {
-      var href = link.getAttribute('href');
-      if (href && !href.startsWith('#') && !href.startsWith('javascript') && link.target !== '_blank') {
-        if (e.metaKey || e.ctrlKey || e.shiftKey) return;
-        e.preventDefault();
-        window.smoothNavigate(href);
-      }
-      return;
-    }
-
-    var btn = e.target.closest('[onclick]');
-    if (btn) {
-      var onclickStr = btn.getAttribute('onclick');
-      if (onclickStr.includes('location.href') || onclickStr.includes('location.replace')) {
-        var match = onclickStr.match(/location.(href|replace)s*=s*['"]([^'"]+)['"]/);
-        if (match && match[2]) { e.preventDefault(); window.smoothNavigate(match[2]); return; }
-        var match2 = onclickStr.match(/window.location.hrefs*=s*['"]([^'"]+)['"]/);
-        if (match2 && match2[1]) { e.preventDefault(); window.smoothNavigate(match2[1]); return; }
-      }
-    }
-  }, true);
-
-  var originalAssign = window.location.assign;
-  var originalReplace = window.location.replace;
-  window.location.assign = function(url) { window.smoothNavigate(url); };
-  window.location.replace = function(url) { window.smoothNavigate(url); };
-})();
-
-setTimeout(function() {
-  if (window.hideLoading) window.hideLoading();
-  var app = document.getElementById('mainApp');
-  if (app && !app.classList.contains('animate-in')) {
-    app.classList.add('animate-in');
-    var masks = document.querySelectorAll('.loading-overlay, #coffeeLoadingMask');
-    masks.forEach(function(m) { if(m) m.classList.remove('show'); });
-  }
-}, 1500);
-
-// ============================================================
-// 全局自定义 UI 弹窗
-// ============================================================
-window.showCustomAlert = function(title, desc) {
-  return new Promise(function(resolve) {
-    var mask = document.createElement('div');
-    mask.style.cssText = 'position:fixed;inset:0;background:rgba(17,24,39,0.4);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;';
-    mask.innerHTML = '<div style="background:#fff;border-radius:16px;width:80%;max-width:320px;padding:24px;text-align:center;transform:scale(.9);transition:transform .2s;box-shadow:0 20px 40px rgba(0,0,0,.1);"><h3 style="margin-bottom:12px;font-size:1.1em;color:#0F172A;font-weight:700;">'+title+'</h3><p style="color:#475569;margin-bottom:24px;font-size:.9em;line-height:1.6;">'+desc+'</p><div style="display:flex;gap:12px;"><button id="ma" style="flex:1;padding:12px;border-radius:99px;border:none;background:#10B981;color:#fff;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.3);">确定</button></div></div>';
-    document.body.appendChild(mask);
-    requestAnimationFrame(function() { mask.style.opacity = '1'; mask.children[0].style.transform = 'scale(1)'; });
-    var close = function() { mask.style.opacity = '0'; mask.children[0].style.transform = 'scale(.9)'; setTimeout(function() { document.body.removeChild(mask); resolve(); }, 200); };
-    mask.querySelector('#ma').onclick = close;
-  });
-};
-
-window.showCustomConfirm = function(title, desc) {
-  return new Promise(function(resolve) {
-    var mask = document.createElement('div');
-    mask.style.cssText = 'position:fixed;inset:0;background:rgba(17,24,39,0.4);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;';
-    mask.innerHTML = '<div style="background:#fff;border-radius:16px;width:80%;max-width:320px;padding:24px;text-align:center;transform:scale(.9);transition:transform .2s;box-shadow:0 20px 40px rgba(0,0,0,.1);"><h3 style="margin-bottom:12px;font-size:1.1em;color:#0F172A;font-weight:700;">'+title+'</h3><p style="color:#475569;margin-bottom:24px;font-size:.9em;line-height:1.6;">'+desc+'</p><div style="display:flex;gap:12px;"><button id="mc" style="flex:1;padding:12px;border-radius:99px;border:none;background:#F1F5F9;color:#64748B;font-weight:600;cursor:pointer;">取消</button><button id="mo" style="flex:1;padding:12px;border-radius:99px;border:none;background:#10B981;color:#fff;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.3);">确定</button></div></div>';
-    document.body.appendChild(mask);
-    requestAnimationFrame(function() { mask.style.opacity = '1'; mask.children[0].style.transform = 'scale(1)'; });
-    var close = function(val) { mask.style.opacity = '0'; mask.children[0].style.transform = 'scale(.9)'; setTimeout(function() { document.body.removeChild(mask); resolve(val); }, 200); };
-    mask.querySelector('#mc').onclick = function() { close(false); };
-    mask.querySelector('#mo').onclick = function() { close(true); };
-  });
-};
-
-window.showCustomPrompt = function(title, placeholder) {
-  return new Promise(function(resolve) {
-    var mask = document.createElement('div');
-    mask.style.cssText = 'position:fixed;inset:0;background:rgba(17,24,39,0.4);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;';
-    mask.innerHTML = '<div style="background:#fff;border-radius:16px;width:80%;max-width:320px;padding:24px;text-align:center;transform:scale(.9);transition:transform .2s;box-shadow:0 20px 40px rgba(0,0,0,.1);"><h3 style="margin-bottom:12px;font-size:1.1em;color:#0F172A;font-weight:700;">'+title+'</h3><input id="pi" placeholder="'+placeholder+'" style="width:100%;padding:12px;border:1px solid #E2E8F0;border-radius:12px;margin-bottom:20px;outline:none;font-size:.9em;background:#F8FAFC;"><div style="display:flex;gap:12px;"><button id="pc" style="flex:1;padding:12px;border-radius:99px;border:none;background:#F1F5F9;color:#64748B;font-weight:600;cursor:pointer;">取消</button><button id="po" style="flex:1;padding:12px;border-radius:99px;border:none;background:#10B981;color:#fff;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.3);">确定</button></div></div>';
-    document.body.appendChild(mask);
-    requestAnimationFrame(function() { mask.style.opacity = '1'; mask.children[0].style.transform = 'scale(1)'; mask.querySelector('#pi').focus(); });
-    var close = function(val) { mask.style.opacity = '0'; mask.children[0].style.transform = 'scale(.9)'; setTimeout(function() { document.body.removeChild(mask); resolve(val); }, 200); };
-    mask.querySelector('#pc').onclick = function() { close(null); };
-    mask.querySelector('#po').onclick = function() { close(mask.querySelector('#pi').value); };
-  });
-};
