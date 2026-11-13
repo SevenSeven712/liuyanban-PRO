@@ -376,8 +376,45 @@ document.getElementById('chatInput').onkeydown = function(e) { if (e.key === 'En
   var check = setInterval(function() {
     if (window.sb) { 
         clearInterval(check); 
+        
+        // 首次加载
         loadChats(); 
-        window.sb.channel('public:chats').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats' }, function() { loadChats(); }).subscribe(); 
+        
+        // 1. 开启 Realtime 实时监听
+        window.sb.channel('public:chats')
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats' }, function(payload) { 
+              var newMsg = payload.new;
+              // 防止重复添加
+              if (!chats.find(c => c.id === newMsg.id)) {
+                  newMsg.users = usersCache[newMsg.user_id] || null;
+                  chats.push(newMsg);
+                  renderChat();
+              }
+          })
+          .subscribe(function(status) {
+              console.log("Realtime 状态: " + status);
+          });
+
+        // 2. 双保险：每 3 秒轮询一次最新消息
+        setInterval(function() {
+            if (document.hidden) return; // 切到后台不轮询，省资源
+            window.sb.from('chats').select('*').order('created_at', { ascending: true }).limit(100).then(function(res) {
+                if (res.data && res.data.length > 0) {
+                    var rawChats = res.data;
+                    // 如果消息数量变了，或者最后一条消息的 ID 变了，说明有新消息
+                    var lastCurrentId = chats.length > 0 ? chats[chats.length - 1].id : null;
+                    var lastNewId = rawChats[rawChats.length - 1].id;
+                    
+                    if (rawChats.length !== chats.length || lastCurrentId !== lastNewId) {
+                        chats = rawChats.map(c => ({
+                            ...c,
+                            users: usersCache[c.user_id] || null
+                        }));
+                        renderChat();
+                    }
+                }
+            });
+        }, 3000);
     }
   }, 100);
 })();
